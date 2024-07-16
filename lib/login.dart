@@ -61,7 +61,9 @@ class _LoginPageState extends State<LoginPage> {
           'passwordConfirm': password
         });
 
-        await widget.pb.collection('users').authWithPassword(username, password);
+        await widget.pb
+            .collection('users')
+            .authWithPassword(username, password);
         // Consider adding success feedback here if needed
       } catch (createError) {
         print('Error creating user: $createError');
@@ -80,7 +82,8 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final width = 400.toDouble();
+    double screenWidth = MediaQuery.of(context).size.width;
+    double width = (screenWidth < 400 ? 250 : 400).toDouble();
     return Scaffold(
       appBar: AppBar(
         title: const Text('Welcome'),
@@ -187,27 +190,31 @@ class _LoginPageState extends State<LoginPage> {
                               );
                             }
                           },
-                          child: isLoading ? SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(
-                              color: Theme.of(context).colorScheme.onPrimary,
-                              strokeCap: StrokeCap.round,
-                            ),
-                          ) : Text(
-                          'Continue',
-                          style: theme.typography.englishLike.titleMedium
-                              ?.copyWith(
-                            color: theme.colorScheme.onPrimary,
-                            // color: passwordError == null &&
-                            //     passwordController.text.isNotEmpty &&
-                            //     usernameController.text.isNotEmpty
-                            //     ? theme.colorScheme
-                            //         .onPrimary // Normal text color
-                            //     : theme.disabledColor, // Disabled text color
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
+                          child: isLoading
+                              ? SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(
+                                    color:
+                                        Theme.of(context).colorScheme.onPrimary,
+                                    strokeCap: StrokeCap.round,
+                                  ),
+                                )
+                              : Text(
+                                  'Continue',
+                                  style: theme
+                                      .typography.englishLike.titleMedium
+                                      ?.copyWith(
+                                    color: theme.colorScheme.onPrimary,
+                                    // color: passwordError == null &&
+                                    //     passwordController.text.isNotEmpty &&
+                                    //     usernameController.text.isNotEmpty
+                                    //     ? theme.colorScheme
+                                    //         .onPrimary // Normal text color
+                                    //     : theme.disabledColor, // Disabled text color
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
                         ),
                       ),
                     ],
@@ -236,9 +243,13 @@ class _LoginPageState extends State<LoginPage> {
               style: Theme.of(context).typography.englishLike.headlineMedium,
             ),
             const SizedBox(height: 5),
-            Text(
-              "Start competing with friends and family.",
-              style: Theme.of(context).typography.englishLike.bodyLarge,
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 15),
+              child: Text(
+                "Start competing with friends and family.",
+                style: Theme.of(context).typography.englishLike.bodyLarge,
+                textAlign: TextAlign.center,
+              ),
             ),
             const SizedBox(height: 20),
             SizedBox(

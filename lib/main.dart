@@ -114,7 +114,7 @@ class _MyHomePageState extends State<MyHomePage> {
     showFlexibleBottomSheet(
       minHeight: 0,
       initHeight: 0.3,
-      maxHeight: 1,
+      maxHeight: 0.4,
       context: context,
       builder: _buildBottomSheet,
       anchors: [0, 0.3],
@@ -126,7 +126,9 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   void _showCreateModal(BuildContext context) {
-    Navigator.of(context).push(TutorialOverlay());
+    var nav = Navigator.of(context);
+    nav.pop();
+    nav.push(TutorialOverlay());
   }
 
   @override
@@ -201,67 +203,62 @@ class _MyHomePageState extends State<MyHomePage> {
     var theme = Theme.of(context);
     return BottomSheetBuilder(scrollController: scrollController, children: [
       Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 10),
-        child: Column(
-          children: [
-            GestureDetector(
-              onTap: () => _showCreateModal(context),
-              child: Card.filled(
+          padding: const EdgeInsets.symmetric(horizontal: 10),
+          child: Column(
+            children: [
+              GestureDetector(
+                onTap: () => _showCreateModal(context),
+                child: Card.filled(
+                  child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          vertical: 10, horizontal: 10),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                            vertical: 5, horizontal: 10),
+                        child: Row(
+                          children: [
+                            const Icon(
+                              Symbols.draw_rounded,
+                              size: 30,
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.only(left: 15),
+                              child: Text(
+                                "Create a challenge",
+                                style: theme.typography.englishLike.titleLarge,
+                              ),
+                            )
+                          ],
+                        ),
+                      )),
+                ),
+              ),
+              Card.filled(
                 child: Container(
-                    padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
+                    padding: const EdgeInsets.symmetric(
+                        vertical: 10, horizontal: 10),
                     child: Padding(
                       padding: const EdgeInsets.symmetric(
-                          vertical: 5,
-                          horizontal: 10
-                      ),
+                          vertical: 5, horizontal: 10),
                       child: Row(
                         children: [
                           const Icon(
-                            Symbols.draw_rounded,
+                            Symbols.group_add_rounded,
                             size: 30,
                           ),
                           Padding(
                             padding: const EdgeInsets.only(left: 15),
                             child: Text(
-                              "Create a challenge",
+                              "Join a challenge",
                               style: theme.typography.englishLike.titleLarge,
                             ),
                           )
                         ],
                       ),
-                    )
-                ),
+                    )),
               ),
-            ),
-            Card.filled(
-              child: Container(
-                  padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                        vertical: 5,
-                      horizontal: 10
-                    ),
-                    child: Row(
-                      children: [
-                        const Icon(
-                          Symbols.group_add_rounded,
-                          size: 30,
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.only(left: 15),
-                          child: Text(
-                              "Join a challenge",
-                            style: theme.typography.englishLike.titleLarge,
-                          ),
-                        )
-                      ],
-                    ),
-                  )
-              ),
-            ),
-          ],
-        )
-      )
+            ],
+          ))
     ]);
   }
 }
