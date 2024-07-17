@@ -16,10 +16,14 @@ class _LoginPageState extends State<LoginPage> {
   bool showUsernameForm = false;
   bool isLoading = false;
 
-  Future<void> _signInWithGoogle() async {
+  Future<void> _setLoading([bool state = true]) async {
     setState(() {
-      isLoading = true;
+      isLoading = state;
     });
+  }
+
+  Future<void> _signInWithGoogle() async {
+    _setLoading();
     try {
       await widget.pb.collection('users').authWithOAuth2(
         'google',
@@ -33,24 +37,37 @@ class _LoginPageState extends State<LoginPage> {
         ],
         // Add createData, expand, or fields if needed
       );
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Logged in!'),
+          ),
+        );
+      }
+
+      _setLoading(false);
     } catch (e) {
       // Handle error getting OAuth2 URL
       print('Error doing OAuth2 URL: $e');
+      _setLoading(false);
     }
   }
 
   Future<void> _signInWithUsername(String username, String password) async {
-    setState(() {
-      isLoading = true;
-    });
+    _setLoading();
     try {
       await widget.pb.collection('users').authWithPassword(username, password);
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Logged in!'),
-        ),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Logged in!'),
+          ),
+        );
+      }
+
+      _setLoading(false);
     } catch (e) {
       // Handle error getting OAuth2 URL
       print('Error doing OAuth2 URL:$e');
@@ -64,7 +81,16 @@ class _LoginPageState extends State<LoginPage> {
         await widget.pb
             .collection('users')
             .authWithPassword(username, password);
-        // Consider adding success feedback here if needed
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Account created'),
+            ),
+          );
+        }
+
+        _setLoading(false);
       } catch (createError) {
         print('Error creating user: $createError');
         if (mounted) {
@@ -74,6 +100,7 @@ class _LoginPageState extends State<LoginPage> {
               content: Text('Error creating account. Please try again.'),
             ),
           );
+          _setLoading(false);
         }
       }
     }
@@ -291,13 +318,23 @@ class _LoginPageState extends State<LoginPage> {
               height: 50,
               child: FilledButton(
                 onPressed: _signInWithGoogle,
-                child: Text(
-                  'Continue with Google',
-                  style: theme.typography.englishLike.titleMedium?.copyWith(
-                    color: theme.colorScheme.onPrimary,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
+                child: isLoading
+                    ? SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          color: Theme.of(context).colorScheme.onPrimary,
+                          strokeCap: StrokeCap.round,
+                        ),
+                      )
+                    : Text(
+                        'Continue with Google',
+                        style:
+                            theme.typography.englishLike.titleMedium?.copyWith(
+                          color: theme.colorScheme.onPrimary,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
               ),
             )
           ],

@@ -80,7 +80,7 @@ class _AppState extends State<App> {
         themeMode: ThemeMode.system,
         home: Builder(
           builder: (context) => isLoggedIn
-              ? MyHomePage(title: 'Home', pb: pb) // If isLoggedIn is true
+              ? HomePage(title: 'Home', pb: pb) // If isLoggedIn is true
               : LoginPage(pb: pb), // If isLoggedIn is false
         ),
       );
@@ -88,8 +88,8 @@ class _AppState extends State<App> {
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title, required this.pb});
+class HomePage extends StatefulWidget {
+  const HomePage({super.key, required this.title, required this.pb});
 
   // This widget is the home page of your application. It is stateful, meaning
   // that it has a State object (defined below) that contains fields that affect
@@ -104,10 +104,10 @@ class MyHomePage extends StatefulWidget {
   final PocketBase pb;
 
   @override
-  State<MyHomePage> createState() => _MyHomePageState();
+  State<HomePage> createState() => _HomePageState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
+class _HomePageState extends State<HomePage> {
   int _counter = 0;
 
   void _showBottomSheet() {
@@ -128,7 +128,10 @@ class _MyHomePageState extends State<MyHomePage> {
   void _showCreateModal(BuildContext context) {
     var nav = Navigator.of(context);
     nav.pop();
-    nav.push(TutorialOverlay());
+    showDialog(
+    context: context,
+    builder: (context) => CreateDialog(),
+    );
   }
 
   @override
