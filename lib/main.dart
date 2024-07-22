@@ -1,27 +1,30 @@
 import 'package:bottom_sheet/bottom_sheet.dart';
 import 'package:dynamic_color/dynamic_color.dart';
 import 'package:fitness_challenges/components/bottomSheet.dart';
+import 'package:fitness_challenges/components/challenge.dart';
 import 'package:fitness_challenges/create.dart';
 import 'package:fitness_challenges/login.dart';
 import 'package:fitness_challenges/pb.dart';
-import 'package:fitness_challenges/states/user.dart';
 import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:pocketbase/pocketbase.dart';
 import 'package:provider/provider.dart';
 
+import 'manager.dart';
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   final pb = await initializePocketbase();
+  final manager = ChallengeProvider(pb: pb);
+  manager.init();
 
   runApp(
     Provider<PocketBase>.value(
       value: pb,
       child: ChangeNotifierProvider(
-        // Add ChangeNotifierProvider here
-        create: (context) => UserModel(),
+        create: (context) => manager,
         child: const App(),
       ),
     ),
@@ -31,7 +34,7 @@ void main() async {
 class App extends StatefulWidget {
   const App({super.key});
 
-  // ...@override
+  @override
   _AppState createState() => _AppState();
 }
 
@@ -64,6 +67,7 @@ class _AppState extends State<App> {
   Widget build(BuildContext context) {
     return DynamicColorBuilder(builder: (lightColorScheme, darkColorScheme) {
       return MaterialApp(
+        debugShowCheckedModeBanner: false,
         title: 'Fitness Challenges',
         theme: ThemeData(
           colorScheme: lightColorScheme ?? _defaultLightColorScheme,
@@ -108,7 +112,7 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  int _counter = 0;
+  final int _counter = 0;
 
   void _showBottomSheet() {
     showFlexibleBottomSheet(
@@ -129,13 +133,14 @@ class _HomePageState extends State<HomePage> {
     var nav = Navigator.of(context);
     nav.pop();
     showDialog(
-    context: context,
-    builder: (context) => CreateDialog(),
+      context: context,
+      builder: (context) => CreateDialog(pb: widget.pb),
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    final challengeProvider = Provider.of<ChallengeProvider>(context);
     PocketBase pb = widget.pb;
     // This method is rerun every time setState is called, for instance as done
     // by the _incrementCounter method above.
@@ -172,17 +177,23 @@ class _HomePageState extends State<HomePage> {
           // wireframe for each widget.
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
+            ...challengeProvider.challenges.map((value) {
+              return Padding(
+                padding: const EdgeInsets.symmetric(vertical: 5),
+                child: Challenge(challenge: value, pb: pb),
+              );
+            }),
+            const SizedBox(
+              height: 25,
+            ),
+            Text(
+                "Logged in as ${pb.authStore.model?.getDataValue("username")}"),
+            const SizedBox(height: 10,),
             FilledButton.tonal(
                 onPressed: () {
                   pb.authStore.clear();
                 },
                 child: const Text("Logout")),
-            Text(
-                "Logged in as ${pb.authStore.model?.getDataValue("username")}"),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
           ],
         ),
       ),

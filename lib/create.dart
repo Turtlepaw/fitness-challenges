@@ -1,147 +1,181 @@
-import 'package:carousel_slider/carousel_slider.dart';
+import 'dart:convert';
+import 'dart:ffi';
+
+import 'package:fitness_challenges/manager.dart';
 import 'package:fitness_challenges/types/challenges.dart';
+import 'package:fitness_challenges/utils/data.dart';
+import 'package:fitness_challenges/utils/bingo.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
+import 'package:pocketbase/pocketbase.dart';
+import 'package:provider/provider.dart';
+import 'package:reactive_forms/reactive_forms.dart';
 
-class CreateModal extends ModalRoute<void> {
-  @override
-  Duration get transitionDuration =>
-      const Duration(milliseconds: 350); // Adjust duration
+class CreateDialog extends StatefulWidget {
+  final PocketBase pb;
 
-  @override
-  bool get opaque => false;
-
-  @override
-  bool get barrierDismissible => false;
+  const CreateDialog({super.key, required this.pb});
 
   @override
-  Color get barrierColor => Colors.black.withOpacity(0.5);
-
-  @override
-  String? get barrierLabel => null;
-
-  @override
-  bool get maintainState => true;
-
-  @override
-  Widget buildPage(BuildContext context,
-      Animation<double> animation,
-      Animation<double> secondaryAnimation,) {
-    return const Material(
-      type: MaterialType.transparency,
-      child: CreateWidget(),
-    );
-  }
-
-  @override
-  Widget buildTransitions(BuildContext context,
-      Animation<double> animation,
-      Animation<double> secondaryAnimation,
-      Widget child,) {
-    // Fade animation with longer duration
-    Animation<double> fadeAnimation = CurvedAnimation(
-      parent: animation,
-      curve: Curves.easeOut,
-    );
-
-    // Slide animation for entering
-    Animation<Offset> slideInAnimation = Tween<Offset>(
-      begin: const Offset(0, 0.2),
-      end: Offset.zero,
-    ).animate(CurvedAnimation(
-      parent: animation,
-      curve: Curves.easeOut,
-    ));
-
-    // Slide animation for exiting (reversed and going further up)
-    Animation<Offset> slideOutAnimation = Tween<Offset>(
-      begin: Offset.zero,
-      end: const Offset(0, -0.5), // Adjust -0.5 for desired upward distance
-    ).animate(CurvedAnimation(
-      parent: secondaryAnimation, // Use secondaryAnimation for exit
-      curve: Curves.easeOut,
-    ));
-
-    return FadeTransition(
-      opacity: fadeAnimation,
-      child: SlideTransition(
-        position: animation.status == AnimationStatus.forward
-            ? slideInAnimation
-            : slideOutAnimation,
-        child: child,
-      ),
-    );
-  }
+  _CreateDialogState createState() => _CreateDialogState();
 }
 
-class CreateDialog extends StatelessWidget {
+class _CreateDialogState extends State<CreateDialog> {
+  var loading = false;
+  final form = FormGroup({
+    type: FormControl<int>(validators: [Validators.required]),
+    title: FormControl<String>(validators: [Validators.required]),
+    date: FormControl<DateTime>(validators: [Validators.required]),
+    autoEnd: FormControl<bool>(value: false),
+    difficulty: FormControl<int>(
+      value: 2,
+    )
+  });
+
+  void _handleCreate() async {
+    setState(() {
+      loading = true;
+    });
+    bool autoEndValue = form.control(autoEnd).value;
+    try {
+      var challenge = BingoDataManager(usersBingoData: [
+        UserBingoData(
+          userId: widget.pb.authStore.model.id,
+          activities:
+            Bingo().generateBingoActivities(
+              DifficultyExtension.of(form.control(difficulty).value)
+            ),
+        ),
+      ]);
+
+      await widget.pb.collection("challenges").create(
+          body: {
+            "name": form.control(title).value,
+            "type": form.control(type).value,
+            "users": [widget.pb.authStore.model.id],
+            "endDate": autoEndValue == true ? "auto" :
+            form.control(date).value.toString(),
+            "difficulty": form.control(difficulty).value,
+            "host": widget.pb.authStore.model.id,
+            "winner": null,
+            "ended": false,
+            "data": jsonEncode(challenge.toJson())
+          }
+      );
+      if(mounted){
+        Provider.of<ChallengeProvider>(context, listen: false).reloadChallenges();
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Challenge created'),
+          ),
+        );
+        Navigator.of(context).pop();
+      }
+    } catch(error){
+      if (kDebugMode) {
+        print(error);
+      }
+
+      if(mounted){
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Failed to create challenge'),
+          ),
+        );
+      }
+      setState(() {
+        loading = false;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Dialog.fullscreen(
-        child: Scaffold(
-            appBar: AppBar(
-              // TRY THIS: Try changing the color here to a specific color (to
-              // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
-              // change color while the other colors stay the same.
-              //backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-              leading: GestureDetector(
-                child: const Icon(Symbols.close_rounded),
-                onTap: () {
-                  Navigator.of(context).pop();
-                },
+    return ReactiveForm(
+        formGroup: form,
+        child: Dialog.fullscreen(
+            child: Scaffold(
+              appBar: AppBar(
+                leading: IconButton(
+                  icon: const Icon(Symbols.close_rounded),
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                ),
+                actions: <Widget>[
+                  ReactiveFormConsumer(
+                    builder: (context, form, widget) {
+                      return Padding(
+                        padding: const EdgeInsets.only(right: 12),
+                        child: loading
+                            ? const Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 15),
+                          child: SizedBox(
+                            width: 15,
+                            height: 15,
+                            child: CircularProgressIndicator(
+                              strokeCap: StrokeCap.round,
+                              strokeWidth: 3.0,),
+                          ),
+                        )
+                            : TextButton(
+                            onPressed: form.valid ? _handleCreate : null,
+                            child: const Text("Create")),
+                      );
+                    },
+                  )
+                ],
+
+                // Here we take the value from the MyHomePage object that was created by
+                // the App.build method, and use it to set our appbar title.
+                title: const Text("Create Challenge"),
               ),
-              // Here we take the value from the MyHomePage object that was created by
-              // the App.build method, and use it to set our appbar title.
-              title: Text("Create Challenge"),
-            ),
-            body: const CreateWidget()));
+              body: CreateWidget(),
+            )));
   }
 }
 
-class CreateWidget extends StatefulWidget {
-  const CreateWidget({super.key});
+// class CreateWidget extends StatefulWidget {
+//   const CreateWidget({super.key});
+//
+//   @override
+//   _CreateWidgetState createState() => _CreateWidgetState();
+// }
 
-  @override
-  _CreateWidgetState createState() => _CreateWidgetState();
-}
+const type = "type";
+const title = "title";
+const date = "dates";
+const autoEnd = "auto_end";
+const difficulty = "difficulty";
 
-class _CreateWidgetState extends State<CreateWidget> {
-  Challenge? challengeSelected;
-  TextEditingController titleController = TextEditingController();
-  DateTimeRange? dateRange;
-  bool endWhenComplete = false;
-  int difficulty = 2;
-
+class CreateWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     var theme = Theme.of(context);
 
     return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          buildChallengeSelector(theme),
-          _buildTextFields(theme),
-          _buildDatePickers(theme),
-          _buildDifficultyLevels(theme)
-        ],
-      ),
-    );
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            buildChallengeSelector(theme),
+            _buildTextFields(theme),
+            _buildDatePickers(context, theme),
+            _buildDifficultyLevels(theme),
+            //FilledButton(onPressed: (){}, child: Text("Create"))
+          ],
+        ));
   }
 
   Widget buildChallengeSelector(ThemeData theme) {
-    return LayoutBuilder(
-        builder: (BuildContext context, BoxConstraints constraints) {
-          return ConstraintsTransformBox(
-            constraintsTransform: (constraints) =>
-                BoxConstraints(
-                  maxWidth: constraints.maxWidth > 450 ? 400 : constraints
-                      .maxWidth,
-                ),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 15),
+    return ReactiveFormConsumer(builder: (context, form, widget) {
+      return Padding(
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          child: Center(
               child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
                     "Challenge",
@@ -150,92 +184,36 @@ class _CreateWidgetState extends State<CreateWidget> {
                   const SizedBox(
                     height: 10,
                   ),
-                  ClipRRect(
-                    borderRadius: const BorderRadius.all(Radius.elliptical(14, 12)),
-                    child: CarouselSlider(
-                      options: CarouselOptions(
-                        height: 80,
-                        autoPlay: challengeSelected == null,
-                        // onPageChanged: (index, reason) {
-                        //   setState(() {
-                        //     _current = index; // Update selected index
-                        //   });
-                        // },
-                      ),
-                      items: challenges.map((i) {
-                        return Builder(
-                          builder: (BuildContext context) {
-                            return GestureDetector(
-                              // Add GestureDetector for click
-                              onTap: () {
-                                setState(() {
-                                  challengeSelected = i;
-                                });
-                              },
-                              child: Card(
-                                child: Padding(
-                                  padding: EdgeInsets.symmetric(horizontal: 15),
-                                  child: Column(
-                                    mainAxisSize: MainAxisSize.min,
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    crossAxisAlignment: CrossAxisAlignment.center,
-                                    children: [
-                                      Row(
-                                        crossAxisAlignment: CrossAxisAlignment
-                                            .center,
-                                        mainAxisAlignment: MainAxisAlignment.center,
-                                        children: [
-                                          AnimatedCrossFade(
-                                            firstChild: Icon(i.icon, size: 35),
-                                            secondChild: const Icon(
-                                                Symbols.check_rounded,
-                                                size: 35),
-                                            crossFadeState: challengeSelected == i
-                                                ? CrossFadeState.showSecond
-                                                : CrossFadeState.showFirst,
-                                            duration: const Duration(
-                                                milliseconds:
-                                                100), // Adjust duration as needed
-                                          ),
-                                          const SizedBox(width: 15),
-                                          Column(
-                                            mainAxisAlignment: MainAxisAlignment
-                                                .start,
-                                            crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                            children: [
-                                              Text(
-                                                i.name,
-                                                style: theme
-                                                    .typography.englishLike
-                                                    .titleLarge,
-                                              ),
-                                              const SizedBox(height: 2),
-                                              Text(
-                                                i.description,
-                                                style: theme
-                                                    .typography.englishLike
-                                                    .labelMedium,
-                                              ),
-                                            ],
-                                          ),
-                                        ],
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            );
-                          },
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      ...challenges.asMap().entries.map((entry) {
+                        final c = entry.value;
+                        final index = entry.key;
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 5),
+                          child: FilterChip(
+                            avatar:
+                            form
+                                .control(type)
+                                .value == index ? null : Icon(c.icon),
+                            label: Text(c.name),
+                            onSelected: index == 0 ? (value) {
+                              form
+                                  .control(type)
+                                  .value = index;
+                            } : null,
+                            selected: form
+                                .control(type)
+                                .value == index,
+                          ),
                         );
-                      }).toList(),
-                    ),
-                  ),
+                      }),
+                    ],
+                  )
                 ],
-              )
-            ),
-          );
-        });
+              )));
+    });
   }
 
   Widget _buildTextFields(ThemeData theme) {
@@ -259,13 +237,13 @@ class _CreateWidgetState extends State<CreateWidget> {
                     const SizedBox(
                       height: 10,
                     ),
-                    TextField(
+                    ReactiveTextField(
+                      formControlName: title,
                       decoration: const InputDecoration(
                         border: OutlineInputBorder(),
                         labelText: 'Title',
                         icon: Icon(Symbols.description_rounded),
                       ),
-                      controller: titleController,
                     )
                   ],
                 ),
@@ -273,85 +251,15 @@ class _CreateWidgetState extends State<CreateWidget> {
         });
   }
 
-  Widget _buildDatePickers(ThemeData theme) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 10),
-      child: Center(
-          child: Column(
-            children: [
-              Text(
-                "Start & End Date",
-                style: theme.typography.englishLike.labelLarge,
-              ),
-              const SizedBox(
-                height: 10,
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  ActionChip(
-                      onPressed: () {
-                        (endWhenComplete
-                            ? showDatePicker(
-                            context: context,
-                            firstDate:
-                            DateTime.now().add(const Duration(days: 1)),
-                            lastDate: DateTime.now()
-                                .add(const Duration(days: 365 * 2)))
-                            : showDateRangePicker(
-                          context: context,
-                          firstDate:
-                          DateTime.now().add(const Duration(days: 1)),
-                          lastDate: DateTime.now()
-                              .add(const Duration(days: 365 * 2)),
-                        ))
-                            .then((value) {
-                          setState(() {
-                            if (value is DateTimeRange) {
-                              dateRange = value;
-                            } else if (value is DateTime) {
-                              dateRange =
-                                  DateTimeRange(start: value, end: value);
-                            }
-                          });
-                        });
-                      },
-                      label: Text(
-                        dateRange == null
-                            ? "Set ${endWhenComplete == false
-                            ? "Dates"
-                            : "Start"}"
-                            : _formatRange(),
-                      )),
-                  SizedBox(
-                    width: 10,
-                  ),
-                  FilterChip(
-                      selected: endWhenComplete,
-                      onSelected: (value) {
-                        setState(() {
-                          endWhenComplete = value;
-                        });
-                      },
-                      label: const Text(
-                        "End when complete",
-                      ))
-                ],
-              ),
-            ],
-          )),
-    );
-  }
-
-  Widget _buildDifficultyLevels(ThemeData theme) {
-    return Padding(
+  Widget _buildDatePickers(BuildContext context, ThemeData theme) {
+    return ReactiveFormConsumer(builder: (context, form, widget) {
+      return Padding(
         padding: const EdgeInsets.symmetric(vertical: 10),
         child: Center(
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
-                  "Difficulty",
+                  "Start & End Date",
                   style: theme.typography.englishLike.labelLarge,
                 ),
                 const SizedBox(
@@ -360,47 +268,124 @@ class _CreateWidgetState extends State<CreateWidget> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    ...[1, 2, 3].map((l) {
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 5),
-                        child: FilterChip(
-                          label: Text(_getDifficultyLabel(l)),
-                          onSelected: (value) {
-                            setState(() {
-                              difficulty = l;
-                            });
-                          },
-                          selected: difficulty == l,
-                        ),
-                      );
-                    }),
+                    FilterChip(
+                        selected: form
+                            .control(date)
+                            .isNotNull,
+                        onSelected: (v) {
+                          showDatePicker(
+                              context: context,
+                              firstDate:
+                              DateTime.now().add(const Duration(days: 2)),
+                              lastDate: DateTime.now()
+                                  .add(const Duration(days: 365 * 2)))
+                              .then((value) {
+                            form
+                                .control(autoEnd)
+                                .value = false;
+                            form
+                                .control(date)
+                                .value = value;
+                          });
+                        },
+                        label: Text(
+                          form
+                              .control(date)
+                              .value == null
+                              ? "Set End Date"
+                              : _formatRange(form),
+                        )),
+                    const SizedBox(
+                      width: 10,
+                    ),
+                    FilterChip(
+                        selected: form
+                            .control(autoEnd)
+                            .value,
+                        onSelected: (value) {
+                          form
+                              .control(autoEnd)
+                              .value = value;
+                          if (value) {
+                            form
+                              .control(date)
+                              .value = null;
+                          }
+                        },
+                        label: const Text(
+                          "End when complete",
+                        ))
                   ],
-                )
+                ),
               ],
-            )
-        )
-    );
+            )),
+      );
+    });
   }
 
-  String _formatRange() {
-    if (dateRange == null) return "";
-    final format = new DateFormat('MMM dd');
+  Widget _buildDifficultyLevels(ThemeData theme) {
+    return ReactiveFormConsumer(builder: (context, form, widget) {
+      return Padding(
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    "Difficulty",
+                    style: theme.typography.englishLike.labelLarge,
+                  ),
+                  const SizedBox(
+                    height: 10,
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      ...Difficulty.values.map((l) {
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 5),
+                          child: FilterChip(
+                            label: Text(_getDifficultyLabel(l.index)),
+                            onSelected: (value) {
+                              form
+                                  .control(difficulty)
+                                  .value = l.index;
+                            },
+                            selected: form
+                                .control(difficulty)
+                                .value == l.index,
+                          ),
+                        );
+                      }),
+                    ],
+                  )
+                ],
+              )));
+    });
+  }
 
-    if (endWhenComplete) {
-      return "Starts ${format.format(dateRange!.start)}";
-    } else {
-      return "${format.format(dateRange!.start)} – ${format.format(
-          dateRange!.end)}";
-    }
+  String _formatRange(FormGroup form) {
+    var dateRange = form
+        .control(date)
+        .value;
+    if (dateRange == null) return "";
+    final format = DateFormat('MMM dd');
+
+    return "Ends ${format.format(dateRange)}";
+    // if (form.control(autoEnd).value) {
+    //   return "Starts ${format.format(dateRange!.start)}";
+    // } else {
+    //   return "${format.format(dateRange!.start)} – ${format.format(dateRange!.end)}";
+    // }
   }
 
   String _getDifficultyLabel(int difficulty) {
     switch (difficulty) {
-      case 1:
+      case 0:
         return "Easy";
-      case 2:
+      case 1:
         return "Medium";
-      case 3:
+      case 2:
         return "Hard";
       default:
         return "Unknown"; // Handle cases outside 1, 2, 3

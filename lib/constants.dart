@@ -1,1 +1,1 @@
-const String apiUrl = "https://fitnesschallenges.pockethost.io/";
+const String apiUrl = "https://fitnesschallenges.pockethost.io";
