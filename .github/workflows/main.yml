@@ -20,4 +20,5 @@ jobs:
       uses: ncipollo/release-action@v1
       with:
         artifacts: "build/app/outputs/apk/debug/*.apk"
-        token: ${{ secrets.TOKEN }}
+        token: ${{ GITHUB_TOKEN }}
+        #token: ${{ secrets.TOKEN }}
