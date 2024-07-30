@@ -13,6 +13,7 @@ extension BingoDataTypeExtension on BingoDataType {
       BingoDataType.steps => Symbols.steps_rounded,
       BingoDataType.distance => Symbols.distance_rounded,
       BingoDataType.azm => Symbols.azm_rounded,
+    BingoDataType.filled => Symbols.check_rounded,
       _ => Symbols.indeterminate_question_box_rounded
     };
   }
@@ -96,7 +97,7 @@ class BingoDataManager {
   }
 
   // Method to update a user's bingo activity
-  void updateUserBingoActivity(
+  BingoDataManager? updateUserBingoActivity(
       String userId, int index, BingoDataType newType) {
     for (var user in usersBingoData) {
       if (user.userId == userId) {
@@ -104,8 +105,10 @@ class BingoDataManager {
           var activity = user.activities[index];
           user.activities[index] =
               BingoDataActivity(type: newType, amount: activity.amount);
+          return this;
         }
       }
     }
+    return null;
   }
 }

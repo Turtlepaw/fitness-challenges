@@ -1,32 +1,145 @@
+import 'package:animated_splash_screen/animated_splash_screen.dart';
 import 'package:bottom_sheet/bottom_sheet.dart';
 import 'package:dynamic_color/dynamic_color.dart';
 import 'package:fitness_challenges/components/bottomSheet.dart';
 import 'package:fitness_challenges/components/challenge.dart';
+import 'package:fitness_challenges/components/navBar.dart';
 import 'package:fitness_challenges/create.dart';
-import 'package:fitness_challenges/login.dart';
 import 'package:fitness_challenges/pb.dart';
+import 'package:fitness_challenges/routes/join.dart';
+import 'package:fitness_challenges/routes/settings.dart';
+import 'package:fitness_challenges/routes/splash.dart';
+import 'package:fitness_challenges/utils/health.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:health/health.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
 import 'package:material_symbols_icons/symbols.dart';
+import 'package:page_transition/page_transition.dart';
 import 'package:pocketbase/pocketbase.dart';
 import 'package:provider/provider.dart';
 
+import 'login.dart';
 import 'manager.dart';
+
+final _rootNavigatorKey = GlobalKey<NavigatorState>();
+final _shellNavigatorKey = GlobalKey<NavigatorState>();
+
+CustomTransitionPage buildPageWithDefaultTransition<T>({
+  required BuildContext context,
+  required GoRouterState state,
+  required Widget child,
+}) {
+  return CustomTransitionPage<T>(
+    key: state.pageKey,
+    child: child,
+    transitionDuration: Duration(milliseconds: 150),
+    transitionsBuilder: (context, animation, secondaryAnimation, child) =>
+        FadeTransition(opacity: animation, child: child),
+  );
+}
+
+Page<dynamic> Function(BuildContext, GoRouterState) defaultPageBuilder<T>(
+        Widget child) =>
+    (BuildContext context, GoRouterState state) {
+      return buildPageWithDefaultTransition<T>(
+        context: context,
+        state: state,
+        child: child,
+      );
+    };
+
+final _router =
+    GoRouter(initialLocation: '/', navigatorKey: _rootNavigatorKey, routes: [
+  GoRoute(
+      path: '/',
+      builder: (context, state) => SplashScreen(
+            asyncFunction: () async {
+              var pb = Provider.of<PocketBase>(context, listen: false);
+              await Future.delayed(const Duration(seconds: 1));
+              if (context.mounted) {
+                if (pb.authStore.isValid) {
+                  // User is logged in, navigate to home
+                  context.go('/home');
+                } else {
+                  // User is not logged in, navigate to login
+                  context.go('/login');
+                }
+              }
+            }
+          )
+      /*FlutterSplashScreen.fadeIn(
+            backgroundColor: Theme.of(context).colorScheme.surface,
+            childWidget: SizedBox(
+              height: 250,
+              width: 250,
+              child: Icon(
+                Symbols.rocket_launch_rounded,
+                color: Theme.of(context).colorScheme.onSurface,
+                size: 1000,
+              ),
+            ),
+            asyncNavigationCallback: () async {
+              var pb = Provider.of<PocketBase>(context, listen: false);
+              await Future.delayed(const Duration(seconds: 100));
+              if (context.mounted) {
+                if (pb.authStore.isValid) {
+                  // User is logged in, navigate to home
+                  context.go('/home');
+                } else {
+                  // User is not logged in, navigate to login
+                  context.go('/login');
+                }
+              }
+            }),*/
+      ),
+  GoRoute(
+    path: '/login',
+    pageBuilder: defaultPageBuilder(const LoginPage()),
+  ),
+  ShellRoute(
+    navigatorKey: _shellNavigatorKey,
+    pageBuilder: (context, state, child) {
+      return NoTransitionPage(
+          child: Scaffold(
+        bottomNavigationBar: CustomNavigationBar(state: state),
+        body: child,
+      ));
+    },
+    routes: [
+      GoRoute(
+          pageBuilder: defaultPageBuilder(const HomePage(title: "Home")),
+          path: '/home'),
+      GoRoute(
+        path: '/settings',
+        pageBuilder: defaultPageBuilder(const SettingsPage()),
+      )
+    ],
+  )
+]);
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   final pb = await initializePocketbase();
   final manager = ChallengeProvider(pb: pb);
+  final healthManager = HealthManager(manager, pb);
   manager.init();
+  healthManager.fetchHealthData();
+  Health().configure(useHealthConnectIfAvailable: true);
 
   runApp(
-    Provider<PocketBase>.value(
-      value: pb,
-      child: ChangeNotifierProvider(
-        create: (context) => manager,
-        child: const App(),
-      ),
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (context) => manager),
+        Provider<PocketBase>.value(
+          value: pb,
+        ),
+        ChangeNotifierProvider.value(
+          value: healthManager,
+        )
+      ],
+      child: const App(),
     ),
   );
 }
@@ -47,18 +160,38 @@ class _AppState extends State<App> {
 
   late bool isLoggedIn; // Track login status locally
   late PocketBase pb;
+  String? subscribedId;
 
   @override
   void initState() {
     super.initState();
     pb = Provider.of<PocketBase>(context, listen: false);
     isLoggedIn = pb.authStore.isValid; // Initialize with current status
+    if (pb.authStore.isValid) {
+      subscribeUserData();
+    }
 
     // Listen for changes in auth status
     pb.authStore.onChange.listen((e) {
+      if (pb.authStore.isValid) {
+        subscribeUserData();
+      } else if (subscribedId != null) {
+        pb.collection("users").unsubscribe(subscribedId!);
+      }
       setState(() {
         isLoggedIn = pb.authStore.isValid; // Update isLoggedIn
       });
+    });
+  }
+
+  /// Enables realtime updates to user data.
+  void subscribeUserData() {
+    if (!pb.authStore.isValid) return;
+    var id = pb.authStore.model.id;
+    pb.collection("users").subscribe(id, (data) {
+      if (data.record?.id == id) {
+        pb.authStore.save(pb.authStore.token, data.record);
+      }
     });
   }
 
@@ -66,7 +199,8 @@ class _AppState extends State<App> {
   @override
   Widget build(BuildContext context) {
     return DynamicColorBuilder(builder: (lightColorScheme, darkColorScheme) {
-      return MaterialApp(
+      return MaterialApp.router(
+        routerConfig: _router,
         debugShowCheckedModeBanner: false,
         title: 'Fitness Challenges',
         theme: ThemeData(
@@ -82,18 +216,48 @@ class _AppState extends State<App> {
               color: Colors.white, fill: 1, weight: 400, opticalSize: 24),
         ),
         themeMode: ThemeMode.system,
-        home: Builder(
-          builder: (context) => isLoggedIn
-              ? HomePage(title: 'Home', pb: pb) // If isLoggedIn is true
-              : LoginPage(pb: pb), // If isLoggedIn is false
-        ),
+        //home: ,
+        // initialRoute: '/',
+        // routes: {
+        //   '/': (context) => FlutterSplashScreen.fadeIn(
+        //       backgroundColor: Theme.of(context).colorScheme.surface,
+        //       childWidget: SizedBox(
+        //         height: 150,
+        //         width: 150,
+        //         child: Icon(Symbols.rocket_launch_rounded, color: Theme.of(context).colorScheme.onSurface,),
+        //       ),
+        //       onAnimationEnd: () => debugPrint("On Fade In End"),
+        //       asyncNavigationCallback: () async {
+        //         await Future.delayed(const Duration(seconds: 1));
+        //         if (context.mounted) {
+        //           if (pb.authStore.isValid) {
+        //             // User is logged in, navigate to home
+        //             Navigator.pushReplacementNamed(context, '/home');
+        //           } else {
+        //             // User is not logged in, navigate to login
+        //             Navigator.pushReplacementNamed(context, '/login');
+        //           }
+        //         }
+        //       }),
+        //   '/home': (context) => HomePage(title: "Home", pb: pb),
+        //   '/login': (context) => LoginPage(pb: pb),
+        //   '/settings': (context) => const SettingsPage(),
+        // },
+        // home: Builder(
+        //   builder: (context) =>
+        //   isLoggedIn
+        //       ? Navigation(
+        //       body: HomePage(title: 'Home', pb: pb)
+        //   )
+        //       : LoginPage(pb: pb), // If isLoggedIn is false
+        // ),
       );
     });
   }
 }
 
 class HomePage extends StatefulWidget {
-  const HomePage({super.key, required this.title, required this.pb});
+  const HomePage({super.key, required this.title});
 
   // This widget is the home page of your application. It is stateful, meaning
   // that it has a State object (defined below) that contains fields that affect
@@ -105,7 +269,6 @@ class HomePage extends StatefulWidget {
   // always marked "final".
 
   final String title;
-  final PocketBase pb;
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -113,20 +276,27 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   final int _counter = 0;
+  late PocketBase pb;
 
-  void _showBottomSheet() {
+  @override
+  void initState() {
+    pb = Provider.of<PocketBase>(context, listen: false);
+  }
+
+  void _showBottomSheet(BuildContext context) {
     showFlexibleBottomSheet(
-      minHeight: 0,
-      initHeight: 0.3,
-      maxHeight: 0.4,
-      context: context,
-      builder: _buildBottomSheet,
-      anchors: [0, 0.3],
-      isSafeArea: true,
-      bottomSheetBorderRadius: const BorderRadius.all(
-        Radius.circular(20),
-      ),
-    );
+        minHeight: 0,
+        initHeight: 0.2,
+        maxHeight: 0.3,
+        useRootScaffold: true,
+        useRootNavigator: true,
+        context: context,
+        builder: _buildBottomSheet,
+        anchors: [0, 0.2],
+        isSafeArea: true,
+        bottomSheetBorderRadius: const BorderRadius.vertical(
+          top: Radius.circular(20),
+        ));
   }
 
   void _showCreateModal(BuildContext context) {
@@ -134,14 +304,26 @@ class _HomePageState extends State<HomePage> {
     nav.pop();
     showDialog(
       context: context,
-      builder: (context) => CreateDialog(pb: widget.pb),
+      builder: (context) => CreateDialog(pb: pb),
+      useSafeArea: false
     );
   }
 
+  void _showJoinModal(BuildContext context) {
+    var nav = Navigator.of(context);
+    nav.pop();
+    showDialog(
+      context: context,
+      builder: (context) => JoinDialog(pb: pb),
+    );
+  }
+
+  int currentPageIndex = 0;
+
   @override
   Widget build(BuildContext context) {
-    final challengeProvider = Provider.of<ChallengeProvider>(context);
-    PocketBase pb = widget.pb;
+    final challengeProvider =
+        Provider.of<ChallengeProvider>(context, listen: true);
     // This method is rerun every time setState is called, for instance as done
     // by the _incrementCounter method above.
     //
@@ -153,7 +335,7 @@ class _HomePageState extends State<HomePage> {
         // TRY THIS: Try changing the color here to a specific color (to
         // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
         // change color while the other colors stay the same.
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        //backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         // Here we take the value from the MyHomePage object that was created by
         // the App.build method, and use it to set our appbar title.
         title: Text(widget.title),
@@ -161,7 +343,7 @@ class _HomePageState extends State<HomePage> {
       body: Center(
         // Center is a layout widget. It takes a single child and positions it
         // in the middle of the parent.
-        child: Column(
+        child: ListView(
           // Column is also a layout widget. It takes a list of children and
           // arranges them vertically. By default, it sizes itself to fit its
           // children horizontally, and tries to be as tall as its parent.
@@ -175,30 +357,29 @@ class _HomePageState extends State<HomePage> {
           // TRY THIS: Invoke "debug painting" (choose the "Toggle Debug Paint"
           // action in the IDE, or press "p" in the console), to see the
           // wireframe for each widget.
-          mainAxisAlignment: MainAxisAlignment.center,
+
           children: <Widget>[
-            ...challengeProvider.challenges.map((value) {
-              return Padding(
-                padding: const EdgeInsets.symmetric(vertical: 5),
-                child: Challenge(challenge: value, pb: pb),
-              );
-            }),
-            const SizedBox(
-              height: 25,
-            ),
-            Text(
-                "Logged in as ${pb.authStore.model?.getDataValue("username")}"),
-            const SizedBox(height: 10,),
-            FilledButton.tonal(
-                onPressed: () {
-                  pb.authStore.clear();
-                },
-                child: const Text("Logout")),
+            if (challengeProvider.challenges.isNotEmpty)
+              ...challengeProvider.challenges.map((value) {
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 5),
+                  child: Challenge(challenge: value, pb: pb),
+                );
+              })
+            else
+              const Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [Text("No challenges...")],
+                ),
+              ),
+            const SizedBox(height: 25)
           ],
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: _showBottomSheet,
+        onPressed: () => _showBottomSheet(context),
         tooltip: 'Create or join',
         child: Icon(
           Symbols.add,
@@ -220,35 +401,43 @@ class _HomePageState extends State<HomePage> {
           padding: const EdgeInsets.symmetric(horizontal: 10),
           child: Column(
             children: [
-              GestureDetector(
-                onTap: () => _showCreateModal(context),
-                child: Card.filled(
-                  child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          vertical: 10, horizontal: 10),
-                      child: Padding(
+                Card.filled(
+                  clipBehavior: Clip.hardEdge,
+                  child: InkWell(
+                    onTap: (){
+                      _showCreateModal(context);
+                    },
+                    child: Container(
                         padding: const EdgeInsets.symmetric(
-                            vertical: 5, horizontal: 10),
-                        child: Row(
-                          children: [
-                            const Icon(
-                              Symbols.draw_rounded,
-                              size: 30,
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.only(left: 15),
-                              child: Text(
-                                "Create a challenge",
-                                style: theme.typography.englishLike.titleLarge,
+                            vertical: 10, horizontal: 10),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                              vertical: 5, horizontal: 10),
+                          child: Row(
+                            children: [
+                              const Icon(
+                                Symbols.draw_rounded,
+                                size: 30,
                               ),
-                            )
-                          ],
-                        ),
-                      )),
+                              Padding(
+                                padding: const EdgeInsets.only(left: 15),
+                                child: Text(
+                                  "Create a challenge",
+                                  style: theme.typography.englishLike.titleLarge,
+                                ),
+                              )
+                            ],
+                          ),
+                        )),
+                  )
                 ),
-              ),
               Card.filled(
-                child: Container(
+                clipBehavior: Clip.hardEdge,
+                child: InkWell(
+                  onTap: (){
+                    _showJoinModal(context);
+                  },
+                  child: Container(
                     padding: const EdgeInsets.symmetric(
                         vertical: 10, horizontal: 10),
                     child: Padding(
@@ -271,6 +460,7 @@ class _HomePageState extends State<HomePage> {
                       ),
                     )),
               ),
+              )
             ],
           ))
     ]);

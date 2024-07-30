@@ -3,12 +3,14 @@ import 'package:flutter/material.dart';
 class LoadingBox extends StatefulWidget {
   final double width;
   final double height;
+  final double radius;
 
   const LoadingBox({
-    super.key,
+    Key? key,
     required this.width,
     required this.height,
-  });
+    this.radius = 8,
+  }) : super(key: key);
 
   @override
   _FadingColorAnimationState createState() => _FadingColorAnimationState();
@@ -17,8 +19,8 @@ class LoadingBox extends StatefulWidget {
 class _FadingColorAnimationState extends State<LoadingBox>
     with SingleTickerProviderStateMixin {
   late AnimationController _animationController;
-  Animation<Color?>? _colorAnimation; // Use a nullable type
-  static const duration = Duration(seconds: 1);
+  late Animation<Color?> _colorAnimation;
+  static const duration = Duration(milliseconds: 700);
 
   @override
   void initState() {
@@ -32,19 +34,13 @@ class _FadingColorAnimationState extends State<LoadingBox>
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+    // Ensuring Theme.of(context) is accessed after initState
     var theme = Theme.of(context);
+    print(theme.colorScheme.surfaceContainerHighest == theme.colorScheme.surface);
     _colorAnimation = ColorTween(
-      begin: theme.colorScheme.surfaceContainer,
-      end: theme.colorScheme.surfaceContainerHighest,
+      begin: theme.colorScheme.surfaceContainerHighest,
+      end: theme.colorScheme.surfaceContainerHigh
     ).animate(_animationController);
-  }
-
-  @override
-  void didUpdateWidget(LoadingBox oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.width != widget.width || oldWidget.height != widget.height) {
-      _animationController.repeat(reverse: true); // Restart the animation on widget updates
-    }
   }
 
   @override
@@ -55,27 +51,15 @@ class _FadingColorAnimationState extends State<LoadingBox>
 
   @override
   Widget build(BuildContext context) {
-    // Ensure the animation is initialized before building the widget
-    if (_colorAnimation == null) {
-      return Container(
-        width: widget.width,
-        height: widget.height,
-        decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surfaceContainer,
-          borderRadius: BorderRadius.circular(8),
-        ),
-      );
-    }
-
     return AnimatedBuilder(
-      animation: _colorAnimation!,
+      animation: _colorAnimation,
       builder: (context, child) {
         return Container(
           width: widget.width,
           height: widget.height,
           decoration: BoxDecoration(
-            color: _colorAnimation!.value,
-            borderRadius: BorderRadius.circular(8),
+            color: _colorAnimation.value,
+            borderRadius: BorderRadius.circular(widget.radius),
           ),
         );
       },

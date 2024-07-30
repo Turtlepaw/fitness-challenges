@@ -1,5 +1,7 @@
+import 'package:fitness_challenges/utils/health.dart';
 import 'package:flutter/material.dart';
 import 'package:pocketbase/pocketbase.dart';
+import 'package:provider/provider.dart';
 
 class ChallengeProvider with ChangeNotifier {
   final PocketBase pb;
@@ -48,7 +50,11 @@ class ChallengeProvider with ChangeNotifier {
     }
   }
 
-  Future<void> reloadChallenges() async {
+  Future<void> reloadChallenges(BuildContext context) async {
+    _challenges = [];
     await fetchChallenges();
+    if(context.mounted){
+      Provider.of<HealthManager>(context, listen: false).fetchHealthData();
+    }
   }
 }

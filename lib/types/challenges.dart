@@ -31,3 +31,19 @@ extension DifficultyExtension on Difficulty {
     }
   }
 }
+
+enum Types { bingo, steps, sleep }
+extension TypesExtension on Types {
+  static Types of(int value) {
+    switch (value) {
+      case 0:
+        return Types.bingo;
+      case 1:
+        return Types.steps;
+      case 2:
+        return Types.sleep;
+      default:
+        throw ArgumentError('Invalid type value: $value');
+    }
+  }
+}

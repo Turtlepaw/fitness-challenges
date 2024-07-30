@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 
 class BottomSheetBuilder extends StatelessWidget {
@@ -10,6 +12,9 @@ class BottomSheetBuilder extends StatelessWidget {
   Widget build(BuildContext context) {
     return Material(
       child: Container(
+        decoration: BoxDecoration(
+          color:Theme.of(context).colorScheme.surfaceContainer
+        ),
         //padding: const EdgeInsets.only(top: 20),
         child: ListView(
           controller: scrollController,
@@ -20,7 +25,7 @@ class BottomSheetBuilder extends StatelessWidget {
                 child: DecoratedBox(
                   decoration: BoxDecoration(
                     color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.4),
-                    borderRadius: BorderRadius.circular(2.5),
+                    borderRadius: const BorderRadius.all(Radius.circular(2.5)),
                   ),
                   child: const SizedBox(
                     height: 5,
