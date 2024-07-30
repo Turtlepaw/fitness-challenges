@@ -22,7 +22,8 @@ jobs:
     # Name of the artifact to upload.
     # Optional. Default is 'artifact'
         name: APK
-        path: "build/app/outputs/apk/debug/*.apk"
+        #path: "build/app/outputs/apk/debug/*.apk"
+        path: "build/app/outputs/flutter-apk/app-debug.apk"
     #- name: Push APK to Releases
      # uses: ncipollo/release-action@v1
      # with:
