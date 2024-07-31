@@ -33,6 +33,9 @@ class HealthManager with ChangeNotifier {
       _steps = await Health().getTotalStepsInInterval(midnight, now);
 
       for(final challenge in challengeProvider.challenges){
+        // Check if challenge has ended
+        if(challenge.getBoolValue("ended") == true) continue;
+
         var type = TypesExtension.of(challenge.getIntValue("type"));
 
         if(type == Types.steps && steps != null){

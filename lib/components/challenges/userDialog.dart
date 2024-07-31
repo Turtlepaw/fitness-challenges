@@ -4,7 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
 import 'package:pocketbase/pocketbase.dart';
+import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
+
+import '../../manager.dart';
+import '../../utils/manager.dart';
 class UserDialog extends StatefulWidget {
   final PocketBase pb;
   final RecordModel challenge;
@@ -55,7 +59,24 @@ class _UserDialogState extends State<UserDialog> {
                           style: theme.textTheme.titleLarge,
                         ),
                       ),
-                      TextButton(onPressed: user.id == challenge.getDataValue("host") ? null : (){}, child: Text(user.id == challenge.getDataValue("host") ? "Host" :"Kick"))
+                      TextButton(onPressed: user.id == challenge.getDataValue("host") ? null : () async {
+                        final id = user.id;
+                        final data = Manager.fromChallenge(challenge)
+                            .removeUser(id)
+                            .toJson();
+                        await widget.pb
+                            .collection(Collection.challenges)
+                            .update(challenge.id,
+                            body: {"users-": id, "data": data});
+
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Kicked ${user.getStringValue("username")}'),
+                            ),
+                          );
+                        }
+                      }, child: Text(user.id == challenge.getDataValue("host") ? "Host" :"Kick"))
                     ],
                   ))
                 ],

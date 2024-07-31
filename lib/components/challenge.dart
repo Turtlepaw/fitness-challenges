@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 import 'package:fitness_challenges/components/challenges/codeDialog.dart';
 import 'package:fitness_challenges/components/challenges/confirmDialog.dart';
 import 'package:fitness_challenges/components/challenges/userDialog.dart';
@@ -11,7 +9,6 @@ import 'package:fitness_challenges/utils/steps/data.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_advanced_avatar/flutter_advanced_avatar.dart';
 import 'package:intl/intl.dart';
-import 'package:material_symbols_icons/symbols.dart';
 import 'package:pocketbase/pocketbase.dart';
 import 'package:provider/provider.dart';
 
@@ -86,6 +83,15 @@ class _ChallengeState extends State<Challenge> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisAlignment: MainAxisAlignment.start,
                   children: [
+                    if (_challenge.getBoolValue("ended"))
+                      Row(
+                        children: [
+                          Text("Challenge has ended",
+                              style: theme.textTheme.labelLarge)
+                        ],
+                      ),
+                    if (_challenge.getBoolValue("ended"))
+                      const SizedBox(height: 8),
                     Row(
                       children: [
                         Icon(challenges
@@ -136,7 +142,14 @@ class _ChallengeState extends State<Challenge> {
       builder: (context) {
         return ChallengeDialog(challenge: _challenge, pb: widget.pb);
       },
-    );
+    ).then((_) async {
+      final data = await widget.pb
+          .collection(Collection.challenges)
+          .getOne(_challenge.id, expand: "users");
+      setState(() {
+        _challenge = data;
+      });
+    });
   }
 }
 
@@ -153,6 +166,7 @@ class ChallengeDialog extends StatefulWidget {
 class _ChallengeDialogState extends State<ChallengeDialog> {
   final formatter = NumberFormat('#,###');
   late RecordModel _challenge;
+  bool _isDialogOpen = false;
 
   @override
   void initState() {
@@ -164,10 +178,41 @@ class _ChallengeDialogState extends State<ChallengeDialog> {
   void subscribe() {
     widget.pb.collection("challenges").subscribe(widget.challenge.id,
         (newValue) {
-      setState(() {
-        _challenge = newValue.record!;
-      });
+      print("Got update (dialog)");
+      if (!_isDialogOpen) {
+        setState(() {
+          _challenge = newValue.record!;
+        });
+      }
     }, expand: "users");
+  }
+
+  @override
+  void dispose() {
+    widget.pb
+        .collection(Collection.challenges)
+        .unsubscribe(widget.challenge.id);
+    super.dispose();
+  }
+
+  void _openDialog(Widget dialog) {
+    setState(() {
+      _isDialogOpen = true;
+    });
+
+    showDialog(
+      context: context,
+      builder: (context) => dialog,
+    ).then((_) async {
+      //TODO: move to a provider based update system
+      final data = await widget.pb
+          .collection(Collection.challenges)
+          .getOne(_challenge.id, expand: "users");
+      setState(() {
+        _isDialogOpen = false;
+        _challenge = data;
+      });
+    });
   }
 
   @override
@@ -177,7 +222,7 @@ class _ChallengeDialogState extends State<ChallengeDialog> {
       child: Scaffold(
         appBar: AppBar(
           leading: IconButton(
-            icon: const Icon(Symbols.close_rounded),
+            icon: const Icon(Icons.close),
             onPressed: () {
               Navigator.of(context).pop();
             },
@@ -188,36 +233,32 @@ class _ChallengeDialogState extends State<ChallengeDialog> {
               child: MenuAnchor(
                 menuChildren: <Widget>[
                   if (_challenge.getDataValue("host") ==
-                      widget.pb.authStore.model?.id) MenuItemButton(
-                    leadingIcon: const Icon(Symbols.passkey_rounded),
-                    child:
-                        Text("Invite Users", style: theme.textTheme.bodyLarge),
-                    onPressed: () => showDialog(
-                      context: context,
-                      builder: (context) => CodeDialog(
+                      widget.pb.authStore.model?.id)
+                    MenuItemButton(
+                      leadingIcon: const Icon(Icons.person_add),
+                      child: Text("Invite Users",
+                          style: theme.textTheme.bodyLarge),
+                      onPressed: () => _openDialog(CodeDialog(
                         pb: widget.pb,
                         challenge: _challenge,
-                      ),
+                      )),
                     ),
-                  ),
                   if (_challenge.getDataValue("host") ==
-                      widget.pb.authStore.model?.id) MenuItemButton(
-                    leadingIcon: const Icon(Symbols.group_rounded),
-                    child:
-                    Text("Manage Users", style: theme.textTheme.bodyLarge),
-                    onPressed: () => showDialog(
-                      context: context,
-                      builder: (context) => UserDialog(
+                      widget.pb.authStore.model?.id)
+                    MenuItemButton(
+                      leadingIcon: const Icon(Icons.group),
+                      child: Text("Manage Users",
+                          style: theme.textTheme.bodyLarge),
+                      onPressed: () => _openDialog(UserDialog(
                         pb: widget.pb,
                         challenge: _challenge,
-                      ),
+                      )),
                     ),
-                  ),
                   if (_challenge.getDataValue("host") ==
                       widget.pb.authStore.model?.id)
                     MenuItemButton(
                       leadingIcon: Icon(
-                        Symbols.delete_rounded,
+                        Icons.delete,
                         color: theme.colorScheme.error,
                       ),
                       child: Text(
@@ -225,39 +266,36 @@ class _ChallengeDialogState extends State<ChallengeDialog> {
                         style: theme.textTheme.bodyLarge
                             ?.copyWith(color: theme.colorScheme.error),
                       ),
-                      onPressed: () => showDialog(
-                        context: context,
-                        builder: (context) => ConfirmDialog(
-                          isDestructive: true,
-                          icon: Symbols.delete_rounded,
-                          title: "Delete Challenge",
-                          description:
-                              "The challenge will be irreversibly deleted.",
-                          onConfirm: () async {
-                            await widget.pb
-                                .collection(Collection.challenges)
-                                .delete(_challenge.id);
-                            if (context.mounted) {
-                              Provider.of<ChallengeProvider>(context,
-                                      listen: false)
-                                  .reloadChallenges(context);
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('Challenge deleted'),
-                                ),
-                              );
-                              final nav = Navigator.of(context);
-                              nav.pop();
-                              nav.pop();
-                            }
-                          },
-                        ),
-                      ),
+                      onPressed: () => _openDialog(ConfirmDialog(
+                        isDestructive: true,
+                        icon: Icons.delete,
+                        title: "Delete Challenge",
+                        description:
+                            "The challenge will be irreversibly deleted.",
+                        onConfirm: () async {
+                          await widget.pb
+                              .collection(Collection.challenges)
+                              .delete(_challenge.id);
+                          if (context.mounted) {
+                            Provider.of<ChallengeProvider>(context,
+                                    listen: false)
+                                .reloadChallenges(context);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Challenge deleted'),
+                              ),
+                            );
+                            final nav = Navigator.of(context);
+                            nav.pop();
+                            nav.pop();
+                          }
+                        },
+                      )),
                     )
                   else
                     MenuItemButton(
                       leadingIcon: Icon(
-                        Symbols.logout_rounded,
+                        Icons.logout,
                         color: theme.colorScheme.error,
                       ),
                       child: Text(
@@ -265,40 +303,37 @@ class _ChallengeDialogState extends State<ChallengeDialog> {
                         style: theme.textTheme.bodyLarge
                             ?.copyWith(color: theme.colorScheme.error),
                       ),
-                      onPressed: () => showDialog(
-                        context: context,
-                        builder: (context) => ConfirmDialog(
-                          isDestructive: true,
-                          icon: Symbols.logout_rounded,
-                          title: "Leave Challenge",
-                          description:
-                              "You won't be able to rejoin without an invite code.",
-                          onConfirm: () async {
-                            final id = widget.pb.authStore.model?.id;
-                            final data = Manager.fromChallenge(_challenge)
-                                .removeUser(id)
-                                .toJson();
-                            await widget.pb
-                                .collection(Collection.challenges)
-                                .update(_challenge.id,
-                                    body: {"users-": id, "data": data});
+                      onPressed: () => _openDialog(ConfirmDialog(
+                        isDestructive: true,
+                        icon: Icons.logout,
+                        title: "Leave Challenge",
+                        description:
+                            "You won't be able to rejoin without an invite code.",
+                        onConfirm: () async {
+                          final id = widget.pb.authStore.model?.id;
+                          final data = Manager.fromChallenge(_challenge)
+                              .removeUser(id)
+                              .toJson();
+                          await widget.pb
+                              .collection(Collection.challenges)
+                              .update(_challenge.id,
+                                  body: {"users-": id, "data": data});
 
-                            if (context.mounted) {
-                              Provider.of<ChallengeProvider>(context,
-                                      listen: false)
-                                  .reloadChallenges(context);
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('Left challenge'),
-                                ),
-                              );
-                              final nav = Navigator.of(context);
-                              nav.pop();
-                              nav.pop();
-                            }
-                          },
-                        ),
-                      ),
+                          if (context.mounted) {
+                            Provider.of<ChallengeProvider>(context,
+                                    listen: false)
+                                .reloadChallenges(context);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Left challenge'),
+                              ),
+                            );
+                            final nav = Navigator.of(context);
+                            nav.pop();
+                            nav.pop();
+                          }
+                        },
+                      )),
                     )
                 ],
                 builder: (BuildContext context, MenuController controller,
@@ -311,7 +346,7 @@ class _ChallengeDialogState extends State<ChallengeDialog> {
                         controller.open();
                       }
                     },
-                    icon: const Icon(Symbols.more_vert_rounded),
+                    icon: const Icon(Icons.more_vert),
                   );
                 },
               ),
@@ -325,6 +360,23 @@ class _ChallengeDialogState extends State<ChallengeDialog> {
           _ => const Text("unknown challenge type")
         },
       ),
+    );
+  }
+
+  Widget _buildDetails(BuildContext context) {
+    final format = DateFormat('MMMM dd');
+    return Column(
+      children: [
+        const SizedBox(
+          height: 15,
+        ),
+        if (_challenge.getBoolValue("ended"))
+          Text(
+            "This challenge has ended and will be deleted ${format.format(DateTime.parse(_challenge.getDataValue("deleteDate")))}",
+            style: Theme.of(context).textTheme.titleMedium,
+            textAlign: TextAlign.center,
+          )
+      ],
     );
   }
 
@@ -351,8 +403,9 @@ class _ChallengeDialogState extends State<ChallengeDialog> {
         return Container(
           padding: const EdgeInsets.all(10.0),
           child: ListView.builder(
-            itemCount: userTotals.length,
+            itemCount: userTotals.length + 1,
             itemBuilder: (context, index) {
+              if (index == (userTotals.length)) return _buildDetails(context);
               var data = userTotals[index];
               var user = _challenge.expand["users"]!
                   .firstWhere((u) => u.id == data['userId']);
@@ -421,9 +474,12 @@ class _ChallengeDialogState extends State<ChallengeDialog> {
     var theme = Theme.of(context);
     Map<String, dynamic> jsonMap = _challenge.getDataValue("data");
     final manager = BingoDataManager.fromJson(jsonMap);
-    final bingoActivities = manager.usersBingoData.firstWhere((value) {
-      return value.userId == widget.pb.authStore.model.id;
-    });
+
+    // Provide a default UserBingoData if not found
+    final bingoActivities = manager.usersBingoData.firstWhere(
+      (value) => value.userId == widget.pb.authStore.model?.id,
+      orElse: () => UserBingoData(userId: "", activities: []),
+    );
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -431,54 +487,68 @@ class _ChallengeDialogState extends State<ChallengeDialog> {
 
         return Container(
           padding: const EdgeInsets.all(10.0),
-          child: GridView.builder(
-            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: crossAxisCount > 1 ? crossAxisCount : 1,
-              crossAxisSpacing: 5.0,
-              mainAxisSpacing: 5.0,
-            ),
-            itemCount: bingoActivities.activities.length,
-            itemBuilder: (context, index) {
-              return Card(
-                  clipBehavior: Clip.hardEdge,
-                  color: theme.colorScheme.primary,
-                  child: InkWell(
-                    splashColor: theme.colorScheme.onPrimary.withAlpha(30),
-                    onTap: bingoActivities.activities[index].type !=
-                            BingoDataType.filled
-                        ? () {
-                            final data = manager.updateUserBingoActivity(
-                                widget.pb.authStore.model.id,
+          child: ListView(
+            children: [
+              GridView.builder(
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: crossAxisCount > 1 ? crossAxisCount : 1,
+                  crossAxisSpacing: 5.0,
+                  mainAxisSpacing: 5.0,
+                ),
+                itemCount: bingoActivities.activities.length,
+                shrinkWrap: true,
+                // Prevent unbounded height error
+                //physics: const NeverScrollableScrollPhysics(), // Disable GridView scrolling
+                itemBuilder: (context, index) {
+                  final activity = bingoActivities.activities[index];
+
+                  return Card(
+                    clipBehavior: Clip.hardEdge,
+                    color: theme.colorScheme.primary,
+                    child: InkWell(
+                      splashColor: theme.colorScheme.onPrimary.withAlpha(30),
+                      onTap: activity.type != BingoDataType.filled
+                          ? () {
+                              final data = manager.updateUserBingoActivity(
+                                widget.pb.authStore.model?.id,
                                 index,
-                                BingoDataType.filled);
-                            if (data != null) {
-                              widget.pb.collection("challenges").update(
-                                  _challenge.id,
-                                  body: {"data": jsonEncode(data.toJson())});
+                                BingoDataType.filled,
+                              );
+                              if (data != null) {
+                                widget.pb.collection("challenges").update(
+                                    _challenge.id,
+                                    body: {"data": data.toJson()});
+                              } else {
+                                debugPrint(
+                                    "Manager#updateUserBingoActivity returned null");
+                              }
                             }
-                          }
-                        : null,
-                    child: Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            bingoActivities.activities[index].type.asIcon(),
-                            size: 40,
-                            color: theme.colorScheme.onPrimary,
-                          ),
-                          const SizedBox(height: 10),
-                          Text(
-                            bingoActivities.activities[index].amount.toString(),
-                            textAlign: TextAlign.center,
-                            style: theme.textTheme.labelLarge
-                                ?.copyWith(color: theme.colorScheme.onPrimary),
-                          ),
-                        ],
+                          : null,
+                      child: Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              activity.type.asIcon(),
+                              size: 40,
+                              color: theme.colorScheme.onPrimary,
+                            ),
+                            const SizedBox(height: 10),
+                            Text(
+                              activity.amount.toString(),
+                              textAlign: TextAlign.center,
+                              style: theme.textTheme.labelLarge?.copyWith(
+                                  color: theme.colorScheme.onPrimary),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                  ));
-            },
+                  );
+                },
+              ),
+              _buildDetails(context),
+            ],
           ),
         );
       },
