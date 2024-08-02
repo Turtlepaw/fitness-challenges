@@ -164,12 +164,13 @@ class _CreateDialogState extends State<CreateDialog> {
         "type": form.control(type).value,
         "users": [widget.pb.authStore.model.id],
         "endDate":
-            autoEndValue == true ? "auto" : form.control(date).value.toString(),
+            autoEndValue == true ? null : pbDateFormat.format(form.control(date).value),
         "difficulty": form.control(difficulty).value,
         "host": widget.pb.authStore.model.id,
         "winner": null,
         "ended": false,
-        "data": jsonEncode(challenge)
+        "data": jsonEncode(challenge),
+        "autoEnd": autoEndValue
       });
 
       if (mounted) {
