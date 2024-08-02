@@ -8,7 +8,9 @@ import 'package:fitness_challenges/utils/manager.dart';
 import 'package:fitness_challenges/utils/steps/data.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_advanced_avatar/flutter_advanced_avatar.dart';
+import 'package:flutter_emoji_feedback/flutter_emoji_feedback.dart';
 import 'package:intl/intl.dart';
+import 'package:material_symbols_icons/material_symbols_icons.dart';
 import 'package:pocketbase/pocketbase.dart';
 import 'package:provider/provider.dart';
 
@@ -167,6 +169,7 @@ class _ChallengeDialogState extends State<ChallengeDialog> {
   final formatter = NumberFormat('#,###');
   late RecordModel _challenge;
   bool _isDialogOpen = false;
+  bool _hasSubmittedFeedback = false;
 
   @override
   void initState() {
@@ -365,16 +368,94 @@ class _ChallengeDialogState extends State<ChallengeDialog> {
 
   Widget _buildDetails(BuildContext context) {
     final format = DateFormat('MMMM dd');
+    final theme = Theme.of(context);
     return Column(
       children: [
         const SizedBox(
           height: 15,
         ),
         if (_challenge.getBoolValue("ended"))
-          Text(
-            "This challenge has ended and will be deleted ${format.format(DateTime.parse(_challenge.getDataValue("deleteDate")))}",
-            style: Theme.of(context).textTheme.titleMedium,
-            textAlign: TextAlign.center,
+          Column(
+            children: [
+              Text(
+                "This challenge has ended and will be deleted ${format.format(DateTime.parse(_challenge.getDataValue("deleteDate")))}",
+                style: Theme.of(context).textTheme.titleMedium,
+                textAlign: TextAlign.center,
+              ),
+              Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 15),
+                  child: Card.outlined(
+                    child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 25, vertical: 15),
+                        child: Column(children: [
+                          AnimatedSwitcher(
+                              duration: const Duration(milliseconds: 500),
+                              switchInCurve: Curves.easeOut,
+                              child: _hasSubmittedFeedback
+                                  ? Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                          vertical: 15),
+                                      child: Column(
+                                        children: [
+                                          Text(
+                                            "Thanks for submitting feedback!",
+                                            style: theme.textTheme.titleLarge,
+                                          ),
+                                          Text(
+                                            "Your feedback helps improve the app!",
+                                            style: theme.textTheme.bodyLarge,
+                                          )
+                                        ],
+                                      ),
+                                    )
+                                  : Column(
+                                      children: [
+                                        Text(
+                                          "How was your experience?",
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .titleMedium,
+                                          textAlign: TextAlign.center,
+                                        ),
+                                        Padding(
+                                          padding: const EdgeInsets.symmetric(
+                                              horizontal: 15, vertical: 10),
+                                          child: EmojiFeedback(
+                                            animDuration: const Duration(
+                                                milliseconds: 300),
+                                            curve: Curves.easeOutBack,
+                                            inactiveElementScale: .7,
+                                            onChanged: (value) async {
+                                              await widget.pb.collection("feedback").create(
+                                                body: {
+                                                  "rating": switch(value){
+                                                    1 => "Terrible",
+                                                  2 => "Bad",
+                                                  3 => "Good",
+                                                  4 => "Very Good",
+                                                  5 => "Awesome",
+                                                    _ => "Unknown"
+                                                  },
+                                                  "user": widget.pb.authStore.model.id,
+                                                  "challenge": _challenge.id,
+                                                  "ratingId": value
+                                                }
+                                              );
+
+                                              await Future.delayed(
+                                                  Duration(milliseconds: 300));
+                                              setState(() {
+                                                _hasSubmittedFeedback = true;
+                                              });
+                                            },
+                                          ),
+                                        )
+                                      ],
+                                    )),
+                        ])),
+                  ))
+            ],
           )
       ],
     );
@@ -419,6 +500,14 @@ class _ChallengeDialogState extends State<ChallengeDialog> {
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
+                      if(_challenge.getBoolValue("ended") && index == 0)
+                        Row(
+                          children: [
+                            const SizedBox(width: 5),
+                            Icon(Symbols.trophy_rounded, color: theme.colorScheme.onPrimary, size: 26,),
+                            const SizedBox(width: 10),
+                          ],
+                        ),
                       // Position Indicator
                       Text(
                         "${index + 1}.",

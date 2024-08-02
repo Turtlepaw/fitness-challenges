@@ -1,4 +1,5 @@
 import 'package:fitness_challenges/constants.dart';
+import 'package:fitness_challenges/routes/profile.dart';
 import 'package:fitness_challenges/utils/health.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -9,6 +10,7 @@ import 'package:material_symbols_icons/material_symbols_icons.dart';
 import 'package:pocketbase/pocketbase.dart';
 import 'package:provider/provider.dart';
 
+import '../components/challenges/confirmDialog.dart';
 import '../components/loader.dart';
 
 class SettingsPage extends StatefulWidget {
@@ -22,10 +24,34 @@ class _SettingsPageState extends State<SettingsPage> {
   bool _isLoading = false;
   bool _isAvailable = true;
   bool _isHealthConnected = false;
+  late String username;
+  late PocketBase pb;
 
   @override
   void initState() {
+    pb = Provider.of<PocketBase>(context, listen: false);
+
     _checkHealthPermissions();
+    username = (pb.authStore.model as RecordModel).getStringValue("username", "unknown");
+
+    //subscribe();
+  }
+
+  void subscribe(){
+
+    pb.collection("users").subscribe(pb.authStore.model.id, (value) {
+      if(value.record != null){
+        setState(() {
+          username = value.record!.getStringValue("username");
+        });
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    pb.collection("users").unsubscribe();
   }
 
   Future<void> _connectHealthPlatform() async {
@@ -34,9 +60,10 @@ class _SettingsPageState extends State<SettingsPage> {
 
     final result = await _checkHealthPermissions();
 
-    if(result == true){
-      if(mounted){
-        Provider.of<HealthManager>(context, listen: false).fetchHealthData(context: context);
+    if (result == true) {
+      if (mounted) {
+        Provider.of<HealthManager>(context, listen: false)
+            .fetchHealthData(context: context);
       }
     }
   }
@@ -46,7 +73,7 @@ class _SettingsPageState extends State<SettingsPage> {
       _isLoading = true;
     });
 
-    if(mounted){
+    if (mounted) {
       Provider.of<HealthManager>(context, listen: false).fetchHealthData();
     }
 
@@ -117,18 +144,23 @@ class _SettingsPageState extends State<SettingsPage> {
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       Text(
-                        "Logged in as ${pb.authStore.model?.getDataValue("username")}",
+                        "Logged in as $username",
                         style: theme.textTheme.titleMedium,
                         textAlign: TextAlign.center,
                       ),
                       const SizedBox(height: 5),
-                      FilledButton.tonal(
-                        onPressed: () {
-                          pb.authStore.clear();
-                          context.go("/login");
-                        },
-                        child: const Text("Logout"),
-                      ),
+                      Row(
+                        children: [
+                          FilledButton.tonal(
+                            onPressed: _requestLogoutConfirmation,
+                            child: const Text("Logout"),
+                          ),
+                          const SizedBox(width: 4),
+                          IconButton.filledTonal(
+                              onPressed: _openProfileEditor,
+                              icon: Icon(Symbols.edit_rounded, color: theme.colorScheme.onPrimaryContainer,))
+                        ],
+                      )
                     ],
                   ),
                 ],
@@ -144,27 +176,24 @@ class _SettingsPageState extends State<SettingsPage> {
               },
               child: _isLoading
                   ? LayoutBuilder(builder: (context, constraints) {
-                final width = getWidth(constraints);
-                return SizedBox(
-                  width: width,
-                  child: Column(
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 14, vertical: 6),
-                        child: LoadingBox(
-                          height: 120,
-                          width: MediaQuery
-                              .of(context)
-                              .size
-                              .width,
-                          radius: 12,
+                      final width = getWidth(constraints);
+                      return SizedBox(
+                        width: width,
+                        child: Column(
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 14, vertical: 6),
+                              child: LoadingBox(
+                                height: 120,
+                                width: MediaQuery.of(context).size.width,
+                                radius: 12,
+                              ),
+                            )
+                          ],
                         ),
-                      )
-                    ],
-                  ),
-                );
-              })
+                      );
+                    })
                   : buildCard([
                       Text(
                         _isHealthConnected
@@ -173,19 +202,24 @@ class _SettingsPageState extends State<SettingsPage> {
                         style: theme.textTheme.titleLarge,
                         textAlign: TextAlign.center,
                       ),
-                const SizedBox(height: 5),
+                      const SizedBox(height: 5),
                       if (!_isHealthConnected)
                         const Text(
                           "Connect Health Connect to create and join challenges",
                           textAlign: TextAlign.center,
-                        ) else if(health.steps != null) Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Symbols.steps_rounded, color: theme.colorScheme.primary,),
-                          const SizedBox(width: 8),
-                          Text("${health.steps} steps")
-                        ],
-                      ),
+                        )
+                      else if (health.steps != null)
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Symbols.steps_rounded,
+                              color: theme.colorScheme.primary,
+                            ),
+                            const SizedBox(width: 8),
+                            Text("${health.steps} steps")
+                          ],
+                        ),
                       const SizedBox(height: 10),
                       FilledButton.tonal(
                         onPressed: _isAvailable
@@ -205,7 +239,7 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
-  double getWidth(BoxConstraints constraints){
+  double getWidth(BoxConstraints constraints) {
     if (constraints.maxWidth < 500) {
       return constraints.maxWidth - 10; // Fill the width on phones with margin
     } else {
@@ -234,5 +268,35 @@ class _SettingsPageState extends State<SettingsPage> {
         ),
       ));
     });
+  }
+
+  void _openProfileEditor() {
+    final pb = Provider.of<PocketBase>(context, listen: false);
+    showDialog(
+        context: context,
+        builder: (context) => ProfileDialog(pb: pb),
+        useSafeArea: false).then((_) => {
+          setState(() {
+    username = (pb.authStore.model as RecordModel).getStringValue("username");
+          })
+    });
+  }
+
+  void _requestLogoutConfirmation() {
+    final pb = Provider.of<PocketBase>(context, listen: false);
+    showDialog(
+        context: context,
+        builder: (context) => ConfirmDialog(
+          isDestructive: true,
+          icon: Icons.logout,
+          title: "Logout",
+          description:
+          "Are you sure you want to logout?",
+          onConfirm: () async {
+            pb.authStore.clear();
+            context.go("/login");
+          },
+        ),
+        useSafeArea: false);
   }
 }

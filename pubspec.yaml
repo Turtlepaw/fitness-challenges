@@ -63,6 +63,7 @@ dependencies:
   collection: ^1.18.0
   health: ^10.2.0
   share_plus: ^9.0.0
+  flutter_emoji_feedback: ^0.3.2
 
 dev_dependencies:
   flutter_test:
