@@ -663,8 +663,7 @@ class _ChallengeDialogState extends State<ChallengeDialog> {
                         const SizedBox(width: 15),
                         Text(
                           trimString(
-                              user.getStringValue("username") +
-                                  "abcdefghijklmnop",
+                              user.getStringValue("username"),
                               maxUsernameLength),
                           style: theme.textTheme.titleLarge
                               ?.copyWith(color: theme.colorScheme.onPrimary),
