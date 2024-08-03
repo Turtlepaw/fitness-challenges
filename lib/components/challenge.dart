@@ -1,3 +1,7 @@
+import 'dart:math';
+
+import 'package:collection/collection.dart';
+import 'package:confetti/confetti.dart';
 import 'package:fitness_challenges/components/challenges/codeDialog.dart';
 import 'package:fitness_challenges/components/challenges/confirmDialog.dart';
 import 'package:fitness_challenges/components/challenges/userDialog.dart';
@@ -170,10 +174,12 @@ class _ChallengeDialogState extends State<ChallengeDialog> {
   late RecordModel _challenge;
   bool _isDialogOpen = false;
   bool _hasSubmittedFeedback = false;
+  late ConfettiController _controller;
 
   @override
   void initState() {
     super.initState();
+    _controller = ConfettiController(duration: const Duration(seconds: 5));
     _challenge = widget.challenge;
     subscribe();
   }
@@ -192,6 +198,7 @@ class _ChallengeDialogState extends State<ChallengeDialog> {
 
   @override
   void dispose() {
+    _controller.dispose();
     widget.pb
         .collection(Collection.challenges)
         .unsubscribe(widget.challenge.id);
@@ -366,7 +373,117 @@ class _ChallengeDialogState extends State<ChallengeDialog> {
     );
   }
 
-  Widget _buildDetails(BuildContext context) {
+  String trimString(String input, int maxCharacters) {
+    if (input.length <= maxCharacters) {
+      return input;
+    } else {
+      return '${input.substring(0, maxCharacters - 3)}...';
+    }
+  }
+
+  Path drawStar(Size size) {
+    // Method to convert degree to radians
+    double degToRad(double deg) => deg * (pi / 180.0);
+
+    const numberOfPoints = 5;
+    final halfWidth = size.width / 2;
+    final externalRadius = halfWidth;
+    final internalRadius = halfWidth / 2.5;
+    final degreesPerStep = degToRad(360 / numberOfPoints);
+    final halfDegreesPerStep = degreesPerStep / 2;
+    final path = Path();
+    final fullAngle = degToRad(360);
+    path.moveTo(size.width, halfWidth);
+
+    for (double step = 0; step < fullAngle; step += degreesPerStep) {
+      path.lineTo(halfWidth + externalRadius * cos(step),
+          halfWidth + externalRadius * sin(step));
+      path.lineTo(halfWidth + internalRadius * cos(step + halfDegreesPerStep),
+          halfWidth + internalRadius * sin(step + halfDegreesPerStep));
+    }
+    path.close();
+    return path;
+  }
+
+  Widget _buildTopDetails(BuildContext context, String? winnerId) {
+    _controller.play();
+    final theme = Theme.of(context);
+    final user =
+        _challenge?.expand["users"]?.firstWhere((u) => u.id == winnerId);
+
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        if (_challenge.getBoolValue("ended") && user != null)
+          Center(
+              child: Align(
+            alignment: Alignment.center,
+            child: Stack(
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.emoji_events,
+                      // Substitute for Symbols.trophy_rounded
+                      color: theme.colorScheme.onSurface,
+                      size: 26,
+                    ),
+                    const SizedBox(width: 15),
+                    Container(
+                      decoration: BoxDecoration(
+                          color: theme.colorScheme.surfaceContainerHigh,
+                          borderRadius: BorderRadius.circular(6)),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 1),
+                      child: Text(
+                        user.getStringValue("username", "Unknown"),
+                        // Substitute for user.getStringValue("username")
+                        style: theme.textTheme.headlineSmall,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      "is the winner",
+                      style: Theme.of(context).textTheme.headlineSmall,
+                    )
+                  ],
+                ),
+                Positioned.fill(
+                  child: Align(
+                    alignment: Alignment.center,
+                    child: ConfettiWidget(
+                      blastDirectionality: BlastDirectionality.directional,
+                      blastDirection: pi / 2,
+                      gravity: 0.7,
+                      colors: [
+                        // Colors.green,
+                        // Colors.blue,
+                        // Colors.pink,
+                        // Colors.orange,
+                        // Colors.purple
+                        theme.colorScheme.primary,
+                        theme.colorScheme.secondary,
+                        theme.colorScheme.inversePrimary
+                      ],
+                      createParticlePath: drawStar,
+                      confettiController: _controller,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          )),
+        const SizedBox(
+          height: 15,
+        )
+      ],
+    );
+  }
+
+  Widget _buildBottomDetails(BuildContext context) {
     final format = DateFormat('MMMM dd');
     final theme = Theme.of(context);
     return Column(
@@ -422,26 +539,36 @@ class _ChallengeDialogState extends State<ChallengeDialog> {
                                           padding: const EdgeInsets.symmetric(
                                               horizontal: 15, vertical: 10),
                                           child: EmojiFeedback(
+                                            enableFeedback: true,
                                             animDuration: const Duration(
                                                 milliseconds: 300),
+                                            //initialRating: 0,
+                                            customLabels: const [
+                                              "Terrible",
+                                              "Bad",
+                                              "Okay",
+                                              "Good",
+                                              "Great"
+                                            ],
                                             curve: Curves.easeOutBack,
                                             inactiveElementScale: .7,
                                             onChanged: (value) async {
-                                              await widget.pb.collection("feedback").create(
-                                                body: {
-                                                  "rating": switch(value){
-                                                    1 => "Terrible",
+                                              await widget.pb
+                                                  .collection("feedback")
+                                                  .create(body: {
+                                                "rating": switch (value) {
+                                                  1 => "Terrible",
                                                   2 => "Bad",
-                                                  3 => "Good",
-                                                  4 => "Very Good",
-                                                  5 => "Awesome",
-                                                    _ => "Unknown"
-                                                  },
-                                                  "user": widget.pb.authStore.model.id,
-                                                  "challenge": _challenge.id,
-                                                  "ratingId": value
-                                                }
-                                              );
+                                                  3 => "Okay",
+                                                  4 => "Good",
+                                                  5 => "Great",
+                                                  _ => "Unknown"
+                                                },
+                                                "user": widget
+                                                    .pb.authStore.model.id,
+                                                "challenge": _challenge.id,
+                                                "ratingId": value
+                                              });
 
                                               await Future.delayed(
                                                   Duration(milliseconds: 300));
@@ -450,7 +577,7 @@ class _ChallengeDialogState extends State<ChallengeDialog> {
                                               });
                                             },
                                           ),
-                                        )
+                                        ),
                                       ],
                                     )),
                         ])),
@@ -481,78 +608,87 @@ class _ChallengeDialogState extends State<ChallengeDialog> {
 
     return LayoutBuilder(
       builder: (context, constraints) {
+        final maxUsernameLength = (constraints.maxWidth / 30).floor();
+
         return Container(
           padding: const EdgeInsets.all(10.0),
-          child: ListView.builder(
-            itemCount: userTotals.length + 1,
-            itemBuilder: (context, index) {
-              if (index == (userTotals.length)) return _buildDetails(context);
-              var data = userTotals[index];
-              var user = _challenge.expand["users"]!
-                  .firstWhere((u) => u.id == data['userId']);
+          child: ListView(
+            children: [
+              _buildTopDetails(context, userTotals.first['userId'] as String),
+              ...userTotals.mapIndexed((index, data) {
+                var user = _challenge.expand["users"]!
+                    .firstWhere((u) => u.id == data['userId']);
 
-              return Card(
-                elevation: 4.0, // Add elevation for better visual depth
-                color: theme.colorScheme.primary,
-                child: Padding(
-                  padding:
-                      const EdgeInsets.symmetric(vertical: 15, horizontal: 15),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      if(_challenge.getBoolValue("ended") && index == 0)
-                        Row(
-                          children: [
-                            const SizedBox(width: 5),
-                            Icon(Symbols.trophy_rounded, color: theme.colorScheme.onPrimary, size: 26,),
-                            const SizedBox(width: 10),
-                          ],
+                return Card(
+                  elevation: 4.0, // Add elevation for better visual depth
+                  color: theme.colorScheme.primary,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                        vertical: 15, horizontal: 15),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        if (_challenge.getBoolValue("ended") && index == 0)
+                          Row(
+                            children: [
+                              const SizedBox(width: 5),
+                              Icon(
+                                Symbols.trophy_rounded,
+                                color: theme.colorScheme.onPrimary,
+                                size: 26,
+                              ),
+                              const SizedBox(width: 10),
+                            ],
+                          ),
+                        // Position Indicator
+                        Text(
+                          "${index + 1}.",
+                          style: theme.textTheme.titleLarge?.copyWith(
+                              color: theme.colorScheme.onPrimary,
+                              fontWeight: FontWeight.bold),
                         ),
-                      // Position Indicator
-                      Text(
-                        "${index + 1}.",
-                        style: theme.textTheme.titleLarge?.copyWith(
+                        const SizedBox(width: 20),
+                        AdvancedAvatar(
+                          name: user.getStringValue("username"),
+                          style: theme.textTheme.titleMedium
+                              ?.copyWith(color: theme.colorScheme.primary),
+                          decoration: BoxDecoration(
                             color: theme.colorScheme.onPrimary,
-                            fontWeight: FontWeight.bold),
-                      ),
-                      const SizedBox(width: 20),
-                      AdvancedAvatar(
-                        name: user.getStringValue("username"),
-                        style: theme.textTheme.titleMedium
-                            ?.copyWith(color: theme.colorScheme.primary),
-                        decoration: BoxDecoration(
-                          color: theme.colorScheme.onPrimary,
-                          borderRadius: BorderRadius.circular(50),
+                            borderRadius: BorderRadius.circular(50),
+                          ),
+                          size: 35,
                         ),
-                        size: 35,
-                      ),
-                      const SizedBox(width: 15),
-                      Text(
-                        user.getStringValue("username"),
-                        // Use username as full name
-                        style: theme.textTheme.titleLarge
-                            ?.copyWith(color: theme.colorScheme.onPrimary),
-                      ),
-                      // Center
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            Text(
-                              "${formatter.format(data['totalValue'])} steps",
-                              style: theme.textTheme.titleLarge?.copyWith(
-                                  color: theme.colorScheme.onPrimary),
-                            ),
-                          ],
+                        const SizedBox(width: 15),
+                        Text(
+                          trimString(
+                              user.getStringValue("username") +
+                                  "abcdefghijklmnop",
+                              maxUsernameLength),
+                          style: theme.textTheme.titleLarge
+                              ?.copyWith(color: theme.colorScheme.onPrimary),
                         ),
-                      ),
-                      // User Avatar
-                      const SizedBox(width: 10),
-                    ],
+                        // Center
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              Text(
+                                "${formatter.format(data['totalValue'])} steps",
+                                style: theme.textTheme.titleLarge?.copyWith(
+                                    color: theme.colorScheme.onPrimary),
+                              ),
+                            ],
+                          ),
+                        ),
+                        // User Avatar
+                        const SizedBox(width: 10),
+                      ],
+                    ),
                   ),
-                ),
-              );
-            },
+                );
+              }),
+              _buildBottomDetails(context)
+            ],
           ),
         );
       },
@@ -578,6 +714,7 @@ class _ChallengeDialogState extends State<ChallengeDialog> {
           padding: const EdgeInsets.all(10.0),
           child: ListView(
             children: [
+              _buildTopDetails(context, null),
               GridView.builder(
                 gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: crossAxisCount > 1 ? crossAxisCount : 1,
@@ -636,7 +773,7 @@ class _ChallengeDialogState extends State<ChallengeDialog> {
                   );
                 },
               ),
-              _buildDetails(context),
+              _buildBottomDetails(context),
             ],
           ),
         );
