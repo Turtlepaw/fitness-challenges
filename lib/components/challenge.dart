@@ -15,6 +15,7 @@ import 'package:flutter_advanced_avatar/flutter_advanced_avatar.dart';
 import 'package:flutter_emoji_feedback/flutter_emoji_feedback.dart';
 import 'package:intl/intl.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
+import 'package:overlap_stack/overlap_stack.dart';
 import 'package:pocketbase/pocketbase.dart';
 import 'package:provider/provider.dart';
 
@@ -113,24 +114,25 @@ class _ChallengeState extends State<Challenge> {
                     const SizedBox(
                       height: 15,
                     ),
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        ..._challenge.expand["users"]!.map((user) {
-                          return Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 3),
-                            child: AdvancedAvatar(
-                              name: user.getStringValue("username"),
-                              style: theme.textTheme.titleMedium?.copyWith(
-                                  color: theme.colorScheme.onPrimary),
-                              decoration: BoxDecoration(
-                                color: theme.colorScheme.primary,
-                                borderRadius: BorderRadius.circular(50),
-                              ),
+                    OverlapStack(
+                      align: OverlapStackAlign.start,
+                      minSpacing: 1,
+                      maxSpacing: 2.3,
+                      itemSize: const Size(20, 40),
+                      children: _challenge.expand["users"]!.map((user) {
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 3),
+                          child: AdvancedAvatar(
+                            name: user.getStringValue("username"),
+                            style: theme.textTheme.titleMedium
+                                ?.copyWith(color: theme.colorScheme.onPrimary),
+                            decoration: BoxDecoration(
+                              color: theme.colorScheme.primary,
+                              borderRadius: BorderRadius.circular(50),
                             ),
-                          );
-                        }).toList()
-                      ],
+                          ),
+                        );
+                      }).toList(),
                     ),
                   ],
                 ),

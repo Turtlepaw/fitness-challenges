@@ -463,6 +463,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.0.0"
+  overlap_stack:
+    dependency: "direct main"
+    description:
+      name: overlap_stack
+      sha256: "93366a183065474211b4f18a0c7b940b056d5302b63ab0d0fb27e136b1fb3758"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.1"
   page_transition:
     dependency: "direct main"
     description:

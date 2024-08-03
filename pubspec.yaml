@@ -67,6 +67,7 @@ dependencies:
   health: ^10.2.0
   share_plus: ^10.0.0
   confetti: ^0.7.0
+  overlap_stack: ^1.0.1
 
 dev_dependencies:
   flutter_test:
