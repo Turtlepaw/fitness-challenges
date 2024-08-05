@@ -68,6 +68,9 @@ dependencies:
   share_plus: ^10.0.0
   confetti: ^0.7.0
   overlap_stack: ^1.0.1
+  relative_time: ^5.0.0
+  flutter_localizations:
+    sdk: flutter
 
 dev_dependencies:
   flutter_test:

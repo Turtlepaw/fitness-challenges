@@ -24,7 +24,7 @@ class _LoginPageState extends State<LoginPage> {
         //asyncValidators: [usernameValidator],
         validators: [Validators.required],
         value: ''),
-    password: FormControl<String>(validators: [Validators.required], value: ''),
+    password: FormControl<String>(validators: [Validators.required, Validators.minLength(8)], value: ''),
   });
 
   bool showUsernameForm = false;
@@ -109,6 +109,8 @@ class _LoginPageState extends State<LoginPage> {
                 content: Text('Account created'),
               ),
             );
+
+            context.go("/home");
           }
 
           _setLoading(false);

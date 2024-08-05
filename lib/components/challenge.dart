@@ -18,6 +18,7 @@ import 'package:material_symbols_icons/material_symbols_icons.dart';
 import 'package:overlap_stack/overlap_stack.dart';
 import 'package:pocketbase/pocketbase.dart';
 import 'package:provider/provider.dart';
+import 'package:relative_time/relative_time.dart';
 
 import '../manager.dart';
 
@@ -493,14 +494,19 @@ class _ChallengeDialogState extends State<ChallengeDialog> {
         const SizedBox(
           height: 15,
         ),
-        if (_challenge.getBoolValue("ended"))
-          Column(
-            children: [
-              Text(
-                "This challenge has ended and will be deleted ${format.format(DateTime.parse(_challenge.getDataValue("deleteDate")))}",
-                style: Theme.of(context).textTheme.titleMedium,
-                textAlign: TextAlign.center,
-              ),
+        Column(
+          children: [
+            Text(
+              switch (_challenge.getBoolValue("ended")) {
+                true =>
+                  "This challenge has ended and will be deleted ${DateTime.parse(_challenge.getDataValue("deleteDate")).relativeTime(context)}",
+                false =>
+                  "Ends ${DateTime.parse(_challenge.getDataValue("endDate")).relativeTime(context)}"
+              },
+              style: Theme.of(context).textTheme.titleMedium,
+              textAlign: TextAlign.center,
+            ),
+            if (_challenge.getBoolValue("ended"))
               Padding(
                   padding: const EdgeInsets.symmetric(vertical: 15),
                   child: Card.outlined(
@@ -584,8 +590,8 @@ class _ChallengeDialogState extends State<ChallengeDialog> {
                                     )),
                         ])),
                   ))
-            ],
-          )
+          ],
+        )
       ],
     );
   }
@@ -662,8 +668,7 @@ class _ChallengeDialogState extends State<ChallengeDialog> {
                         ),
                         const SizedBox(width: 15),
                         Text(
-                          trimString(
-                              user.getStringValue("username"),
+                          trimString(user.getStringValue("username"),
                               maxUsernameLength),
                           style: theme.textTheme.titleLarge
                               ?.copyWith(color: theme.colorScheme.onPrimary),

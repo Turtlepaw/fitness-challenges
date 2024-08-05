@@ -1,7 +1,7 @@
 import 'package:health/health.dart';
 import 'package:intl/intl.dart';
 
-const String apiUrl = "https://fitnesschallenges.pockethost.io";
+const String apiUrl = "https://fitnesschallenges.webredirect.org";
 const types = [
   HealthDataType.STEPS,
   HealthDataType.HEART_RATE,

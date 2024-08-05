@@ -18,7 +18,8 @@ import 'package:material_symbols_icons/symbols.dart';
 import 'package:page_transition/page_transition.dart';
 import 'package:pocketbase/pocketbase.dart';
 import 'package:provider/provider.dart';
-
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:relative_time/relative_time.dart';
 import 'login.dart';
 import 'manager.dart';
 
@@ -200,6 +201,16 @@ class _AppState extends State<App> {
   Widget build(BuildContext context) {
     return DynamicColorBuilder(builder: (lightColorScheme, darkColorScheme) {
       return MaterialApp.router(
+        localizationsDelegates: [
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+          RelativeTimeLocalizations.delegate
+        ],
+        supportedLocales: [
+          Locale('en'), // English
+          Locale('es'), // Spanish
+        ],
         routerConfig: _router,
         debugShowCheckedModeBanner: false,
         title: 'Fitness Challenges',
