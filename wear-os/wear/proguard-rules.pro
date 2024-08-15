@@ -12,3 +12,4 @@
 
 # Keep services
 -keep class com.turtlepaw.fitness_challenges.services.SyncWorker  { *; }
+-keep class androidx.health.services.client.** { *; }
