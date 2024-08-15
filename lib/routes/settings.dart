@@ -1,9 +1,12 @@
+import 'dart:io';
+
 import 'package:fitness_challenges/constants.dart';
 import 'package:fitness_challenges/routes/profile.dart';
 import 'package:fitness_challenges/utils/health.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_advanced_avatar/flutter_advanced_avatar.dart';
+import 'package:flutter_wear_os_connectivity/flutter_wear_os_connectivity.dart';
 import 'package:go_router/go_router.dart';
 import 'package:health/health.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
@@ -24,23 +27,57 @@ class _SettingsPageState extends State<SettingsPage> {
   bool _isLoading = false;
   bool _isAvailable = true;
   bool _isHealthConnected = false;
+  bool _watchAvailable = false;
   late String username;
   late PocketBase pb;
+  late HealthType healthType;
+
+  final FlutterWearOsConnectivity _flutterWearOsConnectivity =
+      FlutterWearOsConnectivity();
 
   @override
-  void initState() {
+  initState() {
+    super.initState();
     pb = Provider.of<PocketBase>(context, listen: false);
 
     _checkHealthPermissions();
-    username = (pb.authStore.model as RecordModel).getStringValue("username", "unknown");
+    username = (pb.authStore.model as RecordModel)
+        .getStringValue("username", "unknown");
 
     //subscribe();
+    _checkWearOS();
+    _getHealthType();
+
+    _flutterWearOsConnectivity.dataChanged().listen((dataEvents) {
+      print(dataEvents.map((e) => e.dataItem));
+    });
   }
 
-  void subscribe(){
+  void _getHealthType() async {
+    var type = await HealthTypeManager().getHealthType();
 
+    setState(() {
+      healthType = type;
+    });
+  }
+
+  void _checkWearOS() async {
+    await _flutterWearOsConnectivity.configureWearableAPI();
+    if(Platform.isAndroid){
+      List<WearOsDevice> connectedDevices =
+          await _flutterWearOsConnectivity.getConnectedDevices();
+      print(connectedDevices);
+      if (connectedDevices.isNotEmpty) {
+        setState(() {
+          _watchAvailable = true;
+        });
+      }
+    }
+  }
+
+  void subscribe() {
     pb.collection("users").subscribe(pb.authStore.model.id, (value) {
-      if(value.record != null){
+      if (value.record != null) {
         setState(() {
           username = value.record!.getStringValue("username");
         });
@@ -64,6 +101,11 @@ class _SettingsPageState extends State<SettingsPage> {
       if (mounted) {
         Provider.of<HealthManager>(context, listen: false)
             .fetchHealthData(context: context);
+
+        HealthTypeManager().setHealthType(HealthType.systemManaged);
+        setState(() {
+          healthType = HealthType.systemManaged;
+        });
       }
     }
   }
@@ -108,6 +150,32 @@ class _SettingsPageState extends State<SettingsPage> {
         _isLoading = false;
       });
     }
+  }
+
+  Future<bool> _connectWearOS() async {
+    await _flutterWearOsConnectivity.configureWearableAPI();
+    final _connectedDevices =
+        await _flutterWearOsConnectivity.getConnectedDevices();
+    for(var device in _connectedDevices) {
+      await _flutterWearOsConnectivity
+          .sendMessage(Uint8List(1),
+          deviceId: device.id,
+          path: "/request-sync",
+          priority: MessagePriority.high)
+          .then((d) => print(d));
+    }
+    List<DataItem> _allDataItems = await _flutterWearOsConnectivity.getAllDataItems();
+    print(_allDataItems.map((e) => e.mapData));
+    if (mounted) {
+      Provider.of<HealthManager>(context, listen: false)
+          .fetchHealthData(context: context);
+    }
+
+    HealthTypeManager().setHealthType(HealthType.watch);
+    setState(() {
+      healthType = HealthType.watch;
+    });
+    return true;
   }
 
   @override
@@ -158,7 +226,10 @@ class _SettingsPageState extends State<SettingsPage> {
                           const SizedBox(width: 4),
                           IconButton.filledTonal(
                               onPressed: _openProfileEditor,
-                              icon: Icon(Symbols.edit_rounded, color: theme.colorScheme.onPrimaryContainer,))
+                              icon: Icon(
+                                Symbols.edit_rounded,
+                                color: theme.colorScheme.onPrimaryContainer,
+                              ))
                         ],
                       )
                     ],
@@ -198,14 +269,14 @@ class _SettingsPageState extends State<SettingsPage> {
                       Text(
                         _isHealthConnected
                             ? "Health Connected"
-                            : "Connect Health Connect",
+                            : "Connect Health Platform",
                         style: theme.textTheme.titleLarge,
                         textAlign: TextAlign.center,
                       ),
                       const SizedBox(height: 5),
                       if (!_isHealthConnected)
                         const Text(
-                          "Connect Health Connect to create and join challenges",
+                          "Connect a health platform to create and join challenges",
                           textAlign: TextAlign.center,
                         )
                       else if (health.steps != null)
@@ -221,16 +292,34 @@ class _SettingsPageState extends State<SettingsPage> {
                           ],
                         ),
                       const SizedBox(height: 10),
-                      FilledButton.tonal(
-                        onPressed: _isAvailable
-                            ? (_isHealthConnected
-                                ? null
-                                : _connectHealthPlatform)
-                            : null,
-                        child: Text(_isAvailable
-                            ? (_isHealthConnected ? "Connected" : "Connect")
-                            : "Unavailable"),
-                      ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          FilterChip(
+                            onSelected: (isSelected) {
+                              if (isSelected) {
+                                var func = (_isAvailable
+                                    ? (_isHealthConnected
+                                        ? null
+                                        : _connectHealthPlatform)
+                                    : null);
+
+                                if (func != null) func();
+                              }
+                            },
+                            label: Text(_isAvailable
+                                ? ((_isHealthConnected && healthType == HealthType.systemManaged) ? "Connected" : "System")
+                                : "Unavailable"),
+                            selected: healthType == HealthType.systemManaged,
+                          ),
+                          const SizedBox(width: 15,),
+                          FilterChip(
+                              label: Text("Watch"),
+                              onSelected: _watchAvailable ? ((isSelected) => _connectWearOS()) : null,
+                            selected: healthType == HealthType.watch,
+                          )
+                        ],
+                      )
                     ]),
             ),
           ),
@@ -273,13 +362,15 @@ class _SettingsPageState extends State<SettingsPage> {
   void _openProfileEditor() {
     final pb = Provider.of<PocketBase>(context, listen: false);
     showDialog(
-        context: context,
-        builder: (context) => ProfileDialog(pb: pb),
-        useSafeArea: false).then((_) => {
-          setState(() {
-    username = (pb.authStore.model as RecordModel).getStringValue("username");
-          })
-    });
+            context: context,
+            builder: (context) => ProfileDialog(pb: pb),
+            useSafeArea: false)
+        .then((_) => {
+              setState(() {
+                username = (pb.authStore.model as RecordModel)
+                    .getStringValue("username");
+              })
+            });
   }
 
   void _requestLogoutConfirmation() {
@@ -287,16 +378,15 @@ class _SettingsPageState extends State<SettingsPage> {
     showDialog(
         context: context,
         builder: (context) => ConfirmDialog(
-          isDestructive: true,
-          icon: Icons.logout,
-          title: "Logout",
-          description:
-          "Are you sure you want to logout?",
-          onConfirm: () async {
-            pb.authStore.clear();
-            context.go("/login");
-          },
-        ),
+              isDestructive: true,
+              icon: Icons.logout,
+              title: "Logout",
+              description: "Are you sure you want to logout?",
+              onConfirm: () async {
+                pb.authStore.clear();
+                context.go("/login");
+              },
+            ),
         useSafeArea: false);
   }
 }
