@@ -38,6 +38,7 @@ class HealthManager with ChangeNotifier {
       var now = DateTime.now();
       var midnight = DateTime(now.year, now.month, now.day);
       _steps = await Health().getTotalStepsInInterval(midnight, now);
+      notifyListeners(); // Notify listeners about the change
     } else if(type == HealthType.watch){
       final FlutterWearOsConnectivity _flutterWearOsConnectivity =
       FlutterWearOsConnectivity();
@@ -47,6 +48,7 @@ class HealthManager with ChangeNotifier {
       final id = "com.turtlepaw.fitness_challenges.steps";
       if(data.first.mapData[id] != null){
         _steps = data.first.mapData[id];
+        notifyListeners(); // Notify listeners about the change
         debugPrint("Steps are at $_steps");
       }
       
