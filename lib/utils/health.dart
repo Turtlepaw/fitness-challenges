@@ -43,6 +43,7 @@ class HealthManager with ChangeNotifier {
       final FlutterWearOsConnectivity _flutterWearOsConnectivity =
       FlutterWearOsConnectivity();
       
+      // Fetches most recent data, even if it's from yesterday
       _flutterWearOsConnectivity.configureWearableAPI();
       var data = await _flutterWearOsConnectivity.getAllDataItems();
       final id = "com.turtlepaw.fitness_challenges.steps";
