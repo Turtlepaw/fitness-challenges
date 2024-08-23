@@ -41,16 +41,23 @@ class HealthManager with ChangeNotifier {
       notifyListeners(); // Notify listeners about the change
     } else if (type == HealthType.watch) {
       final FlutterWearOsConnectivity _flutterWearOsConnectivity =
-      FlutterWearOsConnectivity();
-      
+          FlutterWearOsConnectivity();
+
       // Fetches most recent data, even if it's from yesterday
       _flutterWearOsConnectivity.configureWearableAPI();
       var data = await _flutterWearOsConnectivity.getAllDataItems();
       final id = "com.turtlepaw.fitness_challenges.steps";
+      final timeId = "com.turtlepaw.fitness_challenges.timestamp";
       if (data.first.mapData[id] != null) {
-        _steps = data.first.mapData[id];
-        notifyListeners(); // Notify listeners about the change
-        debugPrint("Steps are at $_steps");
+        var _timestamp = DateTime.parse(data.first.mapData[timeId]);
+        if (isToday(_timestamp)) {
+          _steps = data.first.mapData[id];
+
+          notifyListeners(); // Notify listeners about the change
+          debugPrint("Steps are at $_steps");
+        } else {
+          debugPrint("No steps from today");
+        }
       }
 
       if (context != null && context.mounted) {
@@ -88,6 +95,13 @@ class HealthManager with ChangeNotifier {
     //     types: [HealthDataType.HEART_RATE]);
     // print(heartRate.map((hr) => (hr.value as NumericHealthValue).numericValue));
     //print(heartRate);
+  }
+
+  bool isToday(DateTime date) {
+    final now = DateTime.now();
+    return date.year == now.year &&
+        date.month == now.month &&
+        date.day == now.day;
   }
 }
 
