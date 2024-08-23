@@ -28,9 +28,10 @@ class _SettingsPageState extends State<SettingsPage> {
   bool _isAvailable = true;
   bool _isHealthConnected = false;
   bool _watchAvailable = false;
+  bool _isWatchLoading = false;
   late String username;
   late PocketBase pb;
-  late HealthType healthType;
+  late HealthType? healthType;
 
   final FlutterWearOsConnectivity _flutterWearOsConnectivity =
       FlutterWearOsConnectivity();
@@ -63,7 +64,7 @@ class _SettingsPageState extends State<SettingsPage> {
 
   void _checkWearOS() async {
     await _flutterWearOsConnectivity.configureWearableAPI();
-    if(Platform.isAndroid){
+    if (Platform.isAndroid) {
       List<WearOsDevice> connectedDevices =
           await _flutterWearOsConnectivity.getConnectedDevices();
       print(connectedDevices);
@@ -153,18 +154,23 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   Future<bool> _connectWearOS() async {
+    setState(() {
+      _isWatchLoading = true;
+    });
+
     await _flutterWearOsConnectivity.configureWearableAPI();
     final _connectedDevices =
         await _flutterWearOsConnectivity.getConnectedDevices();
-    for(var device in _connectedDevices) {
+    for (var device in _connectedDevices) {
       await _flutterWearOsConnectivity
           .sendMessage(Uint8List(1),
-          deviceId: device.id,
-          path: "/request-sync",
-          priority: MessagePriority.high)
+              deviceId: device.id,
+              path: "/request-sync",
+              priority: MessagePriority.high)
           .then((d) => print(d));
     }
-    List<DataItem> _allDataItems = await _flutterWearOsConnectivity.getAllDataItems();
+    List<DataItem> _allDataItems =
+        await _flutterWearOsConnectivity.getAllDataItems();
     print(_allDataItems.map((e) => e.mapData));
     if (mounted) {
       Provider.of<HealthManager>(context, listen: false)
@@ -174,6 +180,8 @@ class _SettingsPageState extends State<SettingsPage> {
     HealthTypeManager().setHealthType(HealthType.watch);
     setState(() {
       healthType = HealthType.watch;
+      if (_allDataItems.isNotEmpty) _isHealthConnected = true;
+      _isWatchLoading = false;
     });
     return true;
   }
@@ -308,15 +316,24 @@ class _SettingsPageState extends State<SettingsPage> {
                               }
                             },
                             label: Text(_isAvailable
-                                ? ((_isHealthConnected && healthType == HealthType.systemManaged) ? "Connected" : "System")
+                                ? ((_isHealthConnected &&
+                                        healthType == HealthType.systemManaged)
+                                    ? "Connected"
+                                    : "System")
                                 : "Unavailable"),
                             selected: healthType == HealthType.systemManaged,
                           ),
-                          const SizedBox(width: 15,),
+                          const SizedBox(
+                            width: 15,
+                          ),
                           FilterChip(
-                              label: Text("Watch"),
-                              onSelected: _watchAvailable ? ((isSelected) => _connectWearOS()) : null,
+                            label: Text("Watch"),
+                            onSelected: _watchAvailable
+                                ? ((isSelected) => _connectWearOS())
+                                : null,
                             selected: healthType == HealthType.watch,
+                            // add loading
+                            deleteIcon: CircularProgressIndicator(),
                           )
                         ],
                       )

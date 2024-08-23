@@ -31,7 +31,7 @@ class HealthManager with ChangeNotifier {
     final hasPermissions =
         await health.hasPermissions(types, permissions: permissions);
 
-    if(!pb.authStore.isValid) return;
+    if (!pb.authStore.isValid) return;
     var userId = pb.authStore.model?.id;
 
     if (isAvailable && hasPermissions! && type == HealthType.systemManaged) {
@@ -39,43 +39,42 @@ class HealthManager with ChangeNotifier {
       var midnight = DateTime(now.year, now.month, now.day);
       _steps = await Health().getTotalStepsInInterval(midnight, now);
       notifyListeners(); // Notify listeners about the change
-    } else if(type == HealthType.watch){
+    } else if (type == HealthType.watch) {
       final FlutterWearOsConnectivity _flutterWearOsConnectivity =
-      FlutterWearOsConnectivity();
-      
+          FlutterWearOsConnectivity();
+
       _flutterWearOsConnectivity.configureWearableAPI();
       var data = await _flutterWearOsConnectivity.getAllDataItems();
       final id = "com.turtlepaw.fitness_challenges.steps";
-      if(data.first.mapData[id] != null){
+      if (data.first.mapData[id] != null) {
         _steps = data.first.mapData[id];
         notifyListeners(); // Notify listeners about the change
         debugPrint("Steps are at $_steps");
       }
-      
-      if(context != null && context.mounted){
+
+      if (context != null && context.mounted) {
         challengeProvider.reloadChallenges(context);
       }
     }
 
-    for(final challenge in challengeProvider.challenges){
+    for (final challenge in challengeProvider.challenges) {
       // Check if challenge has ended
-      if(challenge.getBoolValue("ended") == true) continue;
+      if (challenge.getBoolValue("ended") == true) continue;
 
       var type = TypesExtension.of(challenge.getIntValue("type"));
 
-      if(type == Types.steps && steps != null){
-        final manager = StepsDataManager.fromJson(
-            challenge.getDataValue("data")
-        );
+      if (type == Types.steps && steps != null) {
+        final manager =
+            StepsDataManager.fromJson(challenge.getDataValue("data"));
 
         manager.updateUserActivity(userId, steps!);
-        pb.collection(Collection.challenges).update(challenge.id, body: {
-          'data': manager.toJson()
-        });
+        pb
+            .collection(Collection.challenges)
+            .update(challenge.id, body: {'data': manager.toJson()});
       }
     }
 
-    if(context != null && context.mounted){
+    if (context != null && context.mounted) {
       challengeProvider.reloadChallenges(context);
     }
 
@@ -91,10 +90,7 @@ class HealthManager with ChangeNotifier {
   }
 }
 
-enum HealthType {
-  systemManaged,
-  watch
-}
+enum HealthType { systemManaged, watch }
 
 class HealthTypeManager {
   final dataId = "healthType";
@@ -106,8 +102,9 @@ class HealthTypeManager {
   }
 
   /// Gets the health type, defaults to HealthType.systemManaged
-  Future<HealthType> getHealthType() async {
+  Future<HealthType?> getHealthType() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return HealthType.values.elementAt(prefs.getInt(dataId) ?? 0);
+    final data = prefs.getInt(dataId);
+    return data != null ? HealthType.values.elementAt(data) : null;
   }
 }

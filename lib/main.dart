@@ -154,10 +154,10 @@ class App extends StatefulWidget {
 
 class _AppState extends State<App> {
   static final _defaultLightColorScheme =
-      ColorScheme.fromSwatch(primarySwatch: Colors.blue);
+      ColorScheme.fromSwatch(primarySwatch: Colors.deepPurple);
 
   static final _defaultDarkColorScheme = ColorScheme.fromSwatch(
-      primarySwatch: Colors.blue, brightness: Brightness.dark);
+      primarySwatch: Colors.deepPurple, brightness: Brightness.dark);
 
   late bool isLoggedIn; // Track login status locally
   late PocketBase pb;
@@ -434,7 +434,7 @@ class _HomePageState extends State<HomePage> {
                                 padding: const EdgeInsets.only(left: 15),
                                 child: Text(
                                   "Create a challenge",
-                                  style: theme.typography.englishLike.titleLarge,
+                                  style: theme.textTheme.titleLarge,
                                 ),
                               )
                             ],
