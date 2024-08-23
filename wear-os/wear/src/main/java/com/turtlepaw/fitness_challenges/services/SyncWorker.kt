@@ -39,6 +39,8 @@ import java.time.LocalDateTime
 import java.util.concurrent.TimeUnit
 
 private const val STEP_KEY = "com.turtlepaw.fitness_challenges.steps"
+private const val TIMESTAMP_KEY = "com.turtlepaw.fitness_challenges.timestamp"
+
 class SyncWorker(val context: Context, workerParams: WorkerParameters) :
     Worker(context, workerParams) {
 
@@ -129,9 +131,10 @@ class SyncWorker(val context: Context, workerParams: WorkerParameters) :
             SettingsBasics.SHARED_PREFERENCES.getMode()
         )
 
+        val isoDateString = LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME)
         val putDataReq: PutDataRequest = PutDataMapRequest.create("/data").run {
             dataMap.putLong(STEP_KEY, steps)
-            dataMap.putString("Timestamp", LocalDateTime.now().toString())
+            dataMap.putString(TIMESTAMP_KEY, isoDateString)
             setUrgent()
             asPutDataRequest()
         }
