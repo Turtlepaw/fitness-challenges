@@ -41,8 +41,9 @@ class HealthManager with ChangeNotifier {
       notifyListeners(); // Notify listeners about the change
     } else if (type == HealthType.watch) {
       final FlutterWearOsConnectivity _flutterWearOsConnectivity =
-          FlutterWearOsConnectivity();
-
+      FlutterWearOsConnectivity();
+      
+      // Fetches most recent data, even if it's from yesterday
       _flutterWearOsConnectivity.configureWearableAPI();
       var data = await _flutterWearOsConnectivity.getAllDataItems();
       final id = "com.turtlepaw.fitness_challenges.steps";
