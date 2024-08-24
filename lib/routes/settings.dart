@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:fitness_challenges/constants.dart';
 import 'package:fitness_challenges/routes/profile.dart';
+import 'package:fitness_challenges/utils/common.dart';
 import 'package:fitness_challenges/utils/health.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -296,7 +297,7 @@ class _SettingsPageState extends State<SettingsPage> {
                               color: theme.colorScheme.primary,
                             ),
                             const SizedBox(width: 8),
-                            Text("${health.steps} steps")
+                            Text("${formatNumber(health.steps as int)} steps")
                           ],
                         ),
                       const SizedBox(height: 10),
@@ -327,7 +328,7 @@ class _SettingsPageState extends State<SettingsPage> {
                             width: 15,
                           ),
                           FilterChip(
-                            label: Text("Watch"),
+                            label: const Text("Watch"),
                             onSelected: _watchAvailable
                                 ? ((isSelected) => _connectWearOS())
                                 : null,

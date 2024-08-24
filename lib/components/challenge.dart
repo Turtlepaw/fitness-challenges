@@ -8,6 +8,7 @@ import 'package:fitness_challenges/components/challenges/userDialog.dart';
 import 'package:fitness_challenges/types/challenges.dart';
 import 'package:fitness_challenges/types/collections.dart';
 import 'package:fitness_challenges/utils/bingo/data.dart';
+import 'package:fitness_challenges/utils/common.dart';
 import 'package:fitness_challenges/utils/manager.dart';
 import 'package:fitness_challenges/utils/steps/data.dart';
 import 'package:flutter/material.dart';
@@ -679,7 +680,7 @@ class _ChallengeDialogState extends State<ChallengeDialog> {
                             crossAxisAlignment: CrossAxisAlignment.end,
                             children: [
                               Text(
-                                "${formatter.format(data['totalValue'])} steps",
+                                "${formatNumber(data['totalValue'] as int)} steps",
                                 style: theme.textTheme.titleLarge?.copyWith(
                                     color: theme.colorScheme.onPrimary),
                               ),
