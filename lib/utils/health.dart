@@ -48,7 +48,14 @@ class HealthManager with ChangeNotifier {
       var data = await _flutterWearOsConnectivity.getAllDataItems();
       final id = "com.turtlepaw.fitness_challenges.steps";
       final timeId = "com.turtlepaw.fitness_challenges.timestamp";
-      if (data.first.mapData[id] != null) {
+      print(data);
+      await Future.delayed(const Duration(seconds: 1));
+
+      if(data.isEmpty){
+        return debugPrint("No steps from today");
+      }
+
+      if (data?.first?.mapData[id] != null) {
         var _timestamp = DateTime.parse(data.first.mapData[timeId]);
         if (isToday(_timestamp)) {
           _steps = data.first.mapData[id];
@@ -121,5 +128,13 @@ class HealthTypeManager {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     final data = prefs.getInt(dataId);
     return data != null ? HealthType.values.elementAt(data) : null;
+  }
+
+  static String formatType(HealthType? type){
+    return switch(type){
+      HealthType.systemManaged => "System",
+      HealthType.watch => "Watch",
+      null => "Unknown",
+    };
   }
 }

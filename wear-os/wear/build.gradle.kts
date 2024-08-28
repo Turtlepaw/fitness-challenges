@@ -82,6 +82,7 @@ dependencies {
 
     // Kotlin
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-guava:1.8.1")
+    implementation(libs.androidx.core.i18n)
 
     // Room
     ksp(libs.androidx.room.compiler)

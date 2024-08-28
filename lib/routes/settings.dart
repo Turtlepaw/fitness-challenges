@@ -93,7 +93,7 @@ class _SettingsPageState extends State<SettingsPage> {
     pb.collection("users").unsubscribe();
   }
 
-  Future<void> _connectHealthPlatform() async {
+  Future<void> _connectSystemHealthPlatform(bool _) async {
     await Health().requestAuthorization(types,
         permissions: [HealthDataAccess.READ, HealthDataAccess.READ]);
 
@@ -101,6 +101,7 @@ class _SettingsPageState extends State<SettingsPage> {
 
     if (result == true) {
       if (mounted) {
+        debugPrint("Health connect permissions granted");
         Provider.of<HealthManager>(context, listen: false)
             .fetchHealthData(context: context);
 
@@ -109,6 +110,8 @@ class _SettingsPageState extends State<SettingsPage> {
           healthType = HealthType.systemManaged;
         });
       }
+    } else {
+      debugPrint("Health connect permissions not granted");
     }
   }
 
@@ -276,9 +279,9 @@ class _SettingsPageState extends State<SettingsPage> {
                     })
                   : buildCard([
                       Text(
-                        _isHealthConnected
-                            ? "Health Connected"
-                            : "Connect Health Platform",
+                        _isAvailable ? (_isHealthConnected
+                            ? "Health connected via ${HealthTypeManager.formatType(healthType).toLowerCase()}"
+                            : "Connect Health Platform") : "Health unavailable",
                         style: theme.textTheme.titleLarge,
                         textAlign: TextAlign.center,
                       ),
@@ -305,17 +308,11 @@ class _SettingsPageState extends State<SettingsPage> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           FilterChip(
-                            onSelected: (isSelected) {
-                              if (isSelected) {
-                                var func = (_isAvailable
-                                    ? (_isHealthConnected
-                                        ? null
-                                        : _connectHealthPlatform)
-                                    : null);
-
-                                if (func != null) func();
-                              }
-                            },
+                            onSelected: (_isAvailable
+                                ? (_isHealthConnected
+                                    ? null
+                                    : _connectSystemHealthPlatform)
+                                : null),
                             label: Text(_isAvailable
                                 ? ((_isHealthConnected &&
                                         healthType == HealthType.systemManaged)
