@@ -1,4 +1,3 @@
-import 'package:animated_splash_screen/animated_splash_screen.dart';
 import 'package:bottom_sheet/bottom_sheet.dart';
 import 'package:dynamic_color/dynamic_color.dart';
 import 'package:fitness_challenges/components/bottomSheet.dart';
@@ -9,19 +8,19 @@ import 'package:fitness_challenges/pb.dart';
 import 'package:fitness_challenges/routes/join.dart';
 import 'package:fitness_challenges/routes/settings.dart';
 import 'package:fitness_challenges/routes/splash.dart';
+import 'package:fitness_challenges/utils/challengeManager.dart';
 import 'package:fitness_challenges/utils/health.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:go_router/go_router.dart';
 import 'package:health/health.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
 import 'package:material_symbols_icons/symbols.dart';
-import 'package:page_transition/page_transition.dart';
 import 'package:pocketbase/pocketbase.dart';
 import 'package:provider/provider.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:relative_time/relative_time.dart';
+
 import 'login.dart';
-import 'manager.dart';
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
 final _shellNavigatorKey = GlobalKey<NavigatorState>();
@@ -54,21 +53,19 @@ final _router =
     GoRouter(initialLocation: '/', navigatorKey: _rootNavigatorKey, routes: [
   GoRoute(
       path: '/',
-      builder: (context, state) => SplashScreen(
-            asyncFunction: () async {
-              var pb = Provider.of<PocketBase>(context, listen: false);
-              await Future.delayed(const Duration(seconds: 1));
-              if (context.mounted) {
-                if (pb.authStore.isValid) {
-                  // User is logged in, navigate to home
-                  context.go('/home');
-                } else {
-                  // User is not logged in, navigate to login
-                  context.go('/login');
-                }
+      builder: (context, state) => SplashScreen(asyncFunction: () async {
+            var pb = Provider.of<PocketBase>(context, listen: false);
+            await Future.delayed(const Duration(seconds: 1));
+            if (context.mounted) {
+              if (pb.authStore.isValid) {
+                // User is logged in, navigate to home
+                context.go('/home');
+              } else {
+                // User is not logged in, navigate to login
+                context.go('/login');
               }
             }
-          )
+          })
       /*FlutterSplashScreen.fadeIn(
             backgroundColor: Theme.of(context).colorScheme.surface,
             childWidget: SizedBox(
@@ -314,10 +311,9 @@ class _HomePageState extends State<HomePage> {
     var nav = Navigator.of(context);
     nav.pop();
     showDialog(
-      context: context,
-      builder: (context) => CreateDialog(pb: pb),
-      useSafeArea: false
-    );
+        context: context,
+        builder: (context) => CreateDialog(pb: pb),
+        useSafeArea: false);
   }
 
   void _showJoinModal(BuildContext context) {
@@ -406,16 +402,18 @@ class _HomePageState extends State<HomePage> {
     ScrollController scrollController,
     double bottomSheetOffset,
   ) {
+    final challengeProvider =
+        Provider.of<ChallengeProvider>(context, listen: true);
     var theme = Theme.of(context);
     return BottomSheetBuilder(scrollController: scrollController, children: [
       Padding(
           padding: const EdgeInsets.symmetric(horizontal: 10),
           child: Column(
             children: [
-                Card.filled(
+              Card.filled(
                   clipBehavior: Clip.hardEdge,
                   child: InkWell(
-                    onTap: (){
+                    onTap: () {
                       _showCreateModal(context);
                     },
                     child: Container(
@@ -440,37 +438,59 @@ class _HomePageState extends State<HomePage> {
                             ],
                           ),
                         )),
-                  )
-                ),
+                  )),
               Card.filled(
                 clipBehavior: Clip.hardEdge,
                 child: InkWell(
-                  onTap: (){
+                  onTap: () {
                     _showJoinModal(context);
                   },
                   child: Container(
-                    padding: const EdgeInsets.symmetric(
-                        vertical: 10, horizontal: 10),
-                    child: Padding(
                       padding: const EdgeInsets.symmetric(
-                          vertical: 5, horizontal: 10),
-                      child: Row(
-                        children: [
-                          const Icon(
-                            Symbols.group_add_rounded,
-                            size: 30,
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.only(left: 15),
-                            child: Text(
-                              "Join a challenge",
-                              style: theme.typography.englishLike.titleLarge,
+                          vertical: 10, horizontal: 10),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                            vertical: 5, horizontal: 10),
+                        child: Row(
+                          children: [
+                            const Icon(
+                              Symbols.group_add_rounded,
+                              size: 30,
                             ),
-                          )
-                        ],
-                      ),
-                    )),
+                            Padding(
+                              padding: const EdgeInsets.only(left: 15),
+                              child: Text(
+                                "Join a challenge",
+                                style: theme.textTheme.titleLarge,
+                              ),
+                            )
+                          ],
+                        ),
+                      )),
+                ),
               ),
+              const SizedBox(height: 20),
+              TextButton(
+                onPressed: () async {
+                  await challengeProvider.reloadChallenges(context);
+                  var nav = Navigator.of(context);
+                  nav.pop();
+                },
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(
+                      Symbols.refresh_rounded,
+                      size: 25,
+                    ),
+                    const SizedBox(width: 10),
+                    Text(
+                      "Force refresh challenges",
+                      style: theme.textTheme.bodyLarge
+                          ?.copyWith(color: theme.colorScheme.primary),
+                    )
+                  ],
+                ),
               )
             ],
           ))

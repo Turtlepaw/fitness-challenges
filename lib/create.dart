@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-import 'package:fitness_challenges/manager.dart';
+import 'package:fitness_challenges/utils/challengeManager.dart';
 import 'package:fitness_challenges/types/challenges.dart';
 import 'package:fitness_challenges/utils/bingo/data.dart';
 import 'package:fitness_challenges/utils/bingo/manager.dart';

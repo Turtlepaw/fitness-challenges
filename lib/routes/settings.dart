@@ -182,6 +182,7 @@ class _SettingsPageState extends State<SettingsPage> {
     }
 
     HealthTypeManager().setHealthType(HealthType.watch);
+    await Future.delayed(const Duration(seconds: 1));
     setState(() {
       healthType = HealthType.watch;
       if (_allDataItems.isNotEmpty) _isHealthConnected = true;
@@ -238,10 +239,18 @@ class _SettingsPageState extends State<SettingsPage> {
                           const SizedBox(width: 4),
                           IconButton.filledTonal(
                               onPressed: _openProfileEditor,
+                              tooltip: "Edit Profile",
                               icon: Icon(
                                 Symbols.edit_rounded,
                                 color: theme.colorScheme.onPrimaryContainer,
-                              ))
+                              )),
+                          // IconButton.filledTonal(
+                          //     onPressed: _openProfileEditor,
+                          //     tooltip: "Delete Account",
+                          //     icon: Icon(
+                          //       Symbols.delete_forever_rounded,
+                          //       color: theme.colorScheme.onPrimaryContainer,
+                          //     ))
                         ],
                       )
                     ],
@@ -278,12 +287,19 @@ class _SettingsPageState extends State<SettingsPage> {
                       );
                     })
                   : buildCard([
-                      Text(
-                        _isAvailable ? (_isHealthConnected
-                            ? "Health connected via ${HealthTypeManager.formatType(healthType).toLowerCase()}"
-                            : "Connect Health Platform") : "Health unavailable",
+                      ConstrainedBox(
+                        constraints: const BoxConstraints(
+                          maxWidth: 300
+                        ),
+                      child: Text(
+                        _isAvailable
+                            ? (_isHealthConnected
+                            ? "Health connected via ${HealthTypeManager.formatType(healthType)}"
+                            : "Connect Health Platform")
+                            : "Health unavailable",
                         style: theme.textTheme.titleLarge,
                         textAlign: TextAlign.center,
+                      ),
                       ),
                       const SizedBox(height: 5),
                       if (!_isHealthConnected)
@@ -302,6 +318,22 @@ class _SettingsPageState extends State<SettingsPage> {
                             const SizedBox(width: 8),
                             Text("${formatNumber(health.steps as int)} steps")
                           ],
+                        )
+                      else
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Symbols.refresh_rounded,
+                              color: theme.colorScheme.error,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              "Not synced",
+                              style: theme.textTheme.bodyLarge
+                                  ?.copyWith(color: theme.colorScheme.error),
+                            )
+                          ],
                         ),
                       const SizedBox(height: 10),
                       Row(
@@ -309,7 +341,8 @@ class _SettingsPageState extends State<SettingsPage> {
                         children: [
                           FilterChip(
                             onSelected: (_isAvailable
-                                ? (_isHealthConnected
+                                ? (_isHealthConnected &&
+                                        healthType == HealthType.systemManaged
                                     ? null
                                     : _connectSystemHealthPlatform)
                                 : null),
@@ -325,19 +358,25 @@ class _SettingsPageState extends State<SettingsPage> {
                             width: 15,
                           ),
                           FilterChip(
-                            label: const Text("Watch"),
+                            label: const Text("Wear OS"),
                             onSelected: _watchAvailable
                                 ? ((isSelected) => _connectWearOS())
                                 : null,
                             selected: healthType == HealthType.watch,
                             // add loading
-                            deleteIcon: CircularProgressIndicator(),
+                            avatar: _isWatchLoading
+                                ? const CircularProgressIndicator(
+                                    strokeWidth: 3,
+                                    strokeCap: StrokeCap.round,
+                                  )
+                                : const SizedBox(),
+                            showCheckmark: !_isWatchLoading,
                           )
                         ],
                       )
                     ]),
             ),
-          ),
+          )
         ],
       ),
     );

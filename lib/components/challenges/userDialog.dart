@@ -7,7 +7,7 @@ import 'package:pocketbase/pocketbase.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 
-import '../../manager.dart';
+import '../../utils/challengeManager.dart';
 import '../../utils/manager.dart';
 class UserDialog extends StatefulWidget {
   final PocketBase pb;

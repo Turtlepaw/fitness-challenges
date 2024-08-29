@@ -21,7 +21,7 @@ import 'package:pocketbase/pocketbase.dart';
 import 'package:provider/provider.dart';
 import 'package:relative_time/relative_time.dart';
 
-import '../manager.dart';
+import '../utils/challengeManager.dart';
 
 class Challenge extends StatefulWidget {
   final RecordModel challenge;

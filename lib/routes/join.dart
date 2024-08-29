@@ -1,4 +1,4 @@
-import 'package:fitness_challenges/manager.dart';
+import 'package:fitness_challenges/utils/challengeManager.dart';
 import 'package:fitness_challenges/types/challenges.dart';
 import 'package:fitness_challenges/types/collections.dart';
 import 'package:fitness_challenges/utils/manager.dart';

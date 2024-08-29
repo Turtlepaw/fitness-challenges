@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:fitness_challenges/constants.dart';
 import 'package:fitness_challenges/types/challenges.dart';
 import 'package:fitness_challenges/types/collections.dart';
@@ -8,7 +10,7 @@ import 'package:health/health.dart';
 import 'package:pocketbase/pocketbase.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../manager.dart';
+import 'challengeManager.dart';
 
 class HealthManager with ChangeNotifier {
   final ChallengeProvider challengeProvider;
@@ -43,13 +45,13 @@ class HealthManager with ChangeNotifier {
       final FlutterWearOsConnectivity _flutterWearOsConnectivity =
           FlutterWearOsConnectivity();
 
+      await Future.delayed(const Duration(seconds: 2));
       // Fetches most recent data, even if it's from yesterday
       _flutterWearOsConnectivity.configureWearableAPI();
       var data = await _flutterWearOsConnectivity.getAllDataItems();
       final id = "com.turtlepaw.fitness_challenges.steps";
       final timeId = "com.turtlepaw.fitness_challenges.timestamp";
       print(data);
-      await Future.delayed(const Duration(seconds: 1));
 
       if(data.isEmpty){
         return debugPrint("No steps from today");
@@ -131,10 +133,20 @@ class HealthTypeManager {
   }
 
   static String formatType(HealthType? type){
-    return switch(type){
+    return switch (type) {
       HealthType.systemManaged => "System",
-      HealthType.watch => "Watch",
+      HealthType.watch => _getWatchType(),
       null => "Unknown",
     };
+  }
+
+  static String _getWatchType() {
+    if (Platform.isAndroid) {
+      return "Wear OS";
+    } else if (Platform.isIOS) {
+      return "Apple Watch";
+    } else {
+      return "Watch";
+    }
   }
 }

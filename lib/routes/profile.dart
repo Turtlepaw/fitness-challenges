@@ -1,19 +1,9 @@
-import 'package:fitness_challenges/manager.dart';
-import 'package:fitness_challenges/types/challenges.dart';
-import 'package:fitness_challenges/types/collections.dart';
-import 'package:fitness_challenges/utils/manager.dart';
-import 'package:fitness_challenges/utils/steps/data.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_advanced_avatar/flutter_advanced_avatar.dart';
-import 'package:health/health.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
 import 'package:pocketbase/pocketbase.dart';
 import 'package:provider/provider.dart';
 import 'package:reactive_forms/reactive_forms.dart';
-
-import '../constants.dart';
 
 class ProfileDialog extends StatefulWidget {
   final PocketBase pb;
@@ -33,14 +23,16 @@ class _ProfileDialogState extends State<ProfileDialog> {
 
   // Form definition
   final form = FormGroup({
-    username: FormControl<String>(validators: [Validators.required, Validators.minLength(3)]),
+    username: FormControl<String>(
+        validators: [Validators.required, Validators.minLength(3)]),
   });
 
   @override
   void initState() {
     super.initState();
 
-    form.control(username).value = (widget.pb.authStore.model as RecordModel).getStringValue("username");
+    form.control(username).value =
+        (widget.pb.authStore.model as RecordModel).getStringValue("username");
   }
 
   @override
@@ -58,21 +50,22 @@ class _ProfileDialogState extends State<ProfileDialog> {
             },
           ),
           actions: [
-            ReactiveFormConsumer(builder: (context, form, widget) => _isUpdating
-                ? const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 15),
-                child: SizedBox(
-                  width: 15,
-                  height: 15,
-                  child: CircularProgressIndicator(strokeCap: StrokeCap.round, strokeWidth: 3,),
-                )
-            )
-                : TextButton(
-              onPressed: (form.valid)
-                  ? _handleEdit
-                  : null,
-              child: const Text("Save"),
-            ),
+            ReactiveFormConsumer(
+              builder: (context, form, widget) => _isUpdating
+                  ? const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 15),
+                      child: SizedBox(
+                        width: 15,
+                        height: 15,
+                        child: CircularProgressIndicator(
+                          strokeCap: StrokeCap.round,
+                          strokeWidth: 3,
+                        ),
+                      ))
+                  : TextButton(
+                      onPressed: (form.valid) ? _handleEdit : null,
+                      child: const Text("Save"),
+                    ),
             )
           ],
           title: const Text("Edit Profile"),
@@ -90,9 +83,9 @@ class _ProfileDialogState extends State<ProfileDialog> {
       String usernameValue = form.control(username).value;
       final user = widget.pb.authStore.model;
 
-      await widget.pb.collection("users").update(user.id, body: {
-        "username": usernameValue
-      });
+      await widget.pb
+          .collection("users")
+          .update(user.id, body: {"username": usernameValue});
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -103,10 +96,8 @@ class _ProfileDialogState extends State<ProfileDialog> {
         Navigator.of(context).pop();
       }
     } catch (error, stackTrace) {
-      if (kDebugMode) {
-        debugPrint('Error: $error');
-        debugPrintStack(stackTrace: stackTrace);
-      }
+      print('Error updating profile: $error');
+      debugPrintStack(stackTrace: stackTrace);
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -134,9 +125,8 @@ class ProfileWidget extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         Padding(
-          padding: const EdgeInsets.only(left: 25).add(
-            const EdgeInsets.symmetric(vertical: 25)
-          ),
+          padding: const EdgeInsets.only(left: 25)
+              .add(const EdgeInsets.symmetric(vertical: 25)),
           child: Row(
             children: [
               AdvancedAvatar(
@@ -149,9 +139,16 @@ class ProfileWidget extends StatelessWidget {
                 ),
                 size: 70,
               ),
-              const SizedBox(width: 15,),
-              const SizedBox(width: 15,),
-              Text(pb.authStore.model?.getStringValue("username"), style: theme.textTheme.displaySmall,)
+              const SizedBox(
+                width: 15,
+              ),
+              const SizedBox(
+                width: 15,
+              ),
+              Text(
+                pb.authStore.model?.getStringValue("username"),
+                style: theme.textTheme.displaySmall,
+              )
             ],
           ),
         ),
