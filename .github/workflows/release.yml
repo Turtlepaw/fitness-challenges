@@ -18,7 +18,6 @@ jobs:
           channel: stable
 
       - run: flutter pub get
-
       - name: Decode keystore
         run: echo "$KEYSTORE" | base64 --decode > android/app/keystore.jks
         env:
@@ -26,8 +25,6 @@ jobs:
 
       - name: Build APK
         run: flutter build apk --release
-        env:
-          JAVA_HOME: /usr/lib/jvm/java-17-openjdk-amd64
 
       - name: Sign APK
         run: |
