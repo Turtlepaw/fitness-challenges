@@ -34,4 +34,4 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: APK
-          path: build/app/outputs/bundle/release/app-release.aab
+          path: build/app/outputs/bundle/release/app-cirelease-release.aab
