@@ -78,10 +78,25 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
             signingConfig signingConfigs.release
         }
+//        ciRelease {
+//            initWith(buildTypes.release)
+//            signingConfig signingConfigs.ciRelease
+//            // Additional configuration for CI/CD release builds
+//        }
+    }
+
+    flavorDimensions "default"
+
+    productFlavors {
         ciRelease {
-            initWith(buildTypes.release)
-            signingConfig signingConfigs.ciRelease
-            // Additional configuration for CI/CD release builds
+            dimension "default"
+            buildTypes {
+                release {
+                    minifyEnabled true
+                    proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+                    signingConfig signingConfigs.ciRelease
+                }
+            }
         }
     }
 }
