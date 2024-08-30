@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_symbols_icons/symbols.dart';
+import 'package:provider/provider.dart';
+
+import '../utils/health.dart';
 
 class CustomNavigationBar extends StatelessWidget {
   final GoRouterState? state;
@@ -9,16 +12,20 @@ class CustomNavigationBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final health = Provider.of<HealthManager>(context);
+
     return NavigationBar(
-      destinations: const [
-        NavigationDestination(
+      destinations: [
+        const NavigationDestination(
           selectedIcon: Icon(Symbols.home_rounded),
           icon: Icon(Symbols.home_rounded, fill: 0),
           label: 'Home',
         ),
         NavigationDestination(
-          selectedIcon: Badge(child: Icon(Symbols.settings_rounded)),
-          icon: Badge(child: Icon(Symbols.settings_rounded, fill: 0)),
+          selectedIcon: const Icon(Symbols.settings_rounded),
+          icon: health.isConnected
+              ? const Icon(Symbols.settings_rounded, fill: 0)
+              : const Badge(child: Icon(Symbols.settings_rounded, fill: 0)),
           label: 'Settings',
         ),
       ],

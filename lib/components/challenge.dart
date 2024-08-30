@@ -183,7 +183,7 @@ class _ChallengeDialogState extends State<ChallengeDialog> {
   @override
   void initState() {
     super.initState();
-    _controller = ConfettiController(duration: const Duration(seconds: 5));
+    _controller = ConfettiController(duration: const Duration(seconds: 8));
     _challenge = widget.challenge;
     subscribe();
   }
@@ -461,7 +461,7 @@ class _ChallengeDialogState extends State<ChallengeDialog> {
                     child: ConfettiWidget(
                       blastDirectionality: BlastDirectionality.directional,
                       blastDirection: pi / 2,
-                      gravity: 0.7,
+                      gravity: 0.3,
                       colors: [
                         // Colors.green,
                         // Colors.blue,

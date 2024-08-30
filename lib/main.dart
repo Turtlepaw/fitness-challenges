@@ -2,6 +2,7 @@ import 'package:bottom_sheet/bottom_sheet.dart';
 import 'package:dynamic_color/dynamic_color.dart';
 import 'package:fitness_challenges/components/bottomSheet.dart';
 import 'package:fitness_challenges/components/challenge.dart';
+import 'package:fitness_challenges/components/loader.dart';
 import 'package:fitness_challenges/components/navBar.dart';
 import 'package:fitness_challenges/create.dart';
 import 'package:fitness_challenges/pb.dart';
@@ -55,7 +56,6 @@ final _router =
       path: '/',
       builder: (context, state) => SplashScreen(asyncFunction: () async {
             var pb = Provider.of<PocketBase>(context, listen: false);
-            await Future.delayed(const Duration(seconds: 1));
             if (context.mounted) {
               if (pb.authStore.isValid) {
                 // User is logged in, navigate to home
@@ -331,6 +331,7 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     final challengeProvider =
         Provider.of<ChallengeProvider>(context, listen: true);
+    final mediaQuery = MediaQuery.of(context);
     // This method is rerun every time setState is called, for instance as done
     // by the _incrementCounter method above.
     //
@@ -366,7 +367,14 @@ class _HomePageState extends State<HomePage> {
           // wireframe for each widget.
 
           children: <Widget>[
-            if (challengeProvider.challenges.isNotEmpty)
+            if(challengeProvider.isLoading)
+              ...List.generate(3, (index) {
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 10),
+                  child: LoadingBox(width: mediaQuery.size.width - 30, height: 150),
+                );
+              })
+            else if (challengeProvider.challenges.isNotEmpty)
               ...challengeProvider.challenges.map((value) {
                 return Padding(
                   padding: const EdgeInsets.symmetric(vertical: 5),

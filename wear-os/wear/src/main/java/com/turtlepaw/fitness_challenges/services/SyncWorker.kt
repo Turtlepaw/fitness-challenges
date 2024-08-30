@@ -46,11 +46,11 @@ class SyncWorker(val context: Context, workerParams: WorkerParameters) :
     Worker(context, workerParams) {
 
     override fun doWork(): Result = runBlocking {
-        Log.d("MyPetWorker", "Starting...")
+        Log.d("FitnessChallenges", "Starting...")
         if (context.checkSelfPermission(Manifest.permission.ACTIVITY_RECOGNITION)
             != PackageManager.PERMISSION_GRANTED
         ) {
-            Log.d("MyPetWorker", "Permissions not granted...")
+            Log.d("FitnessChallenges", "Permissions not granted...")
             return@runBlocking Result.retry()
         }
 
@@ -62,11 +62,11 @@ class SyncWorker(val context: Context, workerParams: WorkerParameters) :
         val passiveListenerCallback = object : PassiveListenerCallback {
             override fun onNewDataPointsReceived(dataPoints: DataPointContainer) {
                 super.onNewDataPointsReceived(dataPoints)
-                Log.d("MyPetWorker", "Steps changed")
+                Log.d("FitnessChallenges", "Steps changed")
                 val steps = stepsFromDataPoint(
                     dataPoints.getData(DataType.STEPS_DAILY)
                 )
-                Log.d("MyPetWorker", "Steps are: $steps")
+                Log.d("FitnessChallenges", "Steps are: $steps")
 
                 // Update cat's status
                 CoroutineScope(Dispatchers.IO).launch {
@@ -90,7 +90,7 @@ class SyncWorker(val context: Context, workerParams: WorkerParameters) :
             passiveListenerCallback
         )
 
-        Log.d("MyPetWorker", "Registered, waiting...")
+        Log.d("FitnessChallenges", "Registered, waiting...")
 
         // Wait until data is received
         deferred.await()
@@ -100,7 +100,7 @@ class SyncWorker(val context: Context, workerParams: WorkerParameters) :
             passiveMonitoringClient.clearPassiveListenerCallbackAsync()
         }
 
-        Log.d("MyPetWorker", "All done!")
+        Log.d("FitnessChallenges", "All done!")
         return@runBlocking Result.success()
     }
 
@@ -160,7 +160,7 @@ fun Context.scheduleSyncWorker() {
     WorkManager.getInstance(this).enqueueUniqueWork("worker", ExistingWorkPolicy.REPLACE, workRequest)
 }
 
-fun Context.schedulePeriodicMyPetWorker() {
+fun Context.schedulePeriodicFitnessChallenges() {
     val periodicWorkRequest = PeriodicWorkRequestBuilder<SyncWorker>(Duration.ofMinutes(35))
         .setBackoffCriteria(BackoffPolicy.LINEAR, 1, TimeUnit.MINUTES)
         .build()

@@ -293,9 +293,9 @@ class _SettingsPageState extends State<SettingsPage> {
                         ),
                       child: Text(
                         _isAvailable
-                            ? (_isHealthConnected
+                            ? (_isHealthConnected && healthType != null
                             ? "Health connected via ${HealthTypeManager.formatType(healthType)}"
-                            : "Connect Health Platform")
+                            : "Connect a health platform")
                             : "Health unavailable",
                         style: theme.textTheme.titleLarge,
                         textAlign: TextAlign.center,
@@ -364,12 +364,12 @@ class _SettingsPageState extends State<SettingsPage> {
                                 : null,
                             selected: healthType == HealthType.watch,
                             // add loading
-                            avatar: _isWatchLoading
+                            avatar: _isWatchLoading && _watchAvailable
                                 ? const CircularProgressIndicator(
                                     strokeWidth: 3,
                                     strokeCap: StrokeCap.round,
                                   )
-                                : const SizedBox(),
+                                : null,
                             showCheckmark: !_isWatchLoading,
                           )
                         ],

@@ -8,4 +8,8 @@
     <!-- App text -->
     <string name="shortcut_short_label">Specific</string>
     <string name="shortcut_long_label">Open Specific Screen</string>
+    <string name="error_icon_description">Error icon</string>
+    <string name="permissions_not_granted">Permissions not granted</string>
+    <string name="last_synced">Last synced %1$s</string>
+    <string name="never_synced">Never synced</string>
 </resources>

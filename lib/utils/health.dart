@@ -21,6 +21,9 @@ class HealthManager with ChangeNotifier {
   int? _steps;
   int? get steps => _steps;
 
+  bool _isConnected = false;
+  bool get isConnected => _isConnected;
+
   /// Attempts to fetch health data if all permissions are granted
   void fetchHealthData({BuildContext? context}) async {
     final health = Health();
@@ -40,24 +43,30 @@ class HealthManager with ChangeNotifier {
       var now = DateTime.now();
       var midnight = DateTime(now.year, now.month, now.day);
       _steps = await Health().getTotalStepsInInterval(midnight, now);
+      _isConnected = true;
       notifyListeners(); // Notify listeners about the change
-    } else if (type == HealthType.watch) {
-      final FlutterWearOsConnectivity _flutterWearOsConnectivity =
+    } else if (type == HealthType.watch && Platform.isAndroid) {
+      final FlutterWearOsConnectivity flutterWearOsConnectivity =
           FlutterWearOsConnectivity();
 
       await Future.delayed(const Duration(seconds: 2));
       // Fetches most recent data, even if it's from yesterday
-      _flutterWearOsConnectivity.configureWearableAPI();
-      var data = await _flutterWearOsConnectivity.getAllDataItems();
-      final id = "com.turtlepaw.fitness_challenges.steps";
-      final timeId = "com.turtlepaw.fitness_challenges.timestamp";
-      print(data);
+      flutterWearOsConnectivity.configureWearableAPI();
+      var data = await flutterWearOsConnectivity.getAllDataItems();
+      const id = "com.turtlepaw.fitness_challenges.steps";
+      const timeId = "com.turtlepaw.fitness_challenges.timestamp";
+      debugPrint(data.toString());
+
+      var devices = await flutterWearOsConnectivity.getConnectedDevices();
+      if(devices.isNotEmpty) _isConnected = true;
 
       if(data.isEmpty){
         return debugPrint("No steps from today");
       }
 
       if (data?.first?.mapData[id] != null) {
+        // This makes sure it doesn't use data
+        // from yesterday
         var _timestamp = DateTime.parse(data.first.mapData[timeId]);
         if (isToday(_timestamp)) {
           _steps = data.first.mapData[id];
