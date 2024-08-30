@@ -24,7 +24,11 @@ jobs:
           KEYSTORE: ${{ secrets.KEYSTORE }}
 
       - name: Build app bundle
-        run: flutter build appbundle --release
+        run: flutter build appbundle --flavor ciRelease --release
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
 
       - name: Upload app bundle
         uses: actions/upload-artifact@v3
