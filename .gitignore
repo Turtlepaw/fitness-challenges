@@ -47,3 +47,4 @@ app.*.map.json
 
 # Wear os
 /wear-os/wear/build
+/wear-os/.gradle
