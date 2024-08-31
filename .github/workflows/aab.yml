@@ -34,21 +34,32 @@ jobs:
         env:
           KEYSTORE: ${{ secrets.KEYSTORE }}
 
-      - name: Build APK/AAB
-        run: |
-          if [ "${{ github.event.inputs.buildType }}" == "apk" ]; then
-            flutter build apk --flavor ciRelease --release
-          else
-            flutter build appbundle --flavor ciRelease --release
-          fi
+      - name: Build APK
+        if: ${{ github.event.inputs.buildType == 'apk' }}
+        run: flutter build apk --flavor ciRelease --release
         env:
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
 
-      - name: Upload Artifact
+      - name: Build AAB
+        if: ${{ github.event.inputs.buildType == 'aab' }}
+        run: flutter build appbundle --flavor ciRelease --release
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+
+      - name: Upload APK
+        if: ${{ github.event.inputs.buildType == 'apk' }}
         uses: actions/upload-artifact@v3
         with:
-          name: Build-${{ github.event.inputs.buildType }}
-          path: |
-            ${{ github.event.inputs.buildType == 'apk' && 'build/app/outputs/flutter-apk/app-cirelease-release.apk' || 'build/app/outputs/bundle/release/app-cirelease-release.aab' }}
+          name: APK
+          path: build/app/outputs/flutter-apk/app-cirelease-release.apk
+
+      - name: Upload AAB
+        if: ${{ github.event.inputs.buildType == 'aab' }}
+        uses: actions/upload-artifact@v3
+        with:
+          name: AAB
+          path: build/app/outputs/bundle/release/app-cirelease-release.aab
