@@ -28,8 +28,8 @@ class _SettingsPageState extends State<SettingsPage> {
   bool _isLoading = false;
   bool _isAvailable = true;
   bool _isHealthConnected = false;
-  bool _watchAvailable = false;
   bool _isWatchLoading = false;
+  bool _isSysHealthLoading = false;
   late String username;
   late PocketBase pb;
   late HealthType? healthType;
@@ -47,12 +47,7 @@ class _SettingsPageState extends State<SettingsPage> {
         .getStringValue("username", "unknown");
 
     //subscribe();
-    _checkWearOS();
     _getHealthType();
-
-    _flutterWearOsConnectivity.dataChanged().listen((dataEvents) {
-      print(dataEvents.map((e) => e.dataItem));
-    });
   }
 
   void _getHealthType() async {
@@ -61,20 +56,6 @@ class _SettingsPageState extends State<SettingsPage> {
     setState(() {
       healthType = type;
     });
-  }
-
-  void _checkWearOS() async {
-    await _flutterWearOsConnectivity.configureWearableAPI();
-    if (Platform.isAndroid) {
-      List<WearOsDevice> connectedDevices =
-          await _flutterWearOsConnectivity.getConnectedDevices();
-      print(connectedDevices);
-      if (connectedDevices.isNotEmpty) {
-        setState(() {
-          _watchAvailable = true;
-        });
-      }
-    }
   }
 
   void subscribe() {
@@ -121,7 +102,11 @@ class _SettingsPageState extends State<SettingsPage> {
     });
 
     if (mounted) {
-      Provider.of<HealthManager>(context, listen: false).fetchHealthData();
+      final p = Provider.of<HealthManager>(context, listen: false);
+          p.fetchHealthData();
+          p.checkConnectionState();
+    } else {
+      debugPrint("not mounted");
     }
 
     try {
@@ -293,7 +278,7 @@ class _SettingsPageState extends State<SettingsPage> {
                         ),
                       child: Text(
                         _isAvailable
-                            ? (_isHealthConnected && healthType != null
+                            ? (healthType != null
                             ? "Health connected via ${HealthTypeManager.formatType(healthType)}"
                             : "Connect a health platform")
                             : "Health unavailable",
@@ -302,7 +287,7 @@ class _SettingsPageState extends State<SettingsPage> {
                       ),
                       ),
                       const SizedBox(height: 5),
-                      if (!_isHealthConnected)
+                      if (healthType == null)
                         const Text(
                           "Connect a health platform to create and join challenges",
                           textAlign: TextAlign.center,
@@ -341,37 +326,47 @@ class _SettingsPageState extends State<SettingsPage> {
                         children: [
                           FilterChip(
                             onSelected: (_isAvailable
-                                ? (_isHealthConnected &&
-                                        healthType == HealthType.systemManaged
-                                    ? null
-                                    : _connectSystemHealthPlatform)
+                                ? _connectSystemHealthPlatform
                                 : null),
-                            label: Text(_isAvailable
+                            label: Text(health.capabilities.contains(HealthType.systemManaged)
                                 ? ((_isHealthConnected &&
                                         healthType == HealthType.systemManaged)
                                     ? "Connected"
                                     : "System")
                                 : "Unavailable"),
                             selected: healthType == HealthType.systemManaged,
+                            avatar: _isSysHealthLoading && health.capabilities.contains(HealthType.systemManaged)
+                                ? const CircularProgressIndicator(
+                              strokeWidth: 3,
+                              strokeCap: StrokeCap.round,
+                            )
+                                : null,
+                            showCheckmark: !_isSysHealthLoading,
                           ),
                           const SizedBox(
                             width: 15,
                           ),
                           FilterChip(
                             label: const Text("Wear OS"),
-                            onSelected: _watchAvailable
+                            onSelected: health.capabilities.contains(HealthType.watch)
                                 ? ((isSelected) => _connectWearOS())
                                 : null,
                             selected: healthType == HealthType.watch,
-                            // add loading
-                            avatar: _isWatchLoading && _watchAvailable
+                            avatar: _isWatchLoading && health.capabilities.contains(HealthType.watch)
                                 ? const CircularProgressIndicator(
                                     strokeWidth: 3,
                                     strokeCap: StrokeCap.round,
                                   )
                                 : null,
                             showCheckmark: !_isWatchLoading,
-                          )
+                          ),
+                          const SizedBox(
+                            width: 5,
+                          ),
+                          IconButton.filledTonal(onPressed: (){
+                            health.fetchHealthData();
+                            health.checkConnectionState();
+                          }, icon: const Icon(Symbols.refresh_rounded))
                         ],
                       )
                     ]),

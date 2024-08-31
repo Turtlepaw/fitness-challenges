@@ -13,6 +13,7 @@ import 'package:provider/provider.dart';
 import 'package:reactive_forms/reactive_forms.dart';
 
 import '../constants.dart';
+import '../utils/health.dart';
 
 class JoinDialog extends StatefulWidget {
   final PocketBase pb;
@@ -25,7 +26,7 @@ class JoinDialog extends StatefulWidget {
 
 class _JoinDialogState extends State<JoinDialog> {
   bool _isDialogLoading = true;
-  bool _isHealthAvailable = true;
+  late bool _isHealthAvailable;
   bool _isJoining = false;
 
   // Form definition
@@ -44,24 +45,11 @@ class _JoinDialogState extends State<JoinDialog> {
       _isDialogLoading = true;
     });
 
-    try {
-      final result = await Health().hasPermissions(types);
-      if (result == false) {
-        setState(() {
-          _isHealthAvailable = false;
-        });
-      }
-    } catch (error) {
-      if (error is MissingPluginException) {
-        setState(() {
-          _isHealthAvailable = false;
-        });
-      }
-    } finally {
-      setState(() {
-        _isDialogLoading = false;
-      });
-    }
+    final health = Provider.of<HealthManager>(context);
+    setState(() {
+      _isHealthAvailable = health.isConnected;
+      _isDialogLoading = false;
+    });
   }
 
   @override
@@ -156,7 +144,7 @@ class _JoinDialogState extends State<JoinDialog> {
             const SizedBox(height: 10),
             Text(
               "You must connect a health service before joining a challenge",
-              style: theme.typography.englishLike.titleLarge,
+              style: theme.textTheme.titleLarge,
               textAlign: TextAlign.center,
             )
           ],

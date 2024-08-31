@@ -16,7 +16,8 @@ import 'package:pocketbase/pocketbase.dart';
 import 'package:provider/provider.dart';
 import 'package:reactive_forms/reactive_forms.dart';
 
-import 'constants.dart';
+import '../constants.dart';
+import '../utils/health.dart';
 
 class CreateDialog extends StatefulWidget {
   final PocketBase pb;
@@ -29,7 +30,7 @@ class CreateDialog extends StatefulWidget {
 
 class _CreateDialogState extends State<CreateDialog> {
   bool _isDialogLoading = true;
-  bool _isHealthAvailable = true;
+  late bool _isHealthAvailable;
   bool _isCreating = false;
 
   // Form definition
@@ -52,24 +53,11 @@ class _CreateDialogState extends State<CreateDialog> {
       _isDialogLoading = true;
     });
 
-    try {
-      final result = await Health().hasPermissions(types);
-      if(result == false){
-        setState(() {
-          _isHealthAvailable = false;
-        });
-      }
-    } catch (error) {
-      if (error is MissingPluginException) {
-        setState(() {
-          _isHealthAvailable = false;
-        });
-      }
-    } finally {
-      setState(() {
-        _isDialogLoading = false;
-      });
-    }
+    final health = Provider.of<HealthManager>(context);
+    setState(() {
+      _isHealthAvailable = health.isConnected;
+      _isDialogLoading = false;
+    });
   }
 
   @override
@@ -86,14 +74,16 @@ class _CreateDialogState extends State<CreateDialog> {
                 },
               ),
               actions: <Widget>[
-                ReactiveFormConsumer(builder: (context, form, widget) => _isCreating
+                ReactiveFormConsumer(builder: (context, form, widget) =>
+                _isCreating
                     ? const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 15),
-                  child: SizedBox(
-                    width: 15,
-                    height: 15,
-                    child: CircularProgressIndicator(strokeCap: StrokeCap.round),
-                  )
+                    padding: EdgeInsets.symmetric(horizontal: 15),
+                    child: SizedBox(
+                      width: 15,
+                      height: 15,
+                      child: CircularProgressIndicator(
+                          strokeCap: StrokeCap.round),
+                    )
                 )
                     : TextButton(
                   onPressed: (form.valid && _isHealthAvailable)
@@ -106,15 +96,17 @@ class _CreateDialogState extends State<CreateDialog> {
               title: const Text("Create Challenge"),
             ),
             body: _isDialogLoading
-                ? const Center(child: CircularProgressIndicator(strokeCap: StrokeCap.round),)
+                ? const Center(
+              child: CircularProgressIndicator(strokeCap: StrokeCap.round),)
                 : (
-            _isHealthAvailable ? CreateWidget() : _buildHealthUnavailable(context)
+                _isHealthAvailable ? CreateWidget() : _buildHealthUnavailable(
+                    context)
             ),
           ),
         ));
   }
-  
-  Widget _buildHealthUnavailable(BuildContext context){
+
+  Widget _buildHealthUnavailable(BuildContext context) {
     var theme = Theme.of(context);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 15),
@@ -130,7 +122,7 @@ class _CreateDialogState extends State<CreateDialog> {
             const SizedBox(height: 10),
             Text(
               "You must connect a health service before creating a challenge",
-              style: theme.typography.englishLike.titleLarge,
+              style: theme.textTheme.titleLarge,
               textAlign: TextAlign.center,
             )
           ],
@@ -143,29 +135,45 @@ class _CreateDialogState extends State<CreateDialog> {
     setState(() {
       _isCreating = true;
     });
-    bool autoEndValue = form.control(autoEnd).value;
+    bool autoEndValue = form
+        .control(autoEnd)
+        .value;
     try {
-      final challenge = switch (form.control(type).value) {
-        0 => BingoDataManager(usersBingoData: [
-            UserBingoData(
-              userId: widget.pb.authStore.model.id,
-              activities: Bingo().generateBingoActivities(
-                  DifficultyExtension.of(form.control(difficulty).value)),
-            ),
-          ]).toJson(),
-        1 => StepsDataManager([
-            UserStepsData(userId: widget.pb.authStore.model.id, entries: [])
-          ]).toJson(),
+      final challenge = switch (form
+          .control(type)
+          .value) {
+        0 =>
+            BingoDataManager(usersBingoData: [
+              UserBingoData(
+                userId: widget.pb.authStore.model.id,
+                activities: Bingo().generateBingoActivities(
+                    DifficultyExtension.of(form
+                        .control(difficulty)
+                        .value)),
+              ),
+            ]).toJson(),
+        1 =>
+            StepsDataManager([
+              UserStepsData(userId: widget.pb.authStore.model.id, entries: [])
+            ]).toJson(),
         _ => throw UnimplementedError(),
       };
 
       await widget.pb.collection("challenges").create(body: {
-        "name": form.control(title).value,
-        "type": form.control(type).value,
+        "name": form
+            .control(title)
+            .value,
+        "type": form
+            .control(type)
+            .value,
         "users": [widget.pb.authStore.model.id],
         "endDate":
-            autoEndValue == true ? null : pbDateFormat.format(form.control(date).value),
-        "difficulty": form.control(difficulty).value,
+        autoEndValue == true ? null : pbDateFormat.format(form
+            .control(date)
+            .value),
+        "difficulty": form
+            .control(difficulty)
+            .value,
         "host": widget.pb.authStore.model.id,
         "winner": null,
         "ended": false,
@@ -223,15 +231,15 @@ class CreateWidget extends StatelessWidget {
 
     return Center(
         child: Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        buildChallengeSelector(theme),
-        _buildTextFields(theme),
-        _buildDatePickers(context, theme),
-        _buildDifficultyLevels(theme),
-        //FilledButton(onPressed: (){}, child: Text("Create"))
-      ],
-    ));
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            buildChallengeSelector(theme),
+            _buildTextFields(theme),
+            _buildDatePickers(context, theme),
+            _buildDifficultyLevels(theme),
+            //FilledButton(onPressed: (){}, child: Text("Create"))
+          ],
+        ));
   }
 
   Widget buildChallengeSelector(ThemeData theme) {
@@ -254,20 +262,29 @@ class CreateWidget extends StatelessWidget {
                 spacing: 10, // Space between chips horizontally
                 runSpacing: 10, // Space between chips vertically
                 children: [
-                  ...challenges.asMap().entries.map((entry) {
+                  ...challenges
+                      .asMap()
+                      .entries
+                      .map((entry) {
                     final c = entry.value;
                     final index = entry.key;
                     return FilterChip(
-                      avatar: form.control(type).value == index
+                      avatar: form
+                          .control(type)
+                          .value == index
                           ? null
                           : Icon(c.icon),
                       label: Text(c.name),
                       onSelected: index == 1
                           ? (value) {
-                              form.control(type).value = index;
-                            }
+                        form
+                            .control(type)
+                            .value = index;
+                      }
                           : null,
-                      selected: form.control(type).value == index,
+                      selected: form
+                          .control(type)
+                          .value == index,
                     );
                   }).toList(),
                 ],
@@ -304,34 +321,36 @@ class CreateWidget extends StatelessWidget {
   Widget _buildTextFields(ThemeData theme) {
     return LayoutBuilder(
         builder: (BuildContext context, BoxConstraints constraints) {
-      return ConstraintsTransformBox(
-          constraintsTransform: (constraints) => BoxConstraints(
-                maxWidth:
+          return ConstraintsTransformBox(
+              constraintsTransform: (constraints) =>
+                  BoxConstraints(
+                    maxWidth:
                     constraints.maxWidth > 450 ? 400 : constraints.maxWidth,
-              ),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-            child: Column(
-              children: [
-                Text(
-                  "Details",
-                  style: theme.typography.englishLike.labelLarge,
-                ),
-                const SizedBox(
-                  height: 10,
-                ),
-                ReactiveTextField(
-                  formControlName: title,
-                  decoration: const InputDecoration(
-                    border: OutlineInputBorder(),
-                    labelText: 'Title',
-                    icon: Icon(Symbols.description_rounded),
                   ),
-                )
-              ],
-            ),
-          ));
-    });
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 20, vertical: 10),
+                child: Column(
+                  children: [
+                    Text(
+                      "Details",
+                      style: theme.typography.englishLike.labelLarge,
+                    ),
+                    const SizedBox(
+                      height: 10,
+                    ),
+                    ReactiveTextField(
+                      formControlName: title,
+                      decoration: const InputDecoration(
+                        border: OutlineInputBorder(),
+                        labelText: 'Title',
+                        icon: Icon(Symbols.description_rounded),
+                      ),
+                    )
+                  ],
+                ),
+              ));
+        });
   }
 
   Widget _buildDatePickers(BuildContext context, ThemeData theme) {
@@ -340,58 +359,74 @@ class CreateWidget extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: 10),
         child: Center(
             child: Column(
-          children: [
-            Text(
-              "Start & End Date",
-              style: theme.typography.englishLike.labelLarge,
-            ),
-            const SizedBox(
-              height: 10,
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 10),
-              child: Wrap(
-                alignment: WrapAlignment.center,
-                spacing: 10, // Space between chips horizontally
-                runSpacing: 10,
-                children: [
-                  FilterChip(
-                      selected: form.control(date).isNotNull,
-                      onSelected: (v) {
-                        showDatePicker(
+              children: [
+                Text(
+                  "Start & End Date",
+                  style: theme.typography.englishLike.labelLarge,
+                ),
+                const SizedBox(
+                  height: 10,
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 10),
+                  child: Wrap(
+                    alignment: WrapAlignment.center,
+                    spacing: 10, // Space between chips horizontally
+                    runSpacing: 10,
+                    children: [
+                      FilterChip(
+                          selected: form
+                              .control(date)
+                              .isNotNull,
+                          onSelected: (v) {
+                            showDatePicker(
                                 context: context,
                                 firstDate:
-                                    DateTime.now().add(const Duration(days: 2)),
+                                DateTime.now().add(const Duration(days: 2)),
                                 lastDate: DateTime.now()
                                     .add(const Duration(days: 365 * 2)))
-                            .then((value) {
-                          form.control(autoEnd).value = false;
-                          form.control(date).value = value;
-                        });
-                      },
-                      label: Text(
-                        form.control(date).value == null
-                            ? "Set End Date"
-                            : _formatRange(form),
-                      )),
-                  FilterChip(
-                      selected: form.control(autoEnd).value,
-                      onSelected: form.control(type).value == 1
-                          ? null
-                          : (value) {
-                              form.control(autoEnd).value = value;
-                              if (value) {
-                                form.control(date).value = null;
-                              }
-                            },
-                      label: const Text(
-                        "End when complete",
-                      ))
-                ],
-              ),
-            )
-          ],
-        )),
+                                .then((value) {
+                              form
+                                  .control(autoEnd)
+                                  .value = false;
+                              form
+                                  .control(date)
+                                  .value = value;
+                            });
+                          },
+                          label: Text(
+                            form
+                                .control(date)
+                                .value == null
+                                ? "Set End Date"
+                                : _formatRange(form),
+                          )),
+                      FilterChip(
+                          selected: form
+                              .control(autoEnd)
+                              .value,
+                          onSelected: form
+                              .control(type)
+                              .value == 1
+                              ? null
+                              : (value) {
+                            form
+                                .control(autoEnd)
+                                .value = value;
+                            if (value) {
+                              form
+                                  .control(date)
+                                  .value = null;
+                            }
+                          },
+                          label: const Text(
+                            "End when complete",
+                          ))
+                    ],
+                  ),
+                )
+              ],
+            )),
       );
     });
   }
@@ -402,42 +437,50 @@ class CreateWidget extends StatelessWidget {
           padding: const EdgeInsets.symmetric(vertical: 10),
           child: Center(
               child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                "Difficulty",
-                style: theme.typography.englishLike.labelLarge,
-              ),
-              const SizedBox(
-                height: 10,
-              ),
-              Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 10),
-                  child: Wrap(
-                    alignment: WrapAlignment.center,
-                    spacing: 10, // Space between chips horizontally
-                    runSpacing: 10, //
-                    children: [
-                      ...Difficulty.values.map((l) {
-                        return FilterChip(
-                          label: Text(_getDifficultyLabel(l.index)),
-                          onSelected: form.control(type).value == 1
-                              ? null
-                              : (value) {
-                                  form.control(difficulty).value = l.index;
-                                },
-                          selected: form.control(difficulty).value == l.index,
-                        );
-                      }),
-                    ],
-                  ))
-            ],
-          )));
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    "Difficulty",
+                    style: theme.typography.englishLike.labelLarge,
+                  ),
+                  const SizedBox(
+                    height: 10,
+                  ),
+                  Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 10),
+                      child: Wrap(
+                        alignment: WrapAlignment.center,
+                        spacing: 10, // Space between chips horizontally
+                        runSpacing: 10, //
+                        children: [
+                          ...Difficulty.values.map((l) {
+                            return FilterChip(
+                              label: Text(_getDifficultyLabel(l.index)),
+                              onSelected: form
+                                  .control(type)
+                                  .value == 1
+                                  ? null
+                                  : (value) {
+                                form
+                                    .control(difficulty)
+                                    .value = l.index;
+                              },
+                              selected: form
+                                  .control(difficulty)
+                                  .value == l.index,
+                            );
+                          }),
+                        ],
+                      ))
+                ],
+              )));
     });
   }
 
   String _formatRange(FormGroup form) {
-    var dateRange = form.control(date).value;
+    var dateRange = form
+        .control(date)
+        .value;
     if (dateRange == null) return "";
     final format = DateFormat('MMM dd');
 

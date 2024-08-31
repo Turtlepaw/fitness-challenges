@@ -19,32 +19,75 @@ class HealthManager with ChangeNotifier {
   HealthManager(this.challengeProvider, this.pb);
 
   int? _steps;
+
   int? get steps => _steps;
 
   bool _isConnected = false;
+
   bool get isConnected => _isConnected;
+
+  List<HealthType> _capabilities = List.empty(growable: true);
+
+  List<HealthType> get capabilities => _capabilities;
+
+  /// Checks the connection state and updates `isConnected`
+  Future<void> checkConnectionState() async {
+    final health = Health();
+    final type = await HealthTypeManager().getHealthType();
+
+    if (Platform.isAndroid) {
+      final isAvailable = types
+          .map((type) => health.isDataTypeAvailable(type))
+          .every((item) => item == true);
+      if (isAvailable) _capabilities.add(HealthType.systemManaged);
+
+      final FlutterWearOsConnectivity flutterWearOsConnectivity =
+          FlutterWearOsConnectivity();
+      await flutterWearOsConnectivity.configureWearableAPI();
+      var caps = await flutterWearOsConnectivity.getAllCapabilities();
+      print("Caps: $caps");
+
+      if (caps.containsKey("verify_wear_app")) {
+        capabilities.add(HealthType.watch);
+      }
+
+      if (type == HealthType.systemManaged) {
+        final hasPermissions =
+            await health.hasPermissions(types, permissions: permissions);
+
+        _isConnected = isAvailable && (hasPermissions ?? false);
+      } else if(type == HealthType.watch){
+        _isConnected = caps.containsKey("verify_wear_app");
+      }
+    }
+
+    notifyListeners();
+  }
 
   /// Attempts to fetch health data if all permissions are granted
   void fetchHealthData({BuildContext? context}) async {
     final health = Health();
     final type = await HealthTypeManager().getHealthType();
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-
-    final isAvailable = types
-        .map((type) => health.isDataTypeAvailable(type))
-        .every((item) => item == true);
-    final hasPermissions =
-        await health.hasPermissions(types, permissions: permissions);
 
     if (!pb.authStore.isValid) return;
     var userId = pb.authStore.model?.id;
 
-    if (isAvailable && hasPermissions! && type == HealthType.systemManaged) {
-      var now = DateTime.now();
-      var midnight = DateTime(now.year, now.month, now.day);
-      _steps = await Health().getTotalStepsInInterval(midnight, now);
-      _isConnected = true;
-      notifyListeners(); // Notify listeners about the change
+    if (type == HealthType.systemManaged && Platform.isAndroid) {
+      final isAvailable = types
+          .map((type) => health.isDataTypeAvailable(type))
+          .every((item) => item == true);
+      if (!isAvailable) return;
+
+      final hasPermissions =
+          await health.hasPermissions(types, permissions: permissions);
+
+      if (hasPermissions == true) {
+        var now = DateTime.now();
+        var midnight = DateTime(now.year, now.month, now.day);
+        _steps = await Health().getTotalStepsInInterval(midnight, now);
+        _isConnected = true;
+        notifyListeners(); // Notify listeners about the change
+      }
     } else if (type == HealthType.watch && Platform.isAndroid) {
       final FlutterWearOsConnectivity flutterWearOsConnectivity =
           FlutterWearOsConnectivity();
@@ -58,9 +101,9 @@ class HealthManager with ChangeNotifier {
       debugPrint(data.toString());
 
       var devices = await flutterWearOsConnectivity.getConnectedDevices();
-      if(devices.isNotEmpty) _isConnected = true;
+      if (devices.isNotEmpty) _isConnected = true;
 
-      if(data.isEmpty){
+      if (data.isEmpty) {
         return debugPrint("No steps from today");
       }
 
@@ -141,7 +184,7 @@ class HealthTypeManager {
     return data != null ? HealthType.values.elementAt(data) : null;
   }
 
-  static String formatType(HealthType? type){
+  static String formatType(HealthType? type) {
     return switch (type) {
       HealthType.systemManaged => "System",
       HealthType.watch => _getWatchType(),

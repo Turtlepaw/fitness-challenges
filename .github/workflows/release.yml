@@ -1,9 +1,20 @@
-on: workflow_dispatch
-name: Build release APK
+on:
+  workflow_dispatch:
+    inputs:
+      buildType:
+        description: 'Build Type'
+        required: true
+        default: 'apk'
+        type: choice
+        options:
+          - apk
+          - aab
+
+name: Release
 
 jobs:
   build:
-    name: Build APK
+    name: Build APK/AAB
     runs-on: ubuntu-latest
 
     steps:
@@ -18,20 +29,28 @@ jobs:
           channel: stable
 
       - run: flutter pub get
+
       - name: Decode keystore
         run: echo "$KEYSTORE" | base64 --decode > android/app/keystore.jks
         env:
           KEYSTORE: ${{ secrets.KEYSTORE }}
 
-      - name: Build APK
-        run: flutter build apk --flavor ciRelease --release
+      - name: Build APK/AAB
+        run: |
+          if [ "${{ github.event.inputs.buildType }}" == "apk" ]; then
+            flutter build apk --flavor ciRelease --release
+          else
+            flutter build appbundle --flavor ciRelease --release
+          fi
         env:
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
 
-      - name: Upload APK
+      - name: Upload Artifact
         uses: actions/upload-artifact@v3
         with:
-          name: APK
-          path: build/app/outputs/flutter-apk/app-cirelease-release.apk
+          name: ${{ github.event.inputs.buildType | upper }}
+          path: |
+            build/app/outputs/flutter-apk/app-cirelease-release.apk
+            build/app/outputs/bundle/release/app-cirelease-release.aab

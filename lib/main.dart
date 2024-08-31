@@ -4,7 +4,7 @@ import 'package:fitness_challenges/components/bottomSheet.dart';
 import 'package:fitness_challenges/components/challenge.dart';
 import 'package:fitness_challenges/components/loader.dart';
 import 'package:fitness_challenges/components/navBar.dart';
-import 'package:fitness_challenges/create.dart';
+import 'package:fitness_challenges/routes/create.dart';
 import 'package:fitness_challenges/pb.dart';
 import 'package:fitness_challenges/routes/join.dart';
 import 'package:fitness_challenges/routes/settings.dart';
@@ -123,6 +123,7 @@ void main() async {
   final manager = ChallengeProvider(pb: pb);
   final healthManager = HealthManager(manager, pb);
   manager.init();
+  healthManager.checkConnectionState();
   healthManager.fetchHealthData();
   Health().configure(useHealthConnectIfAvailable: true);
 

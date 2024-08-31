@@ -45,6 +45,7 @@ class ChallengeProvider with ChangeNotifier {
     } catch (e) {
       print("Error fetching challenges: $e");
     } finally {
+      await Future.delayed(const Duration(seconds: 1));
       _isLoading = false;
       notifyListeners();
     }

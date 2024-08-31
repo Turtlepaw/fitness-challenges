@@ -24,16 +24,16 @@ class _SplashScreenState extends State<SplashScreen> {
     setState(() {
       _visible = true;
     });
-    await Future.delayed(const Duration(seconds: 1)); // Duration for fade-in
-
-    // Wait for additional time (optional) before starting fade-out
-    await Future.delayed(const Duration(seconds: 2));
-
-    // Fade out
-    setState(() {
-      _visible = false;
-    });
-    await Future.delayed(const Duration(seconds: 1)); // Duration for fade-out
+    // await Future.delayed(const Duration(seconds: 1)); // Duration for fade-in
+    //
+    // // Wait for additional time (optional) before starting fade-out
+    // await Future.delayed(const Duration(seconds: 2));
+    //
+    // // Fade out
+    // setState(() {
+    //   _visible = false;
+    // });
+    // await Future.delayed(const Duration(seconds: 1)); // Duration for fade-out
 
     // Execute async function
     await widget.asyncFunction();
