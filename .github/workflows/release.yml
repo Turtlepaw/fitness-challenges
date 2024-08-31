@@ -52,14 +52,14 @@ jobs:
 
       - name: Upload APK
         if: ${{ github.event.inputs.buildType == 'apk' }}
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: APK
           path: build/app/outputs/flutter-apk/app-cirelease-release.apk
 
       - name: Upload AAB
         if: ${{ github.event.inputs.buildType == 'aab' }}
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: AAB
           path: build/app/outputs/bundle/release/app-cirelease-release.aab
