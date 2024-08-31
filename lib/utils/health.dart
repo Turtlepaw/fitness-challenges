@@ -45,7 +45,7 @@ class HealthManager with ChangeNotifier {
           FlutterWearOsConnectivity();
       await flutterWearOsConnectivity.configureWearableAPI();
       var caps = await flutterWearOsConnectivity.getAllCapabilities();
-      print("Caps: $caps");
+      debugPrint("Caps: $caps");
 
       if (caps.containsKey("verify_wear_app")) {
         capabilities.add(HealthType.watch);

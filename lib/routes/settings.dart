@@ -344,7 +344,7 @@ class _SettingsPageState extends State<SettingsPage> {
                             showCheckmark: !_isSysHealthLoading,
                           ),
                           const SizedBox(
-                            width: 15,
+                            width: 10,
                           ),
                           FilterChip(
                             label: const Text("Wear OS"),
@@ -363,10 +363,10 @@ class _SettingsPageState extends State<SettingsPage> {
                           const SizedBox(
                             width: 5,
                           ),
-                          IconButton.filledTonal(onPressed: (){
+                          IconButton.outlined(onPressed: (){
                             health.fetchHealthData();
                             health.checkConnectionState();
-                          }, icon: const Icon(Symbols.refresh_rounded))
+                          }, icon: Icon(Symbols.refresh_rounded, color: theme.colorScheme.onSurface,))
                         ],
                       )
                     ]),

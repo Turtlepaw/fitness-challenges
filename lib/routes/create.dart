@@ -53,9 +53,10 @@ class _CreateDialogState extends State<CreateDialog> {
       _isDialogLoading = true;
     });
 
-    final health = Provider.of<HealthManager>(context);
+    final health = Provider.of<HealthManager>(context, listen: false);
+    final state = health.isConnected;
     setState(() {
-      _isHealthAvailable = health.isConnected;
+      _isHealthAvailable = state;
       _isDialogLoading = false;
     });
   }
