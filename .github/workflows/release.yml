@@ -56,6 +56,7 @@ jobs:
         with:
           name: APK
           path: build/app/outputs/flutter-apk/app-cirelease-release.apk
+          compression-level: 0
 
       - name: Upload AAB
         if: ${{ github.event.inputs.buildType == 'aab' }}
