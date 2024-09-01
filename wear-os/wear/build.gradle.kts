@@ -26,10 +26,19 @@ android {
 
     signingConfigs {
         create("release") {
-            keyAlias = keyProperties["keyAlias"] as String
-            keyPassword = keyProperties["keyPassword"] as String
-            storeFile = file(keyProperties["storeFile"] as String)
-            storePassword = keyProperties["storePassword"] as String
+            if (!isCI) {
+                // Ensure properties are not null before casting
+                keyAlias = keyProperties["keyAlias"]?.toString() ?: throw IllegalStateException("keyAlias not found in key.properties")
+                keyPassword = keyProperties["keyPassword"]?.toString() ?: throw IllegalStateException("keyPassword not found in key.properties")
+                storeFile = file(keyProperties["storeFile"]?.toString() ?: throw IllegalStateException("storeFile not found in key.properties"))
+                storePassword = keyProperties["storePassword"]?.toString() ?: throw IllegalStateException("storePassword not found in key.properties")
+            } else {
+                // Use default values or ensure that environment variables are set
+                storeFile = file("keystore.jks") // Ensure this file is available
+                storePassword = System.getenv("KEYSTORE_PASSWORD") ?: throw IllegalStateException("KEYSTORE_PASSWORD environment variable not set")
+                keyAlias = System.getenv("KEY_ALIAS") ?: throw IllegalStateException("KEY_ALIAS environment variable not set")
+                keyPassword = System.getenv("KEY_PASSWORD") ?: throw IllegalStateException("KEY_PASSWORD environment variable not set")
+            }
         }
         create("ciRelease"){
                 storeFile = file("keystore.jks")
