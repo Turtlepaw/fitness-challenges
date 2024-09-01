@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:fitness_challenges/constants.dart';
 import 'package:fitness_challenges/routes/profile.dart';
 import 'package:fitness_challenges/utils/common.dart';
@@ -148,19 +146,10 @@ class _SettingsPageState extends State<SettingsPage> {
     });
 
     await _flutterWearOsConnectivity.configureWearableAPI();
-    final _connectedDevices =
-        await _flutterWearOsConnectivity.getConnectedDevices();
-    for (var device in _connectedDevices) {
-      await _flutterWearOsConnectivity
-          .sendMessage(Uint8List(1),
-              deviceId: device.id,
-              path: "/request-sync",
-              priority: MessagePriority.high)
-          .then((d) => print(d));
-    }
-    List<DataItem> _allDataItems =
+
+    List<DataItem> allDataItems =
         await _flutterWearOsConnectivity.getAllDataItems();
-    print(_allDataItems.map((e) => e.mapData));
+    debugPrint(allDataItems.map((e) => e.mapData).join(","));
     if (mounted) {
       Provider.of<HealthManager>(context, listen: false)
           .fetchHealthData(context: context);
@@ -170,7 +159,7 @@ class _SettingsPageState extends State<SettingsPage> {
     await Future.delayed(const Duration(seconds: 1));
     setState(() {
       healthType = HealthType.watch;
-      if (_allDataItems.isNotEmpty) _isHealthConnected = true;
+      if (allDataItems.isNotEmpty) _isHealthConnected = true;
       _isWatchLoading = false;
     });
     return true;
@@ -329,7 +318,7 @@ class _SettingsPageState extends State<SettingsPage> {
                                 ? _connectSystemHealthPlatform
                                 : null),
                             label: Text(health.capabilities.contains(HealthType.systemManaged)
-                                ? ((_isHealthConnected &&
+                                ? ((health.isConnected &&
                                         healthType == HealthType.systemManaged)
                                     ? "Connected"
                                     : "System")

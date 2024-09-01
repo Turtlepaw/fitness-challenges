@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:fitness_challenges/constants.dart';
 import 'package:fitness_challenges/types/challenges.dart';
@@ -56,7 +57,7 @@ class HealthManager with ChangeNotifier {
             await health.hasPermissions(types, permissions: permissions);
 
         _isConnected = isAvailable && (hasPermissions ?? false);
-      } else if(type == HealthType.watch){
+      } else if (type == HealthType.watch) {
         _isConnected = caps.containsKey("verify_wear_app");
       }
     }
@@ -92,15 +93,25 @@ class HealthManager with ChangeNotifier {
       final FlutterWearOsConnectivity flutterWearOsConnectivity =
           FlutterWearOsConnectivity();
 
+      await flutterWearOsConnectivity.configureWearableAPI();
+      var devices = await flutterWearOsConnectivity.getConnectedDevices();
+
+      for (var device in devices) {
+        await flutterWearOsConnectivity
+            .sendMessage(Uint8List(1),
+                deviceId: device.id,
+                path: "/request-sync",
+                priority: MessagePriority.high)
+            .then((d) => debugPrint(d.toString()));
+      }
+
       await Future.delayed(const Duration(seconds: 2));
       // Fetches most recent data, even if it's from yesterday
-      flutterWearOsConnectivity.configureWearableAPI();
       var data = await flutterWearOsConnectivity.getAllDataItems();
       const id = "com.turtlepaw.fitness_challenges.steps";
       const timeId = "com.turtlepaw.fitness_challenges.timestamp";
       debugPrint(data.toString());
 
-      var devices = await flutterWearOsConnectivity.getConnectedDevices();
       if (devices.isNotEmpty) _isConnected = true;
 
       if (data.isEmpty) {
