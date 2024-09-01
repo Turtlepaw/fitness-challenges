@@ -1,0 +1,66 @@
+on:
+  workflow_dispatch:
+    inputs:
+      buildType:
+        description: 'Build Type'
+        required: true
+        default: 'apk'
+        type: choice
+        options:
+          - apk
+          - aab
+
+name: Release Wear OS
+
+jobs:
+  build:
+    name: Build APK/AAB
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17.x'
+          distribution: 'temurin'
+
+      - name: Set up Gradle
+        uses: gradle/gradle-build-action@v2
+
+      - name: Decode keystore
+        run: echo "$KEYSTORE" | base64 --decode > wear-os/app/keystore.jks
+        env:
+          KEYSTORE: ${{ secrets.KEYSTORE }}
+
+      - name: Build APK
+        if: ${{ github.event.inputs.buildType == 'apk' }}
+        run: ./gradlew assembleCiRelease
+        working-directory: wear-os
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+
+      - name: Build AAB
+        if: ${{ github.event.inputs.buildType == 'aab' }}
+        run: ./gradlew bundleCiRelease
+        working-directory: wear-os
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+
+      - name: Upload APK
+        if: ${{ github.event.inputs.buildType == 'apk' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: APK
+          path: wear-os/app/build/outputs/apk/ciRelease/*.apk
+          compression-level: 0
+
+      - name: Upload AAB
+        if: ${{ github.event.inputs.buildType == 'aab' }}
+        uses: actions/upload-artifact

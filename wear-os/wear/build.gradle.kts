@@ -24,6 +24,12 @@ android {
             storeFile = file(keyProperties["storeFile"] as String)
             storePassword = keyProperties["storePassword"] as String
         }
+        create("ciRelease"){
+                storeFile = file("keystore.jks")
+                storePassword = System.getenv("KEYSTORE_PASSWORD")
+                keyAlias = System.getenv("KEY_ALIAS")
+                keyPassword = System.getenv("KEY_PASSWORD")
+        }
     }
 
     defaultConfig {
@@ -48,6 +54,20 @@ android {
             ndk {
                 debugSymbolLevel = "FULL"
             }
+        }
+        create("ciRelease") {
+            initWith(getByName("release")) // Inherit configurations from release
+            isDebuggable = false
+            isMinifyEnabled = true
+            signingConfig = signingConfigs.getByName("ciRelease")
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
+            ndk {
+                debugSymbolLevel = "FULL"
+            }
+            // Add any specific configurations for CI builds if needed
         }
     }
 
