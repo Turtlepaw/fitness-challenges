@@ -31,7 +31,7 @@ jobs:
         uses: gradle/gradle-build-action@v2
 
       - name: Decode keystore
-        run: echo "$KEYSTORE" | base64 --decode > wear-os/app/keystore.jks
+        run: echo "$KEYSTORE" | base64 --decode > wear-os/wear/keystore.jks
         env:
           KEYSTORE: ${{ secrets.KEYSTORE }}
 
