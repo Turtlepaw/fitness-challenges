@@ -63,4 +63,4 @@ jobs:
 
       - name: Upload AAB
         if: ${{ github.event.inputs.buildType == 'aab' }}
-        uses: actions/upload-artifact
+        uses: actions/upload-artifact@v4
