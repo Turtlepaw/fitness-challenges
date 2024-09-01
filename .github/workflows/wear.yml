@@ -24,7 +24,7 @@ jobs:
       - name: Set up Java 17
         uses: actions/setup-java@v4
         with:
-          java-version: '17.x'
+          java-version: '11.x'
           distribution: 'temurin'
 
       - name: Setup Gradle
