@@ -54,6 +54,7 @@ class ChallengeProvider with ChangeNotifier {
   Future<void> reloadChallenges(BuildContext context) async {
     _challenges = [];
     await fetchChallenges();
+    notifyListeners();
     //if(context.mounted){
       //Provider.of<HealthManager>(context, listen: false).fetchHealthData();
     //}
