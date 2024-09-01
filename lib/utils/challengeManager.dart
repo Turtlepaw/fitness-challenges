@@ -53,6 +53,7 @@ class ChallengeProvider with ChangeNotifier {
 
   Future<void> reloadChallenges(BuildContext context) async {
     _challenges = [];
+    notifyListeners();
     await fetchChallenges();
     notifyListeners();
     //if(context.mounted){
