@@ -1,7 +1,14 @@
 import java.util.Properties
 
-val keyProperties = Properties().apply {
-    file("../key.properties").inputStream().use { load(it) }
+val isCI = System.getenv("CI")?.toBoolean() ?: false
+
+// Load key.properties only if not running in CI
+val keyProperties = if (!isCI) {
+    Properties().apply {
+        file("../key.properties").inputStream().use { load(it) }
+    }
+} else {
+    Properties()
 }
 
 @Suppress("DSL_SCOPE_VIOLATION") // TODO: Remove once KTIJ-19369 is fixed
