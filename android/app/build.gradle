@@ -73,6 +73,11 @@ android {
     }
 
     buildTypes {
+        debug {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.debug
+        }
         release {
             minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
@@ -88,6 +93,9 @@ android {
     flavorDimensions "default"
 
     productFlavors {
+        debugVariant {
+            dimension "default"
+        }
         ciRelease {
             dimension "default"
             buildTypes {
