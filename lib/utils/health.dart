@@ -135,10 +135,6 @@ class HealthManager with ChangeNotifier {
           debugPrint("No steps from today");
         }
       }
-
-      if (context != null && context.mounted) {
-        challengeProvider.reloadChallenges(context);
-      }
     }
 
     for (final challenge in challengeProvider.challenges) {
@@ -159,6 +155,7 @@ class HealthManager with ChangeNotifier {
     }
 
     if (context != null && context.mounted) {
+      await Future.delayed(const Duration(seconds: 2));
       challengeProvider.reloadChallenges(context);
     }
 
