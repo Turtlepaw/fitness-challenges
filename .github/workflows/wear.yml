@@ -47,6 +47,7 @@ jobs:
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+          CI: true
 
       - name: Build AAB
         if: ${{ github.event.inputs.buildType == 'aab' }}
@@ -56,6 +57,7 @@ jobs:
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+          CI: true
 
       - name: Upload APK
         if: ${{ github.event.inputs.buildType == 'apk' }}
