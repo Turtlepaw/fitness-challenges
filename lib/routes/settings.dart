@@ -28,6 +28,7 @@ class _SettingsPageState extends State<SettingsPage> {
   bool _isHealthConnected = false;
   bool _isWatchLoading = false;
   bool _isSysHealthLoading = false;
+  bool _isRefreshing = false;
   late String username;
   late PocketBase pb;
   late HealthType? healthType;
@@ -352,10 +353,23 @@ class _SettingsPageState extends State<SettingsPage> {
                           const SizedBox(
                             width: 5,
                           ),
-                          IconButton.outlined(onPressed: (){
-                            health.fetchHealthData();
-                            health.checkConnectionState();
-                          }, icon: Icon(Symbols.refresh_rounded, color: theme.colorScheme.onSurface,))
+                          IconButton.outlined(onPressed: () async {
+                            setState(() {
+                              _isRefreshing = true;
+                            });
+                            await health.fetchHealthData();
+                            await health.checkConnectionState();
+                            setState(() {
+                              _isRefreshing = false;
+                            });
+                          }, icon: _isRefreshing ? const SizedBox(
+                            width: 15,
+                            height: 15,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              strokeCap: StrokeCap.round,
+                            ),
+                          ) : Icon(Symbols.refresh_rounded, color: theme.colorScheme.onSurface,))
                         ],
                       )
                     ]),

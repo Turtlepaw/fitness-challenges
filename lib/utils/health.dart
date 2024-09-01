@@ -66,7 +66,7 @@ class HealthManager with ChangeNotifier {
   }
 
   /// Attempts to fetch health data if all permissions are granted
-  void fetchHealthData({BuildContext? context}) async {
+  Future<void> fetchHealthData({BuildContext? context}) async {
     final health = Health();
     final type = await HealthTypeManager().getHealthType();
 
@@ -95,6 +95,10 @@ class HealthManager with ChangeNotifier {
 
       await flutterWearOsConnectivity.configureWearableAPI();
       var devices = await flutterWearOsConnectivity.getConnectedDevices();
+      if(devices.isEmpty){
+        print("No connected devices");
+        return;
+      }
 
       for (var device in devices) {
         await flutterWearOsConnectivity
