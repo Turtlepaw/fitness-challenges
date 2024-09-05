@@ -42,23 +42,28 @@ class HealthManager with ChangeNotifier {
           .every((item) => item == true);
       if (isAvailable) _capabilities.add(HealthType.systemManaged);
 
-      final FlutterWearOsConnectivity flutterWearOsConnectivity =
-          FlutterWearOsConnectivity();
-      await flutterWearOsConnectivity.configureWearableAPI();
-      var caps = await flutterWearOsConnectivity.getAllCapabilities();
-      debugPrint("Caps: $caps");
+      try {
+        final FlutterWearOsConnectivity flutterWearOsConnectivity =
+            FlutterWearOsConnectivity();
+        await flutterWearOsConnectivity.configureWearableAPI();
+        var caps = await flutterWearOsConnectivity.getAllCapabilities();
+        debugPrint("Caps: $caps");
 
-      if (caps.containsKey("verify_wear_app")) {
-        capabilities.add(HealthType.watch);
-      }
+        if (caps.containsKey("verify_wear_app")) {
+          capabilities.add(HealthType.watch);
+        }
 
-      if (type == HealthType.systemManaged) {
-        final hasPermissions =
-            await health.hasPermissions(types, permissions: permissions);
+        if (type == HealthType.systemManaged) {
+          final hasPermissions =
+              await health.hasPermissions(types, permissions: permissions);
 
-        _isConnected = isAvailable && (hasPermissions ?? false);
-      } else if (type == HealthType.watch) {
-        _isConnected = caps.containsKey("verify_wear_app");
+          _isConnected = isAvailable && (hasPermissions ?? false);
+        } else if (type == HealthType.watch) {
+          _isConnected = caps.containsKey("verify_wear_app");
+        }
+      } catch (e, stacktrace) {
+        debugPrint("Error in Wear OS connection: $e");
+        debugPrint(stacktrace.toString());
       }
     }
 
@@ -90,50 +95,55 @@ class HealthManager with ChangeNotifier {
         notifyListeners(); // Notify listeners about the change
       }
     } else if (type == HealthType.watch && Platform.isAndroid) {
-      final FlutterWearOsConnectivity flutterWearOsConnectivity =
-          FlutterWearOsConnectivity();
+      try {
+        final FlutterWearOsConnectivity flutterWearOsConnectivity =
+            FlutterWearOsConnectivity();
 
-      await flutterWearOsConnectivity.configureWearableAPI();
-      var devices = await flutterWearOsConnectivity.getConnectedDevices();
-      if(devices.isEmpty){
-        print("No connected devices");
-        return;
-      }
-
-      for (var device in devices) {
-        await flutterWearOsConnectivity
-            .sendMessage(Uint8List(1),
-                deviceId: device.id,
-                path: "/request-sync",
-                priority: MessagePriority.high)
-            .then((d) => debugPrint(d.toString()));
-      }
-
-      await Future.delayed(const Duration(seconds: 2));
-      // Fetches most recent data, even if it's from yesterday
-      var data = await flutterWearOsConnectivity.getAllDataItems();
-      const id = "com.turtlepaw.fitness_challenges.steps";
-      const timeId = "com.turtlepaw.fitness_challenges.timestamp";
-      debugPrint(data.toString());
-
-      if (devices.isNotEmpty) _isConnected = true;
-
-      if (data.isEmpty) {
-        return debugPrint("No steps from today");
-      }
-
-      if (data?.first?.mapData[id] != null) {
-        // This makes sure it doesn't use data
-        // from yesterday
-        var _timestamp = DateTime.parse(data.first.mapData[timeId]);
-        if (isToday(_timestamp)) {
-          _steps = data.first.mapData[id];
-
-          notifyListeners(); // Notify listeners about the change
-          debugPrint("Steps are at $_steps");
-        } else {
-          debugPrint("No steps from today");
+        await flutterWearOsConnectivity.configureWearableAPI();
+        var devices = await flutterWearOsConnectivity.getConnectedDevices();
+        if (devices.isEmpty) {
+          debugPrint("No connected devices");
+          return;
         }
+
+        for (var device in devices) {
+          await flutterWearOsConnectivity
+              .sendMessage(Uint8List(1),
+                  deviceId: device.id,
+                  path: "/request-sync",
+                  priority: MessagePriority.high)
+              .then((d) => debugPrint(d.toString()));
+        }
+
+        await Future.delayed(const Duration(seconds: 2));
+        // Fetches most recent data, even if it's from yesterday
+        var data = await flutterWearOsConnectivity.getAllDataItems();
+        const id = "com.turtlepaw.fitness_challenges.steps";
+        const timeId = "com.turtlepaw.fitness_challenges.timestamp";
+        debugPrint(data.toString());
+
+        if (devices.isNotEmpty) _isConnected = true;
+
+        if (data.isEmpty) {
+          return debugPrint("No steps from today");
+        }
+
+        if (data?.first?.mapData[id] != null) {
+          // This makes sure it doesn't use data
+          // from yesterday
+          var _timestamp = DateTime.parse(data.first.mapData[timeId]);
+          if (isToday(_timestamp)) {
+            _steps = data.first.mapData[id];
+
+            notifyListeners(); // Notify listeners about the change
+            debugPrint("Steps are at $_steps");
+          } else {
+            debugPrint("No steps from today");
+          }
+        }
+      } catch (e, stacktrace) {
+        debugPrint("Error fetching health data from Wear OS: $e");
+        debugPrint(stacktrace.toString());
       }
     }
 
@@ -148,9 +158,14 @@ class HealthManager with ChangeNotifier {
             StepsDataManager.fromJson(challenge.getDataValue("data"));
 
         manager.updateUserActivity(userId, steps!);
-        pb
-            .collection(Collection.challenges)
-            .update(challenge.id, body: {'data': manager.toJson()});
+        try {
+          pb
+              .collection(Collection.challenges)
+              .update(challenge.id, body: {'data': manager.toJson()});
+        } catch (e, stacktrace) {
+          debugPrint("Error updating challenge: $e");
+          debugPrint(stacktrace.toString());
+        }
       }
     }
 
@@ -158,16 +173,6 @@ class HealthManager with ChangeNotifier {
       await Future.delayed(const Duration(seconds: 2));
       challengeProvider.reloadChallenges(context);
     }
-
-    // Heart Rate will be done later
-    // using age ->
-
-    // var heartRate = await Health().getHealthDataFromTypes(
-    //     startTime: midnight,
-    //     endTime: now,
-    //     types: [HealthDataType.HEART_RATE]);
-    // print(heartRate.map((hr) => (hr.value as NumericHealthValue).numericValue));
-    //print(heartRate);
   }
 
   bool isToday(DateTime date) {
