@@ -276,7 +276,7 @@ packages:
     description:
       path: "."
       ref: HEAD
-      resolved-ref: "708ae46f5d3772e049dc34adc862759f766fdcfb"
+      resolved-ref: "27b7e2cfb52739470c3d09d2c28df480b940ed81"
       url: "https://github.com/Turtlepaw/flutter_wear_os_connectivity.git"
     source: git
     version: "1.0.0"
