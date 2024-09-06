@@ -36,9 +36,7 @@ class ChallengeProvider with ChangeNotifier {
 
     try {
       final response = await pb.collection("challenges").getFullList(
-        filter: "users.id ?= '${pb.authStore.model?.id}'",
-        expand: "users"
-      );
+          filter: "users.id ?= '${pb.authStore.model?.id}'", expand: "users");
 
       print("Challenges fetched: $response");
       _challenges = response;
@@ -51,13 +49,27 @@ class ChallengeProvider with ChangeNotifier {
     }
   }
 
+  Future<void> saveExisting(RecordModel model) async {
+    int index = _challenges.indexWhere((data) => data.id == model.id);
+
+    if (index != -1) {
+      // Replace the item while keeping its position
+      _challenges[index] = model;
+    } else {
+      // If the item is not found, you can add it (optional)
+      _challenges.add(model);
+    }
+
+    notifyListeners(); // Notify listeners about the change
+  }
+
   Future<void> reloadChallenges(BuildContext context) async {
     _challenges = [];
     notifyListeners();
     await fetchChallenges();
     notifyListeners();
     //if(context.mounted){
-      //Provider.of<HealthManager>(context, listen: false).fetchHealthData();
+    //Provider.of<HealthManager>(context, listen: false).fetchHealthData();
     //}
   }
 }

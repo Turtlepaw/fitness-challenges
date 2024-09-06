@@ -330,8 +330,7 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    final challengeProvider =
-        Provider.of<ChallengeProvider>(context, listen: true);
+    final challengeProvider = Provider.of<ChallengeProvider>(context, listen: true);
     final mediaQuery = MediaQuery.of(context);
     // This method is rerun every time setState is called, for instance as done
     // by the _incrementCounter method above.

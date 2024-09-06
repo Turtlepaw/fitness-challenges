@@ -47,6 +47,8 @@ class _ChallengeState extends State<Challenge> {
     widget.pb.collection("challenges").subscribe(widget.challenge.id,
         (newValue) {
       print("Got update (${newValue.action})");
+      Provider.of<ChallengeProvider>(context, listen: true)
+          .saveExisting(newValue.record!);
       setState(() {
         _challenge = newValue.record!;
       });
@@ -192,6 +194,8 @@ class _ChallengeDialogState extends State<ChallengeDialog> {
     widget.pb.collection("challenges").subscribe(widget.challenge.id,
         (newValue) {
       print("Got update (dialog)");
+      Provider.of<ChallengeProvider>(context, listen: true)
+          .saveExisting(newValue.record!);
       if (!_isDialogOpen) {
         setState(() {
           _challenge = newValue.record!;
