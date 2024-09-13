@@ -67,6 +67,14 @@ jobs:
           path: wear-os/wear/ciRelease/*.apk
           compression-level: 0
 
+      - name: Debug
+        working-directory: wear-os
+        run: ls wear/build/outputs/bundle/
+
+      - name: Debug
+        working-directory: wear-os
+        run: ls wear/build/outputs/bundle/ciRelease/
+
       - name: Upload AAB
         if: ${{ github.event.inputs.buildType == 'aab' }}
         uses: actions/upload-artifact@v4
@@ -74,6 +82,3 @@ jobs:
           name: AAB
           path: wear/build/outputs/bundle/ciRelease/*.aab
           compression-level: 0
-          
-      - name: Debug
-        run: ls wear/build/outputs/bundle/ciRelease/
