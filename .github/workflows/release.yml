@@ -51,16 +51,17 @@ jobs:
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
 
       - name: Upload APK
-        #if#: ${{ github.event.inputs.buildType == 'apk' }}
+        if: ${{ github.event.inputs.buildType == 'apk' }}
         uses: actions/upload-artifact@v4
         with:
           name: APK
           path: build/app/outputs/flutter-apk/*.apk
           compression-level: 0
 
-      #- name: Upload AAB
-       # if: ${{ github.event.inputs.buildType == 'aab' }}
-      #  uses: actions/upload-artifact@v4
-     #   with:
-      #    name: AAB
-       #   path: build/app/outputs/bundle/release/app-cirelease-release.aab
+      - name: Upload AAB
+        if: ${{ github.event.inputs.buildType == 'aab' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: AAB
+          path: build/app/outputs/bundle/ciReleaseRelease/*.aab
+          compression-level: 0
