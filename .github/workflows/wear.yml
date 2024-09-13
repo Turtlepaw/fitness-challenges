@@ -70,3 +70,7 @@ jobs:
       - name: Upload AAB
         if: ${{ github.event.inputs.buildType == 'aab' }}
         uses: actions/upload-artifact@v4
+        with:
+          name: AAB
+          path: wear-os/wear/build/outputs/aab/*/*.aab
+          compression-level: 0
