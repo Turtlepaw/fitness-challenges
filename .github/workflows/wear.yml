@@ -76,4 +76,4 @@ jobs:
           compression-level: 0
           
       - name: Debug
-        run: ls wear-os/wear/
+        run: ls wear-os/wear/release
