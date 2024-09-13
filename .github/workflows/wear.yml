@@ -74,3 +74,6 @@ jobs:
           name: AAB
           path: wear-os/wear/ciRelease/*.aab
           compression-level: 0
+          
+      - name: Debug
+        run: ls wear-os/wear/*/*.aab
