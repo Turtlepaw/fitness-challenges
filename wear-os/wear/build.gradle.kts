@@ -73,7 +73,7 @@ android {
         }
         create("ciRelease") {
             initWith(getByName("release")) // Inherit configurations from release
-            isDebuggable = false
+            //isDebuggable = false
             isMinifyEnabled = true
             signingConfig = signingConfigs.getByName("ciRelease")
             proguardFiles(
