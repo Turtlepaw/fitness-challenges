@@ -65,7 +65,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: APK
-          path: wear/build/outputs//ciRelease/wear-ciRelease.apk #wear-os/wear/ciRelease/*.apk
+          path: wear/build/outputs/apk/ciRelease/wear-ciRelease.apk #wear-os/wear/ciRelease/*.apk
           compression-level: 0
 
       - name: Upload AAB
