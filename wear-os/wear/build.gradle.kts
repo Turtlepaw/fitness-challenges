@@ -52,8 +52,8 @@ android {
         applicationId = "com.turtlepaw.fitness_challenges"
         minSdk = 30
         targetSdk = 33
-        versionCode = 13
-        versionName = "1.3"
+        versionCode = 1
+        versionName = "1.0-wear"
         vectorDrawables {
             useSupportLibrary = true
         }
