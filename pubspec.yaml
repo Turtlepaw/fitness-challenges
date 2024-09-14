@@ -76,6 +76,9 @@ dependencies:
   # temporary fix
   device_info_plus: ^10.1.2
   share_plus: ^10.0.2
+  flutter_local_notifications: ^17.2.2
+  flutter_background_service: ^5.0.10
+  workmanager: ^0.5.2
   #share_plus: 10.0.0
 
 dev_dependencies:

@@ -1,5 +1,6 @@
 import 'package:fitness_challenges/components/loader.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:pocketbase/pocketbase.dart';
@@ -62,6 +63,11 @@ class _LoginPageState extends State<LoginPage> {
             content: Text('Logged in!'),
           ),
         );
+
+        FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+        FlutterLocalNotificationsPlugin();
+        flutterLocalNotificationsPlugin.resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin>()?.requestNotificationsPermission();
 
         context.go("/home");
       }

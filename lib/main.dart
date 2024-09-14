@@ -4,14 +4,15 @@ import 'package:fitness_challenges/components/bottomSheet.dart';
 import 'package:fitness_challenges/components/challenge.dart';
 import 'package:fitness_challenges/components/loader.dart';
 import 'package:fitness_challenges/components/navBar.dart';
-import 'package:fitness_challenges/routes/create.dart';
 import 'package:fitness_challenges/pb.dart';
+import 'package:fitness_challenges/routes/create.dart';
 import 'package:fitness_challenges/routes/join.dart';
 import 'package:fitness_challenges/routes/settings.dart';
 import 'package:fitness_challenges/routes/splash.dart';
 import 'package:fitness_challenges/utils/challengeManager.dart';
 import 'package:fitness_challenges/utils/health.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:go_router/go_router.dart';
 import 'package:health/health.dart';
@@ -20,9 +21,12 @@ import 'package:material_symbols_icons/symbols.dart';
 import 'package:pocketbase/pocketbase.dart';
 import 'package:provider/provider.dart';
 import 'package:relative_time/relative_time.dart';
+import 'package:workmanager/workmanager.dart';
 
 import 'login.dart';
 
+final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+FlutterLocalNotificationsPlugin();
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
 final _shellNavigatorKey = GlobalKey<NavigatorState>();
 
@@ -116,6 +120,54 @@ final _router =
   )
 ]);
 
+@pragma('vm:entry-point')
+void notificationTapBackground(NotificationResponse notificationResponse) {
+  // ignore: avoid_print
+  print('notification(${notificationResponse.id}) action tapped: '
+      '${notificationResponse.actionId} with'
+      ' payload: ${notificationResponse.payload}');
+  if (notificationResponse.input?.isNotEmpty ?? false) {
+    // ignore: avoid_print
+    print(
+        'notification action tapped with input: ${notificationResponse.input}');
+  }
+}
+
+@pragma(
+    'vm:entry-point') // Mandatory if the App is obfuscated or using Flutter 3.1+
+void callbackDispatcher() {
+  Workmanager().executeTask((task, inputData) async {
+    print(
+        "Native called background task: $task");
+    FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+    FlutterLocalNotificationsPlugin();
+// initialise the plugin. app_icon needs to be a added as a drawable resource to the Android head project
+    const AndroidInitializationSettings initializationSettingsAndroid =
+    AndroidInitializationSettings('ic_notif');
+    final InitializationSettings initializationSettings = InitializationSettings(
+        android: initializationSettingsAndroid
+    );
+    await flutterLocalNotificationsPlugin.initialize(initializationSettings,
+        onDidReceiveNotificationResponse: notificationTapBackground);
+
+    // Show notification
+    const AndroidNotificationDetails androidNotificationDetails =
+    AndroidNotificationDetails('challenge_updates', 'Challenge Updates',
+        channelDescription: 'Receive updates to your joined challenges',
+        importance: Importance.defaultImportance,
+        priority: Priority.defaultPriority);
+    const NotificationDetails notificationDetails =
+    NotificationDetails(android: androidNotificationDetails);
+    await flutterLocalNotificationsPlugin.show(
+        0, "Woo, you're first! 🏆", "Tap to see leaderboard", notificationDetails,
+        payload: 'c1');
+
+    print(
+        "Notification sent"); //simpleTask will be emitted here.
+    return Future.value(true);
+  });
+}
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -126,6 +178,16 @@ void main() async {
   healthManager.checkConnectionState();
   healthManager.fetchHealthData();
   Health().configure(useHealthConnectIfAvailable: true);
+
+  // Background work
+  Workmanager().initialize(
+      callbackDispatcher, // The top level function, aka callbackDispatcher
+      isInDebugMode:
+          true // If enabled it will post a notification whenever the task is running. Handy for debugging tasks
+      );
+  Workmanager().registerPeriodicTask("background-sync", "BackgroundSync",
+      frequency: const Duration(hours: 1));
+  Workmanager().registerOneOffTask("background-sync-one-time", "BackgroundSyncOneTime");
 
   runApp(
     MultiProvider(
@@ -168,6 +230,12 @@ class _AppState extends State<App> {
     isLoggedIn = pb.authStore.isValid; // Initialize with current status
     if (pb.authStore.isValid) {
       subscribeUserData();
+      pb.collection("users").authRefresh();
+
+      FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+      FlutterLocalNotificationsPlugin();
+      flutterLocalNotificationsPlugin.resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin>()?.requestNotificationsPermission();
     }
 
     // Listen for changes in auth status
@@ -367,11 +435,13 @@ class _HomePageState extends State<HomePage> {
           // wireframe for each widget.
 
           children: <Widget>[
-            if(challengeProvider.isLoading)
+            if (challengeProvider.isLoading)
               ...List.generate(3, (index) {
                 return Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 10),
-                  child: LoadingBox(width: mediaQuery.size.width - 30, height: 150),
+                  padding:
+                      const EdgeInsets.symmetric(vertical: 5, horizontal: 10),
+                  child: LoadingBox(
+                      width: mediaQuery.size.width - 30, height: 150),
                 );
               })
             else if (challengeProvider.challenges.isNotEmpty)
