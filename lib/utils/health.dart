@@ -157,9 +157,10 @@ class HealthManager with ChangeNotifier {
         final manager =
             StepsDataManager.fromJson(challenge.getDataValue("data"));
 
+        print("Updating ${challenge.getStringValue("name")} to ${steps}");
         manager.updateUserActivity(userId, steps!);
         try {
-          pb
+          await pb
               .collection(Collection.challenges)
               .update(challenge.id, body: {'data': manager.toJson()});
         } catch (e, stacktrace) {
@@ -171,7 +172,7 @@ class HealthManager with ChangeNotifier {
 
     if (context != null && context.mounted) {
       await Future.delayed(const Duration(seconds: 2));
-      challengeProvider.reloadChallenges(context);
+      await challengeProvider.reloadChallenges(context);
     }
   }
 

@@ -1,7 +1,5 @@
-import 'package:fitness_challenges/utils/health.dart';
 import 'package:flutter/material.dart';
 import 'package:pocketbase/pocketbase.dart';
-import 'package:provider/provider.dart';
 
 class ChallengeProvider with ChangeNotifier {
   final PocketBase pb;
@@ -13,10 +11,10 @@ class ChallengeProvider with ChangeNotifier {
   List<RecordModel> get challenges => _challenges;
   bool get isLoading => _isLoading;
 
-  void init() {
+  Future<void> init() async {
     print("ChallengeProvider init called");
     if (pb.authStore.isValid) {
-      fetchChallenges();
+      await fetchChallenges();
     } else {
       pb.authStore.onChange.listen((e) {
         print("Auth Store changed");

@@ -139,6 +139,17 @@ void callbackDispatcher() {
   Workmanager().executeTask((task, inputData) async {
     print(
         "Native called background task: $task");
+
+    print("Syncing...");
+    final pb = await initializePocketbase();
+    final manager = ChallengeProvider(pb: pb);
+    final healthManager = HealthManager(manager, pb);
+    await manager.init();
+    await Health().configure(useHealthConnectIfAvailable: true);
+    await healthManager.checkConnectionState();
+    await healthManager.fetchHealthData();
+    print("Sync complete, ${healthManager.steps}");
+
     FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
     FlutterLocalNotificationsPlugin();
 // initialise the plugin. app_icon needs to be a added as a drawable resource to the Android head project
@@ -176,7 +187,7 @@ void main() async {
   final healthManager = HealthManager(manager, pb);
   manager.init();
   healthManager.checkConnectionState();
-  healthManager.fetchHealthData();
+  //healthManager.fetchHealthData();
   Health().configure(useHealthConnectIfAvailable: true);
 
   // Background work
