@@ -11,6 +11,7 @@ import 'package:fitness_challenges/routes/settings.dart';
 import 'package:fitness_challenges/routes/splash.dart';
 import 'package:fitness_challenges/utils/challengeManager.dart';
 import 'package:fitness_challenges/utils/health.dart';
+import 'package:fitness_challenges/utils/steps/data.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -21,6 +22,7 @@ import 'package:material_symbols_icons/symbols.dart';
 import 'package:pocketbase/pocketbase.dart';
 import 'package:provider/provider.dart';
 import 'package:relative_time/relative_time.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:workmanager/workmanager.dart';
 
 import 'login.dart';
@@ -142,6 +144,7 @@ void callbackDispatcher() {
 
     print("Syncing...");
     final pb = await initializePocketbase();
+    if(!pb.authStore.isValid) return Future.value(false);
     final manager = ChallengeProvider(pb: pb);
     final healthManager = HealthManager(manager, pb);
     await manager.init();
@@ -162,6 +165,8 @@ void callbackDispatcher() {
         onDidReceiveNotificationResponse: notificationTapBackground);
 
     // Show notification
+    // We just need to show syncing notifications
+    // and specialized
     const AndroidNotificationDetails androidNotificationDetails =
     AndroidNotificationDetails('challenge_updates', 'Challenge Updates',
         channelDescription: 'Receive updates to your joined challenges',
@@ -169,9 +174,55 @@ void callbackDispatcher() {
         priority: Priority.defaultPriority);
     const NotificationDetails notificationDetails =
     NotificationDetails(android: androidNotificationDetails);
-    await flutterLocalNotificationsPlugin.show(
-        0, "Woo, you're first! 🏆", "Tap to see leaderboard", notificationDetails,
-        payload: 'c1');
+
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    for(var challenge in manager.challenges){
+      var storedRankingState = prefs.getInt(challenge.id);
+      if(challenge.getIntValue("type") == 1){
+        final jsonMap = challenge.getDataValue<Map<String, dynamic>>("data");
+        final manager = StepsDataManager.fromJson(jsonMap);
+        final userTotals = manager.data.map((userData) {
+          final totalValue = userData.entries
+              .map((entry) => entry.value) // Extract the values
+              .fold(0, (sum, value) => sum + value); // Sum up the values
+          return {
+            'userId': userData.userId,
+            'totalValue': totalValue,
+          };
+        }).toList();
+
+        // Correctly sort by totalValue as an integer
+        userTotals.sort(
+                (a, b) => (b['totalValue'] as int).compareTo(a['totalValue'] as int));
+
+        int getUserPosition(){
+            for (int i = 0; i < userTotals.length; i++) {
+              if (userTotals[i]['userId'] == pb.authStore.model.id) {
+                return i + 1;
+              }
+            }
+            return -1;
+          }
+
+          var currentPosition = getUserPosition();
+        if(currentPosition == -1) continue;
+
+        bool isTop = currentPosition == 1; // Assuming top position is rank 1
+
+        // -1 = ended
+        if(challenge.getBoolValue("ended") && currentPosition != -1){
+          await flutterLocalNotificationsPlugin.show(0, "Challenge complete! ✨", "Tap to see how you finished ${challenge.getStringValue("name")}", notificationDetails, payload: challenge.id);
+          currentPosition = -1;
+        } else if (isTop && (storedRankingState == null || storedRankingState > 1)) {
+          // User reached the top
+          await flutterLocalNotificationsPlugin.show(0, "You're first! 🏆", "You're at the top of ${challenge.getStringValue("name")}", notificationDetails, payload: challenge.id);
+        } else if (!isTop && storedRankingState != null && storedRankingState == 1) {
+          await flutterLocalNotificationsPlugin.show(0, "Keep going! 🔥", "You're not longer at the top of ${challenge.getStringValue("name")}", notificationDetails, payload: challenge.id);
+        }
+
+        prefs.setInt(challenge.id, currentPosition);
+      }
+    }
 
     print(
         "Notification sent"); //simpleTask will be emitted here.
