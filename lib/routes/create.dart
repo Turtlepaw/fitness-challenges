@@ -1,15 +1,12 @@
 import 'dart:convert';
 
-import 'package:fitness_challenges/utils/challengeManager.dart';
 import 'package:fitness_challenges/types/challenges.dart';
 import 'package:fitness_challenges/utils/bingo/data.dart';
 import 'package:fitness_challenges/utils/bingo/manager.dart';
+import 'package:fitness_challenges/utils/challengeManager.dart';
 import 'package:fitness_challenges/utils/steps/data.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:go_router/go_router.dart';
-import 'package:health/health.dart';
 import 'package:intl/intl.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
 import 'package:pocketbase/pocketbase.dart';
@@ -185,6 +182,9 @@ class _CreateDialogState extends State<CreateDialog> {
       if (mounted) {
         Provider.of<ChallengeProvider>(context, listen: false)
             .reloadChallenges(context);
+
+        Provider.of<HealthManager>(context, listen: false)
+            .fetchHealthData(context: context);
 
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(

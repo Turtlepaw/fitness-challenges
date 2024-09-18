@@ -18,7 +18,7 @@ class StepsEntry {
   Map<String, dynamic> toJson() {
     return {
       'dateTime': dateTime.toIso8601String(),
-      'value': value,
+      'value': value
     };
   }
 }

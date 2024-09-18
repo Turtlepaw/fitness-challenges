@@ -201,13 +201,14 @@ void callbackDispatcher() {
                 return i + 1;
               }
             }
-            return -1;
+            return -2;
           }
 
           var currentPosition = getUserPosition();
-        if(currentPosition == -1) continue;
+        if(currentPosition == -2) continue;
 
         bool isTop = currentPosition == 1; // Assuming top position is rank 1
+        print(currentPosition);
 
         // -1 = ended
         if(challenge.getBoolValue("ended") && currentPosition != -1){

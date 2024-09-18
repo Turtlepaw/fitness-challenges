@@ -109,6 +109,8 @@ flutter:
     - images/icon_rounded.png
     - images/adaptive_icon.png
     - images/rocket_launch.png
+    - images/health_connect.png
+    - images/wear_os.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware

@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:fitness_challenges/constants.dart';
 import 'package:fitness_challenges/types/challenges.dart';
 import 'package:fitness_challenges/types/collections.dart';
+import 'package:fitness_challenges/utils/data_source_manager.dart';
 import 'package:fitness_challenges/utils/steps/data.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_wear_os_connectivity/flutter_wear_os_connectivity.dart';
@@ -22,6 +23,10 @@ class HealthManager with ChangeNotifier {
   int? _steps;
 
   int? get steps => _steps;
+
+  int? _azm;
+
+  int? get activeMinutes => _azm;
 
   bool _isConnected = false;
 
@@ -151,18 +156,25 @@ class HealthManager with ChangeNotifier {
       // Check if challenge has ended
       if (challenge.getBoolValue("ended") == true) continue;
 
-      var type = TypesExtension.of(challenge.getIntValue("type"));
+      var challengeType = TypesExtension.of(challenge.getIntValue("type"));
 
-      if (type == Types.steps && steps != null) {
+      if (challengeType == Types.steps && steps != null) {
         final manager =
             StepsDataManager.fromJson(challenge.getDataValue("data"));
 
         print("Updating ${challenge.getStringValue("name")} to ${steps}");
         manager.updateUserActivity(userId, steps!);
+
+        final dataSourceManager =
+            DataSourceManager.fromChallenge(challenge)
+                .setDataSource(userId, getSource(type!));
+
         try {
-          await pb
-              .collection(Collection.challenges)
-              .update(challenge.id, body: {'data': manager.toJson()});
+          await pb.collection(Collection.challenges).update(challenge.id,
+              body: {
+                'data': manager.toJson(),
+                'dataSources': dataSourceManager.toJson()
+              });
         } catch (e, stacktrace) {
           debugPrint("Error updating challenge: $e");
           debugPrint(stacktrace.toString());
@@ -173,6 +185,16 @@ class HealthManager with ChangeNotifier {
     if (context != null && context.mounted) {
       await Future.delayed(const Duration(seconds: 2));
       await challengeProvider.reloadChallenges(context);
+    }
+  }
+
+  DataSource getSource(HealthType type) {
+    if (type == HealthType.watch && Platform.isAndroid) {
+      return DataSource.wearOS;
+    } else if (type == HealthType.systemManaged && Platform.isAndroid) {
+      return DataSource.healthConnect;
+    } else {
+      return DataSource.unknown;
     }
   }
 

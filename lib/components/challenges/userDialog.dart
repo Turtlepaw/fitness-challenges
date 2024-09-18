@@ -1,14 +1,10 @@
-import 'package:fitness_challenges/components/loader.dart';
 import 'package:fitness_challenges/types/collections.dart';
+import 'package:fitness_challenges/utils/data_source_manager.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:material_symbols_icons/material_symbols_icons.dart';
 import 'package:pocketbase/pocketbase.dart';
-import 'package:provider/provider.dart';
-import 'package:share_plus/share_plus.dart';
 
-import '../../utils/challengeManager.dart';
 import '../../utils/manager.dart';
+
 class UserDialog extends StatefulWidget {
   final PocketBase pb;
   final RecordModel challenge;
@@ -26,6 +22,11 @@ class _UserDialogState extends State<UserDialog> {
   Widget build(BuildContext context) {
     final challenge = widget.challenge;
     var theme = Theme.of(context);
+    var dataSourceManager = DataSourceManager.fromChallenge(
+      challenge
+    );
+    print(dataSourceManager.users);
+
     return Dialog(
       child: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -54,9 +55,27 @@ class _UserDialogState extends State<UserDialog> {
                     children: [
                       Padding(
                         padding: const EdgeInsets.only(left: 15),
-                        child: Text(
-                          user.getStringValue("username") ?? "",
-                          style: theme.textTheme.titleLarge,
+                        child: Row(
+                          children: [
+                            Text(
+                              user.getStringValue("username") ?? "",
+                              style: theme.textTheme.titleLarge,
+                            ),
+                            SizedBox(width: 15,),
+                            if(dataSourceManager.getUser(user.id) != null) Container(
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(1000),
+                                color: Colors.white
+                              ),
+                              padding: EdgeInsets.all(5),
+                              child: Image.asset(
+                                  getSourceAsset(dataSourceManager.getUser(user.id)!),
+                                //scale: 8.5,
+                                width: 25,
+                                height: 25,
+                              ),
+                            )
+                          ],
                         ),
                       ),
                       TextButton(onPressed: user.id == challenge.getDataValue("host") ? null : () async {
@@ -96,6 +115,14 @@ class _UserDialogState extends State<UserDialog> {
         ),
       ),
     );
+  }
+
+  String getSourceAsset(DataSourceEntry entry){
+    if(entry.source == DataSource.healthConnect){
+      return "images/health_connect.png";
+    } else {
+      return "images/wear_os.png";
+    }
   }
 
   void _handleClose() {
