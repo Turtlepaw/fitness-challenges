@@ -12,6 +12,7 @@ import 'package:fitness_challenges/routes/splash.dart';
 import 'package:fitness_challenges/utils/challengeManager.dart';
 import 'package:fitness_challenges/utils/health.dart';
 import 'package:fitness_challenges/utils/steps/data.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -139,63 +140,64 @@ void notificationTapBackground(NotificationResponse notificationResponse) {
     'vm:entry-point') // Mandatory if the App is obfuscated or using Flutter 3.1+
 void callbackDispatcher() {
   Workmanager().executeTask((task, inputData) async {
-    print(
-        "Native called background task: $task");
+    try {
+      print(
+          "Native called background task: $task");
 
-    print("Syncing...");
-    final pb = await initializePocketbase();
-    if(!pb.authStore.isValid) return Future.value(false);
-    final manager = ChallengeProvider(pb: pb);
-    final healthManager = HealthManager(manager, pb);
-    await manager.init();
-    await Health().configure(useHealthConnectIfAvailable: true);
-    await healthManager.checkConnectionState();
-    await healthManager.fetchHealthData();
-    print("Sync complete, ${healthManager.steps}");
+      print("Syncing...");
+      final pb = await initializePocketbase();
+      if(!pb.authStore.isValid) return Future.value(false);
+      final manager = ChallengeProvider(pb: pb);
+      final healthManager = HealthManager(manager, pb);
+      await manager.init();
+      await Health().configure(useHealthConnectIfAvailable: true);
+      await healthManager.checkConnectionState();
+      await healthManager.fetchHealthData();
+      print("Sync complete, ${healthManager.steps}");
 
-    FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
-    FlutterLocalNotificationsPlugin();
+      FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+      FlutterLocalNotificationsPlugin();
 // initialise the plugin. app_icon needs to be a added as a drawable resource to the Android head project
-    const AndroidInitializationSettings initializationSettingsAndroid =
-    AndroidInitializationSettings('ic_notif');
-    final InitializationSettings initializationSettings = InitializationSettings(
-        android: initializationSettingsAndroid
-    );
-    await flutterLocalNotificationsPlugin.initialize(initializationSettings,
-        onDidReceiveNotificationResponse: notificationTapBackground);
+      const AndroidInitializationSettings initializationSettingsAndroid =
+      AndroidInitializationSettings('ic_notif', useBridgeTags: true);
+      final InitializationSettings initializationSettings = InitializationSettings(
+          android: initializationSettingsAndroid
+      );
+      await flutterLocalNotificationsPlugin.initialize(initializationSettings,
+          onDidReceiveNotificationResponse: notificationTapBackground);
 
-    // Show notification
-    // We just need to show syncing notifications
-    // and specialized
-    const AndroidNotificationDetails androidNotificationDetails =
-    AndroidNotificationDetails('challenge_updates', 'Challenge Updates',
-        channelDescription: 'Receive updates to your joined challenges',
-        importance: Importance.defaultImportance,
-        priority: Priority.defaultPriority);
-    const NotificationDetails notificationDetails =
-    NotificationDetails(android: androidNotificationDetails);
+      // Show notification
+      // We just need to show syncing notifications
+      // and specialized
+      const AndroidNotificationDetails androidNotificationDetails =
+      AndroidNotificationDetails('challenge_updates', 'Challenge Updates',
+          channelDescription: 'Receive updates to your joined challenges',
+          importance: Importance.defaultImportance,
+          priority: Priority.defaultPriority);
+      const NotificationDetails notificationDetails =
+      NotificationDetails(android: androidNotificationDetails);
 
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    for(var challenge in manager.challenges){
-      var storedRankingState = prefs.getInt(challenge.id);
-      if(challenge.getIntValue("type") == 1){
-        final jsonMap = challenge.getDataValue<Map<String, dynamic>>("data");
-        final manager = StepsDataManager.fromJson(jsonMap);
-        final userTotals = manager.data.map((userData) {
-          final totalValue = userData.entries
-              .map((entry) => entry.value) // Extract the values
-              .fold(0, (sum, value) => sum + value); // Sum up the values
-          return {
-            'userId': userData.userId,
-            'totalValue': totalValue,
-          };
-        }).toList();
+      final SharedPreferences prefs = await SharedPreferences.getInstance();
+      for(var challenge in manager.challenges){
+        var storedRankingState = prefs.getInt(challenge.id);
+        if(challenge.getIntValue("type") == 1){
+          final jsonMap = challenge.getDataValue<Map<String, dynamic>>("data");
+          final manager = StepsDataManager.fromJson(jsonMap);
+          final userTotals = manager.data.map((userData) {
+            final totalValue = userData.entries
+                .map((entry) => entry.value) // Extract the values
+                .fold(0, (sum, value) => sum + value); // Sum up the values
+            return {
+              'userId': userData.userId,
+              'totalValue': totalValue,
+            };
+          }).toList();
 
-        // Correctly sort by totalValue as an integer
-        userTotals.sort(
-                (a, b) => (b['totalValue'] as int).compareTo(a['totalValue'] as int));
+          // Correctly sort by totalValue as an integer
+          userTotals.sort(
+                  (a, b) => (b['totalValue'] as int).compareTo(a['totalValue'] as int));
 
-        int getUserPosition(){
+          int getUserPosition(){
             for (int i = 0; i < userTotals.length; i++) {
               if (userTotals[i]['userId'] == pb.authStore.model.id) {
                 return i + 1;
@@ -205,29 +207,34 @@ void callbackDispatcher() {
           }
 
           var currentPosition = getUserPosition();
-        if(currentPosition == -2) continue;
+          if(currentPosition == -2) continue;
 
-        bool isTop = currentPosition == 1; // Assuming top position is rank 1
-        print(currentPosition);
+          bool isTop = currentPosition == 1; // Assuming top position is rank 1
+          print(currentPosition);
 
-        // -1 = ended
-        if(challenge.getBoolValue("ended") && storedRankingState != -1){
-          await flutterLocalNotificationsPlugin.show(0, "Challenge complete! ✨", "Tap to see how you finished ${challenge.getStringValue("name")}", notificationDetails, payload: challenge.id);
-          currentPosition = -1;
-        } else if (isTop && (storedRankingState == null || storedRankingState > 1)) {
-          // User reached the top
-          await flutterLocalNotificationsPlugin.show(0, "You're first! 🏆", "You're at the top of ${challenge.getStringValue("name")}", notificationDetails, payload: challenge.id);
-        } else if (!isTop && storedRankingState != null && storedRankingState == 1) {
-          await flutterLocalNotificationsPlugin.show(0, "Keep going! 🔥", "You're not longer at the top of ${challenge.getStringValue("name")}", notificationDetails, payload: challenge.id);
+          // -1 = ended
+          if(challenge.getBoolValue("ended") && (storedRankingState != null || storedRankingState != -1)){
+            await flutterLocalNotificationsPlugin.show(challenge.id.hashCode, "Challenge complete! ✨", "See how you finished ${challenge.getStringValue("name")}", notificationDetails, payload: challenge.id);
+            currentPosition = -1;
+          } else if (isTop && (storedRankingState == null || storedRankingState > 1)) {
+            // User reached the top
+            await flutterLocalNotificationsPlugin.show(challenge.id.hashCode, "You're first! 🏆", "You're at the top of ${challenge.getStringValue("name")}", notificationDetails, payload: challenge.id);
+          } else if (!isTop && storedRankingState != null && storedRankingState == 1) {
+            await flutterLocalNotificationsPlugin.show(challenge.id.hashCode, "Keep going! 🔥", "You're not longer at the top of ${challenge.getStringValue("name")}", notificationDetails, payload: challenge.id);
+          }
+
+          prefs.setInt(challenge.id, currentPosition);
         }
-
-        prefs.setInt(challenge.id, currentPosition);
       }
-    }
 
-    print(
-        "Notification sent"); //simpleTask will be emitted here.
-    return Future.value(true);
+      print(
+          "Notification sent"); //simpleTask will be emitted here.
+      return Future.value(true);
+    } catch(err, stackTrace){
+      print(err);
+      debugPrintStack(stackTrace: stackTrace);
+      return Future.value(false);
+    }
   });
 }
 
@@ -246,11 +253,12 @@ void main() async {
   Workmanager().initialize(
       callbackDispatcher, // The top level function, aka callbackDispatcher
       isInDebugMode:
-          true // If enabled it will post a notification whenever the task is running. Handy for debugging tasks
+        kDebugMode
       );
   Workmanager().registerPeriodicTask("background-sync", "BackgroundSync",
       frequency: const Duration(hours: 1));
-  Workmanager().registerOneOffTask("background-sync-one-time", "BackgroundSyncOneTime");
+  print("registered bg work");
+  if(pb.authStore.isValid) Workmanager().registerOneOffTask("background-sync-one-time", "BackgroundSyncOneTime");
 
   runApp(
     MultiProvider(

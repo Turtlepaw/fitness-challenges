@@ -7,6 +7,7 @@ import 'package:pocketbase/pocketbase.dart';
 import 'package:provider/provider.dart';
 import 'package:reactive_forms/reactive_forms.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:workmanager/workmanager.dart';
 
 const password = "password";
 const username = "username";
@@ -48,7 +49,7 @@ class _LoginPageState extends State<LoginPage> {
       await pb.collection('users').authWithOAuth2(
         'google',
         (url) async {
-          await launchUrl(url);
+          await launchUrl(url, mode: LaunchMode.inAppBrowserView);
           _setLoading(false);
         },
         scopes: [
@@ -68,6 +69,8 @@ class _LoginPageState extends State<LoginPage> {
         FlutterLocalNotificationsPlugin();
         flutterLocalNotificationsPlugin.resolvePlatformSpecificImplementation<
             AndroidFlutterLocalNotificationsPlugin>()?.requestNotificationsPermission();
+
+        Workmanager().registerOneOffTask("background-sync-one-time", "BackgroundSyncOneTime");
 
         context.go("/home");
       }
