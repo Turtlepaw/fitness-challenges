@@ -19,6 +19,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.wear.compose.foundation.ExperimentalWearFoundationApi
+import androidx.wear.compose.foundation.lazy.items
 import androidx.wear.compose.material.Button
 import androidx.wear.compose.material.Chip
 import androidx.wear.compose.material.ChipDefaults
@@ -31,8 +32,10 @@ import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
 import com.google.android.horologist.annotations.ExperimentalHorologistApi
 import com.turtlepaw.fitness_challenges.R
+import com.turtlepaw.fitness_challenges.presentation.ChallengeRecord
 import com.turtlepaw.fitness_challenges.presentation.components.Page
 import com.turtlepaw.fitness_challenges.services.scheduleSyncWorker
+import io.github.agrevster.pocketbaseKotlin.PocketbaseClient
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
@@ -44,6 +47,10 @@ import java.time.format.DateTimeFormatter
 fun WearHome(
     context: Context,
     lastSync: LocalDateTime?,
+    pb: PocketbaseClient,
+    challenges: List<ChallengeRecord>,
+    onLogout: () -> Unit,
+    onSelect: (id: String) -> Unit,
     onWorkerRun: () -> Unit
 ) {
     val permissions = rememberPermissionState(Manifest.permission.ACTIVITY_RECOGNITION) {
@@ -56,56 +63,41 @@ fun WearHome(
         item {
             Text("Fitness Challenges")
         }
-        item {
-            Row(
-                horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                if(!permissions.status.isGranted){
-                    Icon(
-                        imageVector = Icons.Rounded.Error,
-                        contentDescription = stringResource(id = R.string.error_icon_description),
-                        tint = MaterialTheme.colors.error
-                    )
-                    Spacer(modifier = Modifier.padding(horizontal = 5.dp))
-                }
-                Text(
-                    context.getString(
-                        if(!permissions.status.isGranted) R.string.permissions_not_granted
-                    else if (lastSync != null) R.string.last_synced//"Last synced ${lastSync.format(DateTimeFormatter.ofPattern("EEEE h:mm a"))}"
-                    else R.string.never_synced,
-                        lastSync?.format(DateTimeFormatter.ofPattern("EEEE h:mm a"))
-                    ),
-                    textAlign = if(permissions.status.isGranted) TextAlign.Center else TextAlign.Start,
-                    color = if(permissions.status.isGranted)
-                        MaterialTheme.colors.onSurfaceVariant
-                    else
-                        MaterialTheme.colors.error
-                )
-            }
-        }
-        item {
-            Spacer(modifier = Modifier.height(8.dp))
-        }
-        item {
+        items(challenges) {
             Chip(
                 onClick = {
-                    if(permissions.status.isGranted){
-                        context.scheduleSyncWorker()
-                        onWorkerRun()
-                    } else {
-                        permissions.launchPermissionRequest()
+                    if(it.id != null){
+                        onSelect(it.id!!)
                     }
                 },
                 label = {
                     Text(
-                        if(permissions.status.isGranted) "Sync" else "Grant"
+                        it.name
                     )
                 },
                 colors = ChipDefaults.chipColors(
                     backgroundColor = MaterialTheme.colors.surface
                 ),
-                contentPadding = PaddingValues(horizontal = 50.dp)            )
+                contentPadding = PaddingValues(horizontal = 50.dp),
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
+        item {
+            Chip(
+                onClick = {
+                    pb.authStore.clear()
+                    onLogout()
+                },
+                label = {
+                    Text(
+                        "Logout"
+                    )
+                },
+                colors = ChipDefaults.chipColors(
+                    backgroundColor = MaterialTheme.colors.surface
+                ),
+                contentPadding = PaddingValues(horizontal = 50.dp)
+            )
         }
     }
 }

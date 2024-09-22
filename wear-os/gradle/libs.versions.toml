@@ -1,33 +1,34 @@
 [versions]
-agp = "8.6.0"
+agp = "8.6.1"
 accompanist = "0.34.0"
 coilCompose = "2.7.0"
-composeNavigation = "1.3.1"
+composeNavigation = "1.4.0"
 composeShimmer = "1.3.0"
 datastorePreferences = "1.1.1"
-desugar_jdk_libs = "2.0.4"
+desugar_jdk_libs = "2.1.2"
 healthServicesClient = "1.1.0-alpha03"
 horologistComposeLayout = "0.6.17"
 horologistComposables = "0.6.17"
 kotlin = "2.0.0"
 coreKtx = "1.13.1"
 junit = "4.13.2"
-junitVersion = "1.1.5"
-espressoCore = "3.5.1"
+junitVersion = "1.2.1"
+espressoCore = "3.6.1"
 appcompat = "1.7.0"
 kotlinxSerializationJson = "1.7.1"
-lifecycleViewmodelCompose = "2.8.4"
+lifecycleViewmodelCompose = "2.8.6"
 lottieCompose = "6.5.0"
 playServicesPal = "20.3.0"
 playServicesWearable = "18.2.0"
 material = "1.12.0"
 constraintlayout = "2.1.4"
-composeBom = "2024.06.00"
-composeMaterial = "1.3.1"
+composeBom = "2024.09.02"
+composeMaterial = "1.4.0"
 #noinspection GradleDependency
 composeFoundation = "1.3.1"
-activityCompose = "1.9.1"
+activityCompose = "1.9.2"
 coreSplashscreen = "1.0.1"
+pocketbaseKotlin = "2.6.2"
 tiles = "1.4.0"
 tilesMaterial = "1.4.0"
 horologistComposeTools = "0.6.17"
@@ -55,6 +56,7 @@ coil-gif = { module = "io.coil-kt:coil-gif", version.ref = "coilCompose" }
 compose-shimmer = { module = "com.valentinilk.shimmer:compose-shimmer", version.ref = "composeShimmer" }
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxSerializationJson" }
 lottie-compose = { module = "com.airbnb.android:lottie-compose", version.ref = "lottieCompose" }
+pocketbase-kotlin = { module = "io.github.agrevster:pocketbase-kotlin", version.ref = "pocketbaseKotlin" }
 vico-compose = { group = "com.patrykandpatrick.vico", name = "compose", version.ref = "vico" }
 # For `compose`. Creates a `ChartStyle` based on an M3 Material Theme.
 vico-compose-m3 = { group = "com.patrykandpatrick.vico", name = "compose-m3", version.ref = "vico" }

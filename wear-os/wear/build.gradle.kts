@@ -89,11 +89,11 @@ android {
 
     compileOptions {
         isCoreLibraryDesugaringEnabled = true
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
+        sourceCompatibility = JavaVersion.VERSION_18
+        targetCompatibility = JavaVersion.VERSION_18
     }
     kotlinOptions {
-        jvmTarget = "1.8"
+        jvmTarget = JavaVersion.VERSION_18.toString()
     }
     buildFeatures {
         compose = true
@@ -160,8 +160,15 @@ dependencies {
     debugImplementation(libs.androidx.ui.test.manifest)
     coreLibraryDesugaring(libs.desugar.jdk.libs)
 
-    // Lottie
-    implementation(libs.lottie.compose)
+    // Pocketbase
+    implementation(libs.pocketbase.kotlin)
+
+    // Wear OS
+    implementation("androidx.wear:wear-remote-interactions:1.1.0-beta01")
+
+    // for .await
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.1") // Use the latest version
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1")
 
     //wearApp(project(":wear"))
 }

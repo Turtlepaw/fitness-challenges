@@ -1,4 +1,5 @@
 import 'package:fitness_challenges/components/loader.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:go_router/go_router.dart';
@@ -517,7 +518,7 @@ class _UsernameFormState extends State<_UsernameForm> {
             child: LoadingBox(width: double.infinity, height: 80),
           ),
           const SizedBox(height: 20),
-          _buildInputs(theme, true),
+          _buildInputs(theme, true, true),
         ],
       );
     } else if (snapshot.hasError) {
@@ -545,13 +546,13 @@ class _UsernameFormState extends State<_UsernameForm> {
             )
           ),
           const SizedBox(height: 20),
-          _buildInputs(theme, isNewAccount),
+          _buildInputs(theme, isNewAccount, false),
         ],
       );
     }
   }
 
-  Widget _buildInputs(ThemeData theme, bool isNewAccount) {
+  Widget _buildInputs(ThemeData theme, bool isNewAccount, bool isLoading) {
     return AdaptiveBox(
       width: widget.width,
       child: Column(
@@ -608,6 +609,37 @@ class _UsernameFormState extends State<_UsernameForm> {
               ),
             );
           }),
+          if(isNewAccount)
+            const SizedBox(height: 5),
+          if(isNewAccount) RichText(
+            textAlign: TextAlign.center,
+            text: TextSpan(
+              style: TextStyle(color: theme.colorScheme.onSurface, fontSize: 16), // Default style
+              children: [
+                TextSpan(text: 'By creating an account, you agree to our '),
+                TextSpan(
+                  text: 'Terms of Service',
+                  style: TextStyle(color: Colors.blue, decoration: TextDecoration.underline),
+                  recognizer: TapGestureRecognizer()..onTap = () {
+                    launchUrl(
+                        Uri.parse('https://gist.github.com/Turtlepaw/baf62bc04fcefe41e008d4fe7fdb1b79')
+                    );
+                  },
+                ),
+                TextSpan(text: ' and '),
+                TextSpan(
+                  text: 'Privacy Policy',
+                  style: TextStyle(color: Colors.blue, decoration: TextDecoration.underline),
+                  recognizer: TapGestureRecognizer()..onTap = () {
+                    launchUrl(
+                        Uri.parse('https://gist.github.com/Turtlepaw/e14d65c181a071b4facfc1aef323b2d4')
+                    );
+                  },
+                ),
+                TextSpan(text: '.'),
+              ],
+            ),
+          ),
           const SizedBox(height: 10),
           TextButton(
             onPressed: () {

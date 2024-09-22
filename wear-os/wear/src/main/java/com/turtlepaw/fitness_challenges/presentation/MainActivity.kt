@@ -7,12 +7,17 @@
 package com.turtlepaw.fitness_challenges.presentation
 
 import android.content.Context
-import android.content.Intent
+import android.content.SharedPreferences
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Error
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -20,30 +25,49 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import androidx.navigation.NavHostController
+import androidx.wear.compose.material.CircularProgressIndicator
+import androidx.wear.compose.material.Icon
 import androidx.wear.compose.navigation.SwipeDismissableNavHost
 import androidx.wear.compose.navigation.composable
 import androidx.wear.compose.navigation.rememberSwipeDismissableNavController
 import com.google.android.gms.wearable.DataClient
-import com.google.android.gms.wearable.DataEvent
 import com.google.android.gms.wearable.DataEventBuffer
 import com.google.android.gms.wearable.DataMapItem
 import com.google.android.gms.wearable.MessageClient
 import com.google.android.gms.wearable.MessageEvent
 import com.google.android.gms.wearable.Wearable
+import com.google.android.horologist.annotations.ExperimentalHorologistApi
+import com.turtlepaw.fitness_challenges.presentation.components.Page
+import com.turtlepaw.fitness_challenges.presentation.pages.Challenge
+import com.turtlepaw.fitness_challenges.presentation.pages.Login
+import com.turtlepaw.fitness_challenges.presentation.pages.UserSteps
 import com.turtlepaw.fitness_challenges.presentation.pages.WearHome
-import com.turtlepaw.fitness_challenges.presentation.theme.SleepTheme
+import com.turtlepaw.fitness_challenges.presentation.pages.calculateUserRankings
+import com.turtlepaw.fitness_challenges.presentation.theme.AppTheme
 import com.turtlepaw.fitness_challenges.services.scheduleSyncWorker
 import com.turtlepaw.fitness_challenges.utils.Settings
 import com.turtlepaw.fitness_challenges.utils.SettingsBasics
+import io.github.agrevster.pocketbaseKotlin.PocketbaseClient
+import io.github.agrevster.pocketbaseKotlin.dsl.login
+import io.github.agrevster.pocketbaseKotlin.dsl.query.ExpandRelations
+import io.github.agrevster.pocketbaseKotlin.models.Record
+import io.github.agrevster.pocketbaseKotlin.models.User
+import io.github.agrevster.pocketbaseKotlin.stores.BaseAuthStore
+import io.ktor.http.URLProtocol
+import kotlinx.coroutines.delay
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonObject
 import java.time.LocalDateTime
 
 
 enum class Routes(private val route: String) {
     HOME("/home"),
-    SETTINGS("/settings"),
-    FAVORITES("/favorites"),
-    THEME_PICKER("/theme-picker");
+    SIGN_IN("/sign-in"),
+    CHALLENGE("/challenge");
 
     fun getRoute(query: String? = null): String {
         return if (query != null) {
@@ -52,18 +76,69 @@ enum class Routes(private val route: String) {
     }
 }
 
+const val TOKEN_KEY = "token"
+class AuthStore(var sharedPreferences: SharedPreferences) : BaseAuthStore(null) {
+    init {
+        this.token = sharedPreferences.getString(TOKEN_KEY, null)
+    }
+
+    override fun save(token: String?) {
+        super.save(token)
+        sharedPreferences.edit()
+            .putString(TOKEN_KEY, token)
+            .apply()
+    }
+
+    override fun clear() {
+        super.clear()
+        sharedPreferences.edit()
+            .putString(TOKEN_KEY, null)
+            .apply()
+    }
+}
+
 const val REQUEST_SYNC_PATH = "/request-sync"
-class MainActivity : ComponentActivity(), MessageClient.OnMessageReceivedListener {
+@Suppress("")
+class MainActivity : ComponentActivity(), MessageClient.OnMessageReceivedListener, DataClient.OnDataChangedListener {
+    private lateinit var pb: PocketbaseClient
+    private var isLoggedIn = mutableStateOf(false)
+
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
-
         super.onCreate(savedInstanceState)
+
+        Wearable.getMessageClient(this).addListener(this)
+        Wearable.getDataClient(this).addListener(this)
+
+        val sharedPreferences = getSharedPreferences(
+            SettingsBasics.SHARED_PREFERENCES.getKey(),
+            SettingsBasics.SHARED_PREFERENCES.getMode()
+        )
+
+        pb = PocketbaseClient({
+            protocol = URLProtocol.HTTPS
+            host = "fitnesschallenges.webredirect.org"
+        }, store = AuthStore(sharedPreferences))
 
         setTheme(android.R.style.Theme_DeviceDefault)
         setContent {
-            SleepTheme {
+            val navController = rememberSwipeDismissableNavController()
+
+            LaunchedEffect(isLoggedIn.value) { // Trigger navigation when isLoggedIn changes
+                if (isLoggedIn.value) {
+                    delay(100)
+                    navController.navigate(Routes.HOME.getRoute()) {
+                        popUpTo(Routes.SIGN_IN.getRoute()) { inclusive = true }
+                    }
+                }
+            }
+
+            AppTheme {
                 WearPages(
-                    this
+                    this,
+                    pb,
+                    sharedPreferences,
+                    navController
                 )
             }
         }
@@ -72,16 +147,33 @@ class MainActivity : ComponentActivity(), MessageClient.OnMessageReceivedListene
     override fun onResume() {
         super.onResume()
         Wearable.getMessageClient(this).addListener(this)
+        Wearable.getDataClient(this).addListener(this)
     }
 
     override fun onPause() {
         super.onPause()
         Wearable.getMessageClient(this).removeListener(this)
+        Wearable.getDataClient(this).removeListener(this)
     }
 
     override fun onMessageReceived(message: MessageEvent) {
         if (message.path == REQUEST_SYNC_PATH) {
             scheduleSyncWorker()
+        }
+    }
+
+    override fun onDataChanged(data: DataEventBuffer) {
+        for (event in data) {
+            if (event.dataItem.uri.path == "/auth") {
+                val dataMap = DataMapItem.fromDataItem(event.dataItem).dataMap
+                if (!dataMap.containsKey("token")) continue
+                val receivedToken = dataMap.getString("token")
+
+                pb.login(receivedToken)
+                pb.authStore.save(receivedToken)
+                isLoggedIn.value = true // Update state to trigger navigation
+                Log.d("MainActivity", "Received token: $receivedToken and logged in as ${pb.authStore}")
+            }
         }
     }
 }
@@ -94,22 +186,26 @@ fun isNetworkConnected(context: Context): Boolean {
     return capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
 }
 
+@Serializable
+data class ChallengeRecord(val name: String, var users: List<String>, val ended: Boolean, val winner: String, val type: Int, val data: JsonObject) : Record()
+
+@Serializable
+data class ExpandedChallengeRecord(val name: String, val users: List<User>, val ended: Boolean, val winner: String? = null, val type: Int, val data: JsonObject) : Record()
 
 @Composable
 fun WearPages(
-    context: Context
+    context: Context,
+    pb: PocketbaseClient,
+    sharedPreferences: SharedPreferences,
+    navController: NavHostController
 ) {
-    SleepTheme {
+    AppTheme {
         // Creates a navigation controller for our pages
-        val navController = rememberSwipeDismissableNavController()
         var lastSync by remember { mutableStateOf<LocalDateTime?>(null) }
         var lastWorkerRun by remember { mutableStateOf<LocalDateTime?>(null) }
+        var challenges by remember { mutableStateOf<List<ChallengeRecord>>(emptyList()) }
         val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
         val state by lifecycleOwner.lifecycle.currentStateFlow.collectAsState()
-        val sharedPreferences = context.getSharedPreferences(
-            SettingsBasics.SHARED_PREFERENCES.getKey(),
-            SettingsBasics.SHARED_PREFERENCES.getMode()
-        )
         LaunchedEffect(state, lastWorkerRun) {
             // Get last sync
             lastSync = try {
@@ -122,6 +218,29 @@ fun WearPages(
             } catch(error: Exception){
                 null
             }
+
+            val results = pb.records.getFullList<ChallengeRecord>(
+                "challenges",
+                500,
+                expandRelations = ExpandRelations("users")
+            )
+
+            challenges = results
+        }
+
+        LaunchedEffect(state, pb.authStore.token) {
+            Log.d("MainActivity", "Logged in as ${pb.authStore.token}")
+            if(pb.authStore.token == null){
+                navController.navigate(Routes.SIGN_IN.getRoute()) {
+                    // Clear the back stack
+                    popUpTo(navController.graph.startDestinationId) { inclusive = true }
+                }
+            } else if(navController.currentDestination?.route == Routes.SIGN_IN.getRoute()){
+                navController.navigate(Routes.HOME.getRoute()) {
+                    // Clear the back stack
+                    popUpTo(navController.graph.startDestinationId) { inclusive = true }
+                }
+            }
         }
 
         SwipeDismissableNavHost(
@@ -131,11 +250,99 @@ fun WearPages(
             composable(Routes.HOME.getRoute()) {
                 WearHome(
                     context,
-                    lastSync
+                    lastSync,
+                    pb,
+                    challenges,
+                    onLogout = {
+                        pb.authStore.clear()
+                        navController.navigate(Routes.SIGN_IN.getRoute()) {
+                            // Clear the back stack
+                            popUpTo(navController.graph.startDestinationId) { inclusive = true }
+                        }
+                    },
+                    onSelect = {
+                        navController.navigate(Routes.CHALLENGE.getRoute(it))
+                    }
                 ){
                     lastWorkerRun = LocalDateTime.now()
                 }
             }
+            composable(Routes.SIGN_IN.getRoute()){
+                Login(context)
+            }
+            composable(Routes.CHALLENGE.getRoute("{challengeId}")){
+                val challengeId = it.arguments?.getString("challengeId")
+                val rawChallenge = challenges.find { it.id == challengeId }
+                var challenge by remember { mutableStateOf<ExpandedChallengeRecord?>(null) }
+                var rankings by remember { mutableStateOf<List<UserSteps>?>(null) }
+                LaunchedEffect(Unit) {
+                    if(rawChallenge != null){
+                        val expanded = expandChallengeRecord(
+                            rawChallenge,
+                            pb
+                        )
+
+                        Log.d("a", "${expanded}")
+                        rankings = calculateUserRankings(expanded)
+                        challenge = expanded
+                    }
+                }
+
+                if(challenge == null || rankings == null){
+                    LoadingPage()
+                }  else if(rawChallenge == null){
+                    ErrorPage("Challenge not found")
+                } else if(challenge?.type != 1){
+                    ErrorPage("Unsupported challenge type")
+                } else {
+                    Challenge(challenge!!, rankings!!)
+                }
+            }
         }
     }
+}
+
+@OptIn(ExperimentalHorologistApi::class)
+@Composable
+fun ErrorPage(message: String) {
+    Page {
+        item {
+            Icon(
+                imageVector = Icons.Rounded.Error,
+                contentDescription = "Error Icon",
+            )
+        }
+    }
+}
+
+@OptIn(ExperimentalHorologistApi::class)
+@Composable
+fun LoadingPage() {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ){
+        CircularProgressIndicator()
+    }
+}
+
+suspend fun resolveRelationList(relations: List<String>, pb: PocketbaseClient): List<User> {
+    return relations.map {
+        pb.records.getOne<User>("users", it)
+    }
+}
+
+suspend fun expandChallengeRecord(challengeRecord: ChallengeRecord, pb: PocketbaseClient): ExpandedChallengeRecord {
+    // Convert the list of user IDs to full User objects
+    val usersList = resolveRelationList(challengeRecord.users, pb)
+
+    // Return the new ExpandedChallengeRecord with the converted user list
+    return ExpandedChallengeRecord(
+        name = challengeRecord.name,
+        users = usersList,
+        ended = challengeRecord.ended,
+        winner = challengeRecord.winner,
+        type = challengeRecord.type,
+        data = challengeRecord.data
+    )
 }

@@ -12,6 +12,7 @@ import 'package:fitness_challenges/routes/splash.dart';
 import 'package:fitness_challenges/utils/challengeManager.dart';
 import 'package:fitness_challenges/utils/health.dart';
 import 'package:fitness_challenges/utils/steps/data.dart';
+import 'package:fitness_challenges/utils/wearManager.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -62,8 +63,9 @@ final _router =
   GoRoute(
       path: '/',
       builder: (context, state) => SplashScreen(asyncFunction: () async {
-            var pb = Provider.of<PocketBase>(context, listen: false);
             if (context.mounted) {
+              var pb = Provider.of<PocketBase>(context, listen: false);
+
               if (pb.authStore.isValid) {
                 // User is logged in, navigate to home
                 context.go('/home');
@@ -159,7 +161,7 @@ void callbackDispatcher() {
       FlutterLocalNotificationsPlugin();
 // initialise the plugin. app_icon needs to be a added as a drawable resource to the Android head project
       const AndroidInitializationSettings initializationSettingsAndroid =
-      AndroidInitializationSettings('ic_notif', useBridgeTags: true);
+      AndroidInitializationSettings('ic_notif');
       final InitializationSettings initializationSettings = InitializationSettings(
           android: initializationSettingsAndroid
       );
@@ -248,6 +250,7 @@ void main() async {
   healthManager.checkConnectionState();
   //healthManager.fetchHealthData();
   Health().configure(useHealthConnectIfAvailable: true);
+  final wearManager = WearManager(pb).sendAuthentication();
 
   // Background work
   Workmanager().initialize(
@@ -299,7 +302,8 @@ class _AppState extends State<App> {
     super.initState();
     pb = Provider.of<PocketBase>(context, listen: false);
     isLoggedIn = pb.authStore.isValid; // Initialize with current status
-    if (pb.authStore.isValid) {
+
+    if (isLoggedIn) {
       subscribeUserData();
       pb.collection("users").authRefresh();
 
@@ -316,9 +320,13 @@ class _AppState extends State<App> {
       } else if (subscribedId != null) {
         pb.collection("users").unsubscribe(subscribedId!);
       }
-      setState(() {
-        isLoggedIn = pb.authStore.isValid; // Update isLoggedIn
-      });
+
+      // Check if the widget is still mounted
+      if (mounted) {
+        setState(() {
+          isLoggedIn = pb.authStore.isValid; // Update isLoggedIn
+        });
+      }
     });
   }
 
@@ -364,41 +372,6 @@ class _AppState extends State<App> {
               color: Colors.white, fill: 1, weight: 400, opticalSize: 24),
         ),
         themeMode: ThemeMode.system,
-        //home: ,
-        // initialRoute: '/',
-        // routes: {
-        //   '/': (context) => FlutterSplashScreen.fadeIn(
-        //       backgroundColor: Theme.of(context).colorScheme.surface,
-        //       childWidget: SizedBox(
-        //         height: 150,
-        //         width: 150,
-        //         child: Icon(Symbols.rocket_launch_rounded, color: Theme.of(context).colorScheme.onSurface,),
-        //       ),
-        //       onAnimationEnd: () => debugPrint("On Fade In End"),
-        //       asyncNavigationCallback: () async {
-        //         await Future.delayed(const Duration(seconds: 1));
-        //         if (context.mounted) {
-        //           if (pb.authStore.isValid) {
-        //             // User is logged in, navigate to home
-        //             Navigator.pushReplacementNamed(context, '/home');
-        //           } else {
-        //             // User is not logged in, navigate to login
-        //             Navigator.pushReplacementNamed(context, '/login');
-        //           }
-        //         }
-        //       }),
-        //   '/home': (context) => HomePage(title: "Home", pb: pb),
-        //   '/login': (context) => LoginPage(pb: pb),
-        //   '/settings': (context) => const SettingsPage(),
-        // },
-        // home: Builder(
-        //   builder: (context) =>
-        //   isLoggedIn
-        //       ? Navigation(
-        //       body: HomePage(title: 'Home', pb: pb)
-        //   )
-        //       : LoginPage(pb: pb), // If isLoggedIn is false
-        // ),
       );
     });
   }
