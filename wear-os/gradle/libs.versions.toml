@@ -25,7 +25,7 @@ constraintlayout = "2.1.4"
 composeBom = "2024.09.02"
 composeMaterial = "1.4.0"
 #noinspection GradleDependency
-composeFoundation = "1.3.1"
+composeFoundation = "1.7.2"
 activityCompose = "1.9.2"
 coreSplashscreen = "1.0.1"
 pocketbaseKotlin = "2.6.2"
@@ -85,7 +85,7 @@ androidx-ui-tooling = { group = "androidx.compose.ui", name = "ui-tooling" }
 androidx-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-manifest" }
 androidx-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4" }
 androidx-compose-material = { group = "androidx.wear.compose", name = "compose-material", version.ref = "composeMaterial" }
-androidx-compose-foundation = { group = "androidx.wear.compose", name = "compose-foundation", version.ref = "composeFoundation" }
+androidx-compose-foundation = { group = "androidx.wear.compose", name = "compose-foundation", version = "1.4.0" }
 androidx-activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "activityCompose" }
 androidx-core-splashscreen = { group = "androidx.core", name = "core-splashscreen", version.ref = "coreSplashscreen" }
 androidx-tiles = { group = "androidx.wear.tiles", name = "tiles", version.ref = "tiles" }

@@ -1,13 +1,14 @@
 package com.turtlepaw.fitness_challenges.presentation.pages
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.ChevronRight
 import androidx.compose.material.icons.rounded.EmojiEvents
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -15,21 +16,20 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.wear.compose.foundation.lazy.items
 import androidx.wear.compose.foundation.lazy.itemsIndexed
+import androidx.wear.compose.material.Button
+import androidx.wear.compose.material.ButtonColors
+import androidx.wear.compose.material.ButtonDefaults
 import androidx.wear.compose.material.Card
 import androidx.wear.compose.material.CardDefaults
-import androidx.wear.compose.material.Chip
-import androidx.wear.compose.material.ChipDefaults
 import androidx.wear.compose.material.Icon
 import androidx.wear.compose.material.MaterialTheme
 import androidx.wear.compose.material.Text
-import androidx.wear.compose.ui.tooling.preview.WearPreviewSmallRound
 import androidx.wear.tooling.preview.devices.WearDevices
 import com.google.android.horologist.annotations.ExperimentalHorologistApi
-import com.turtlepaw.fitness_challenges.presentation.ChallengeRecord
 import com.turtlepaw.fitness_challenges.presentation.ExpandedChallengeRecord
 import com.turtlepaw.fitness_challenges.presentation.components.Page
 import com.turtlepaw.fitness_challenges.presentation.theme.AppTheme
@@ -45,11 +45,38 @@ import java.text.DecimalFormat
 
 @OptIn(ExperimentalHorologistApi::class)
 @Composable
-fun Challenge(challenge: ExpandedChallengeRecord, rankings: List<UserSteps>) {
+fun Challenge(
+    challenge: ExpandedChallengeRecord,
+    rankings: List<UserSteps>,
+    onNavigateInfo: () -> Unit
+) {
     Page {
         item {
-            Text(text = challenge.name)
+            Button(
+                onClick = onNavigateInfo,
+                enabled = true,
+                colors = ButtonDefaults.buttonColors(
+                    backgroundColor = Color.Transparent,
+                    contentColor = MaterialTheme.colors.onBackground,
+                ),
+                modifier = Modifier.fillMaxWidth() // Ensures button takes full width
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth(), // Ensures Row takes full width
+                    horizontalArrangement = Arrangement.Center // Center both items in the Row
+                ) {
+                    Text(text = challenge.name)
+                    Spacer(modifier = Modifier.width(5.dp)) // Space between text and icon
+                    Icon(
+                        imageVector = Icons.Rounded.ChevronRight,
+                        contentDescription = "Chevron Right",
+                        modifier = Modifier.size(25.dp) // Ensures icon size is always 25.dp
+                    )
+                }
+            }
         }
+        item {}
         itemsIndexed(
             rankings
         ) { index, it ->
@@ -63,25 +90,29 @@ fun Challenge(challenge: ExpandedChallengeRecord, rankings: List<UserSteps>) {
             ) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.fillMaxWidth().heightIn(min = 20.dp)
+                    modifier = Modifier.fillMaxWidth()
                 ) {
-                    if (challenge.ended && index == 0) {
+                    // Show ranking number
+                    if (challenge.ended && index == 0)
                         Icon(
                             imageVector = Icons.Rounded.EmojiEvents,
-                            contentDescription = "Trophy"
+                            contentDescription = "Trophy",
+                            modifier = Modifier.padding(end = 8.dp)
                         )
-                    } else {
-                        Text("${index + 1}.")
-                    }
+                    else Text("${index + 1}.", modifier = Modifier.padding(end = 8.dp))
 
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(it.user.username.toString().truncate(7))
+                    // Truncate username and limit its width
+                    Text(
+                        text = it.user.username.toString().truncate(10),
+                        modifier = Modifier.weight(1f), // Take the available space
+                        maxLines = 1, // Ensure it's a single line
+                        overflow = TextOverflow.Ellipsis // Add ellipsis if too long
+                    )
 
-                    // Move the steps display to the end
+                    // Display steps aligned to the right
                     Text(
                         text = DecimalFormat("#,###").format(it.totalSteps),
-                        modifier = Modifier.weight(1f), // This ensures it takes remaining space
-                        textAlign = TextAlign.End // Align the steps to the right
+                        modifier = Modifier.align(Alignment.CenterVertically)
                     )
                 }
             }
@@ -134,7 +165,7 @@ fun calculateUserRankings(challengeData: ExpandedChallengeRecord): List<UserStep
     device = WearDevices.SMALL_ROUND,
     showSystemUi = true,
     showBackground = true,
-    backgroundColor = android.graphics.Color.BLACK.toLong()
+    backgroundColor = 0xFF000000
 )
 @Composable
 fun ChallengePreview() {
@@ -192,7 +223,7 @@ fun ChallengePreview() {
         Challenge(
             record,
             calculateUserRankings(record)
-        )
+        ){}
     }
 }
 

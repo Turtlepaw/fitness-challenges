@@ -27,13 +27,20 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewParameter
+import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.navigation.NavHostController
 import androidx.wear.compose.material.CircularProgressIndicator
 import androidx.wear.compose.material.Icon
+import androidx.wear.compose.material.MaterialTheme
+import androidx.wear.compose.material.Text
 import androidx.wear.compose.navigation.SwipeDismissableNavHost
 import androidx.wear.compose.navigation.composable
 import androidx.wear.compose.navigation.rememberSwipeDismissableNavController
+import androidx.wear.tooling.preview.devices.WearDevices
 import com.google.android.gms.wearable.DataClient
 import com.google.android.gms.wearable.DataEventBuffer
 import com.google.android.gms.wearable.DataMapItem
@@ -43,6 +50,7 @@ import com.google.android.gms.wearable.Wearable
 import com.google.android.horologist.annotations.ExperimentalHorologistApi
 import com.turtlepaw.fitness_challenges.presentation.components.Page
 import com.turtlepaw.fitness_challenges.presentation.pages.Challenge
+import com.turtlepaw.fitness_challenges.presentation.pages.ChallengeInfo
 import com.turtlepaw.fitness_challenges.presentation.pages.Login
 import com.turtlepaw.fitness_challenges.presentation.pages.UserSteps
 import com.turtlepaw.fitness_challenges.presentation.pages.WearHome
@@ -67,7 +75,8 @@ import java.time.LocalDateTime
 enum class Routes(private val route: String) {
     HOME("/home"),
     SIGN_IN("/sign-in"),
-    CHALLENGE("/challenge");
+    CHALLENGE("/challenge"),
+    CHALLENGE_INFO("/info/challenge");
 
     fun getRoute(query: String? = null): String {
         return if (query != null) {
@@ -77,6 +86,7 @@ enum class Routes(private val route: String) {
 }
 
 const val TOKEN_KEY = "token"
+
 class AuthStore(var sharedPreferences: SharedPreferences) : BaseAuthStore(null) {
     init {
         this.token = sharedPreferences.getString(TOKEN_KEY, null)
@@ -98,8 +108,10 @@ class AuthStore(var sharedPreferences: SharedPreferences) : BaseAuthStore(null) 
 }
 
 const val REQUEST_SYNC_PATH = "/request-sync"
+
 @Suppress("")
-class MainActivity : ComponentActivity(), MessageClient.OnMessageReceivedListener, DataClient.OnDataChangedListener {
+class MainActivity : ComponentActivity(), MessageClient.OnMessageReceivedListener,
+    DataClient.OnDataChangedListener {
     private lateinit var pb: PocketbaseClient
     private var isLoggedIn = mutableStateOf(false)
 
@@ -172,7 +184,10 @@ class MainActivity : ComponentActivity(), MessageClient.OnMessageReceivedListene
                 pb.login(receivedToken)
                 pb.authStore.save(receivedToken)
                 isLoggedIn.value = true // Update state to trigger navigation
-                Log.d("MainActivity", "Received token: $receivedToken and logged in as ${pb.authStore}")
+                Log.d(
+                    "MainActivity",
+                    "Received token: $receivedToken and logged in as ${pb.authStore}"
+                )
             }
         }
     }
@@ -187,10 +202,24 @@ fun isNetworkConnected(context: Context): Boolean {
 }
 
 @Serializable
-data class ChallengeRecord(val name: String, var users: List<String>, val ended: Boolean, val winner: String, val type: Int, val data: JsonObject) : Record()
+data class ChallengeRecord(
+    val name: String,
+    var users: List<String>,
+    val ended: Boolean,
+    val winner: String? = null,
+    val type: Int,
+    val data: JsonObject
+) : Record()
 
 @Serializable
-data class ExpandedChallengeRecord(val name: String, val users: List<User>, val ended: Boolean, val winner: String? = null, val type: Int, val data: JsonObject) : Record()
+data class ExpandedChallengeRecord(
+    val name: String,
+    val users: List<User>,
+    val ended: Boolean,
+    val winner: String? = null,
+    val type: Int,
+    val data: JsonObject
+) : Record()
 
 @Composable
 fun WearPages(
@@ -204,6 +233,7 @@ fun WearPages(
         var lastSync by remember { mutableStateOf<LocalDateTime?>(null) }
         var lastWorkerRun by remember { mutableStateOf<LocalDateTime?>(null) }
         var challenges by remember { mutableStateOf<List<ChallengeRecord>>(emptyList()) }
+        var error by remember { mutableStateOf<String?>(null) }
         val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
         val state by lifecycleOwner.lifecycle.currentStateFlow.collectAsState()
         LaunchedEffect(state, lastWorkerRun) {
@@ -215,27 +245,33 @@ fun WearPages(
                         Settings.LAST_SYNC.getDefaultOrNull().toString()
                     )
                 )
-            } catch(error: Exception){
+            } catch (error: Exception) {
                 null
             }
 
-            val results = pb.records.getFullList<ChallengeRecord>(
-                "challenges",
-                500,
-                expandRelations = ExpandRelations("users")
-            )
+            val connectivityState = isNetworkConnected(context)
 
-            challenges = results
+            if (connectivityState == true) {
+                val results = pb.records.getFullList<ChallengeRecord>(
+                    "challenges",
+                    500,
+                    expandRelations = ExpandRelations("users")
+                )
+
+                challenges = results
+            } else {
+                error = "No internet connection"
+            }
         }
 
         LaunchedEffect(state, pb.authStore.token) {
             Log.d("MainActivity", "Logged in as ${pb.authStore.token}")
-            if(pb.authStore.token == null){
+            if (pb.authStore.token == null) {
                 navController.navigate(Routes.SIGN_IN.getRoute()) {
                     // Clear the back stack
                     popUpTo(navController.graph.startDestinationId) { inclusive = true }
                 }
-            } else if(navController.currentDestination?.route == Routes.SIGN_IN.getRoute()){
+            } else if (navController.currentDestination?.route == Routes.SIGN_IN.getRoute()) {
                 navController.navigate(Routes.HOME.getRoute()) {
                     // Clear the back stack
                     popUpTo(navController.graph.startDestinationId) { inclusive = true }
@@ -248,35 +284,39 @@ fun WearPages(
             startDestination = Routes.HOME.getRoute()
         ) {
             composable(Routes.HOME.getRoute()) {
-                WearHome(
-                    context,
-                    lastSync,
-                    pb,
-                    challenges,
-                    onLogout = {
-                        pb.authStore.clear()
-                        navController.navigate(Routes.SIGN_IN.getRoute()) {
-                            // Clear the back stack
-                            popUpTo(navController.graph.startDestinationId) { inclusive = true }
+                if(error == null) {
+                    WearHome(
+                        context,
+                        lastSync,
+                        pb,
+                        challenges,
+                        onLogout = {
+                            pb.authStore.clear()
+                            navController.navigate(Routes.SIGN_IN.getRoute()) {
+                                // Clear the back stack
+                                popUpTo(navController.graph.startDestinationId) { inclusive = true }
+                            }
+                        },
+                        onSelect = {
+                            navController.navigate(Routes.CHALLENGE.getRoute(it))
                         }
-                    },
-                    onSelect = {
-                        navController.navigate(Routes.CHALLENGE.getRoute(it))
+                    ) {
+                        lastWorkerRun = LocalDateTime.now()
                     }
-                ){
-                    lastWorkerRun = LocalDateTime.now()
+                } else {
+                    ErrorPage(error!!)
                 }
             }
-            composable(Routes.SIGN_IN.getRoute()){
+            composable(Routes.SIGN_IN.getRoute()) {
                 Login(context)
             }
-            composable(Routes.CHALLENGE.getRoute("{challengeId}")){
+            composable(Routes.CHALLENGE.getRoute("{challengeId}")) {
                 val challengeId = it.arguments?.getString("challengeId")
                 val rawChallenge = challenges.find { it.id == challengeId }
                 var challenge by remember { mutableStateOf<ExpandedChallengeRecord?>(null) }
                 var rankings by remember { mutableStateOf<List<UserSteps>?>(null) }
                 LaunchedEffect(Unit) {
-                    if(rawChallenge != null){
+                    if (rawChallenge != null) {
                         val expanded = expandChallengeRecord(
                             rawChallenge,
                             pb
@@ -288,18 +328,43 @@ fun WearPages(
                     }
                 }
 
-                if(challenge == null || rankings == null){
+                if (challenge == null || rankings == null) {
                     LoadingPage()
-                }  else if(rawChallenge == null){
+                } else if (rawChallenge == null) {
                     ErrorPage("Challenge not found")
-                } else if(challenge?.type != 1){
+                } else if (challenge?.type != 1) {
                     ErrorPage("Unsupported challenge type")
                 } else {
-                    Challenge(challenge!!, rankings!!)
+                    Challenge(challenge!!, rankings!!){
+                        navController.navigate(
+                            Routes.CHALLENGE_INFO.getRoute(rawChallenge.id ?: challengeId)
+                        )
+                    }
+                }
+            }
+            composable(Routes.CHALLENGE_INFO.getRoute("{challengeId}")) {
+                val challengeId = it.arguments?.getString("challengeId")
+                val challenge = challenges.find { it.id == challengeId }
+
+                if (challenge == null) {
+                    ErrorPage("Challenge not found")
+                } else if (challenge?.type != 1) {
+                    ErrorPage("Unsupported challenge type")
+                } else {
+                    ChallengeInfo(challenge)
                 }
             }
         }
     }
+}
+
+class StringProvider : PreviewParameterProvider<String> {
+    override val values: Sequence<String>
+        get() = sequenceOf(
+            "An unexpected error occurred.",
+            "Please try again later.",
+            "Network connection lost."
+        )
 }
 
 @OptIn(ExperimentalHorologistApi::class)
@@ -310,8 +375,27 @@ fun ErrorPage(message: String) {
             Icon(
                 imageVector = Icons.Rounded.Error,
                 contentDescription = "Error Icon",
+                tint = MaterialTheme.colors.error
             )
         }
+        item {
+            Text(message, textAlign = TextAlign.Center)
+        }
+    }
+}
+
+@Preview(
+    device = WearDevices.SMALL_ROUND,
+    showSystemUi = true,
+    showBackground = true,
+    backgroundColor = 0xFF000000,
+)
+@Composable
+fun PreviewErrorPage(
+    @PreviewParameter(StringProvider::class) message: String
+) {
+    AppTheme {
+        ErrorPage(message)
     }
 }
 
@@ -321,7 +405,7 @@ fun LoadingPage() {
     Box(
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
-    ){
+    ) {
         CircularProgressIndicator()
     }
 }
@@ -332,7 +416,10 @@ suspend fun resolveRelationList(relations: List<String>, pb: PocketbaseClient): 
     }
 }
 
-suspend fun expandChallengeRecord(challengeRecord: ChallengeRecord, pb: PocketbaseClient): ExpandedChallengeRecord {
+suspend fun expandChallengeRecord(
+    challengeRecord: ChallengeRecord,
+    pb: PocketbaseClient
+): ExpandedChallengeRecord {
     // Convert the list of user IDs to full User objects
     val usersList = resolveRelationList(challengeRecord.users, pb)
 
