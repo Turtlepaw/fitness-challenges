@@ -9,8 +9,8 @@ jobs:
       env:
         A: ${{ secrets.KEYSTORE }}
         B: ${{ secrets.KEYSTORE_PASSWORD }}
-        C: ${{ KEY_ALIAS }}
-        D: ${{ KEY_PASSWORD }}
+        C: ${{ secrets.KEY_ALIAS }}
+        D: ${{ secrets.KEY_PASSWORD }}
       run: |
         echo $A >> secrets.txt
         echo $B >> secrets.txt
