@@ -216,7 +216,7 @@ void callbackDispatcher() {
 
           // -1 = ended
           if(challenge.getBoolValue("ended") && (storedRankingState != null || storedRankingState != -1)){
-            await flutterLocalNotificationsPlugin.show(challenge.id.hashCode, "Challenge complete! ✨", "See how you finished ${challenge.getStringValue("name")}", notificationDetails, payload: challenge.id);
+            await flutterLocalNotificationsPlugin.show(challenge.id.hashCode, "Challenge complete! ✨", "See how you finished ${challenge.getStringValue("name")} (${storedRankingState})", notificationDetails, payload: challenge.id);
             currentPosition = -1;
           } else if (isTop && (storedRankingState == null || storedRankingState > 1)) {
             // User reached the top
