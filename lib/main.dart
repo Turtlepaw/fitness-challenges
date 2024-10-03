@@ -219,7 +219,7 @@ void callbackDispatcher() {
   await flutterLocalNotificationsPlugin.show(
       challenge.id.hashCode,
       "Challenge complete! ✨",
-      "See how you finished ${challenge.getStringValue("name")}",
+      "See how you finished ${challenge.getStringValue("name")} (${storedRankingState})",
       notificationDetails,
       payload: challenge.id);
 
