@@ -76,7 +76,6 @@ fun Challenge(
                 }
             }
         }
-        item {}
         itemsIndexed(
             rankings
         ) { index, it ->
