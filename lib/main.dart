@@ -212,10 +212,10 @@ void callbackDispatcher() {
           bool isTop = currentPosition == 1; // Assuming top position is rank 1
           print(currentPosition);
 
-          // -1 = ended
+          // 0 or -1 = ended
           if (challenge.getBoolValue("ended") &&
     storedRankingState != null &&
-    storedRankingState != -1) {
+    storedRankingState != 0) {
   await flutterLocalNotificationsPlugin.show(
       challenge.id.hashCode,
       "Challenge complete! ✨",
@@ -223,9 +223,9 @@ void callbackDispatcher() {
       notificationDetails,
       payload: challenge.id);
 
-  // Set to -1 to mark the user as notified about the challenge end
-  currentPosition = -1;
-  prefs.setInt(challenge.id, currentPosition); // Update right after notification
+  // Set to 0 to mark the user as notified about the challenge end
+  currentPosition = 0;
+  prefs.setInt(challenge.id, 0); // Update right after notification
 } else if (isTop &&
               (storedRankingState == null || storedRankingState > 1)) {
             // User reached the top
