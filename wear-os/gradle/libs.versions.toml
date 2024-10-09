@@ -1,5 +1,5 @@
 [versions]
-agp = "8.6.1"
+agp = "8.7.0"
 accompanist = "0.34.0"
 coilCompose = "2.7.0"
 composeNavigation = "1.4.0"
