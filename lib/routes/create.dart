@@ -180,15 +180,15 @@ class _CreateDialogState extends State<CreateDialog> {
       });
 
       if (mounted) {
-        Provider.of<ChallengeProvider>(context, listen: false)
+        await Provider.of<ChallengeProvider>(context, listen: false)
             .reloadChallenges(context);
 
-        Provider.of<HealthManager>(context, listen: false)
+        await Provider.of<HealthManager>(context, listen: false)
             .fetchHealthData(context: context);
 
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Challenge created'),
+            content: Text('Challenge created and synced'),
           ),
         );
         Navigator.of(context).pop();

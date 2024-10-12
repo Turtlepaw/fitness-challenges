@@ -226,7 +226,7 @@ class HealthTypeManager {
 
   static String formatType(HealthType? type) {
     return switch (type) {
-      HealthType.systemManaged => "System",
+      HealthType.systemManaged => _getSystemType(),
       HealthType.watch => _getWatchType(),
       null => "Unknown",
     };
@@ -239,6 +239,16 @@ class HealthTypeManager {
       return "Apple Watch";
     } else {
       return "Watch";
+    }
+  }
+
+  static String _getSystemType() {
+    if (Platform.isAndroid) {
+      return "Health Connect";
+    } else if (Platform.isIOS) {
+      return "Apple Health";
+    } else {
+      return "Unavailable";
     }
   }
 }

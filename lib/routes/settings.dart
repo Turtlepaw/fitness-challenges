@@ -25,7 +25,7 @@ class SettingsPage extends StatefulWidget {
 class _SettingsPageState extends State<SettingsPage> {
   bool _isLoading = false;
   bool _isAvailable = true;
-  bool _isHealthConnected = false;
+  bool _isSystemHealthAutorized = false;
   bool _isWatchLoading = false;
   bool _isSysHealthLoading = false;
   bool _isRefreshing = false;
@@ -82,10 +82,11 @@ class _SettingsPageState extends State<SettingsPage> {
     if (result == true) {
       if (mounted) {
         debugPrint("Health connect permissions granted");
-        Provider.of<HealthManager>(context, listen: false)
+        HealthTypeManager().setHealthType(HealthType.systemManaged);
+
+        await Provider.of<HealthManager>(context, listen: false)
             .fetchHealthData(context: context);
 
-        HealthTypeManager().setHealthType(HealthType.systemManaged);
         setState(() {
           healthType = HealthType.systemManaged;
         });
@@ -102,8 +103,8 @@ class _SettingsPageState extends State<SettingsPage> {
 
     if (mounted) {
       final p = Provider.of<HealthManager>(context, listen: false);
-          p.fetchHealthData();
-          p.checkConnectionState();
+      p.fetchHealthData();
+      p.checkConnectionState();
     } else {
       debugPrint("not mounted");
     }
@@ -114,12 +115,12 @@ class _SettingsPageState extends State<SettingsPage> {
 
       if (result == true) {
         setState(() {
-          _isHealthConnected = true;
+          _isSystemHealthAutorized = true;
         });
         return true;
       } else {
         setState(() {
-          _isHealthConnected = false;
+          _isSystemHealthAutorized = false;
         });
         return false;
       }
@@ -160,7 +161,6 @@ class _SettingsPageState extends State<SettingsPage> {
     await Future.delayed(const Duration(seconds: 1));
     setState(() {
       healthType = HealthType.watch;
-      if (allDataItems.isNotEmpty) _isHealthConnected = true;
       _isWatchLoading = false;
     });
     return true;
@@ -263,18 +263,16 @@ class _SettingsPageState extends State<SettingsPage> {
                     })
                   : buildCard([
                       ConstrainedBox(
-                        constraints: const BoxConstraints(
-                          maxWidth: 300
+                        constraints: const BoxConstraints(maxWidth: 300),
+                        child: Text(
+                          _isAvailable
+                              ? (healthType != null
+                                  ? "Health connected via ${HealthTypeManager.formatType(healthType)}"
+                                  : "Connect a health platform")
+                              : "Health unavailable",
+                          style: theme.textTheme.titleLarge,
+                          textAlign: TextAlign.center,
                         ),
-                      child: Text(
-                        _isAvailable
-                            ? (healthType != null
-                            ? "Health connected via ${HealthTypeManager.formatType(healthType)}"
-                            : "Connect a health platform")
-                            : "Health unavailable",
-                        style: theme.textTheme.titleLarge,
-                        textAlign: TextAlign.center,
-                      ),
                       ),
                       const SizedBox(height: 5),
                       if (healthType == null)
@@ -304,7 +302,7 @@ class _SettingsPageState extends State<SettingsPage> {
                             ),
                             const SizedBox(width: 8),
                             Text(
-                              "Not synced",
+                              getErrorText(),
                               style: theme.textTheme.bodyLarge
                                   ?.copyWith(color: theme.colorScheme.error),
                             )
@@ -318,18 +316,22 @@ class _SettingsPageState extends State<SettingsPage> {
                             onSelected: (_isAvailable
                                 ? _connectSystemHealthPlatform
                                 : null),
-                            label: Text(health.capabilities.contains(HealthType.systemManaged)
+                            label: Text(health.capabilities
+                                    .contains(HealthType.systemManaged)
                                 ? ((health.isConnected &&
                                         healthType == HealthType.systemManaged)
                                     ? "Connected"
-                                    : "System")
+                                    : HealthTypeManager.formatType(
+                                        HealthType.systemManaged))
                                 : "Unavailable"),
                             selected: healthType == HealthType.systemManaged,
-                            avatar: _isSysHealthLoading && health.capabilities.contains(HealthType.systemManaged)
+                            avatar: _isSysHealthLoading &&
+                                    health.capabilities
+                                        .contains(HealthType.systemManaged)
                                 ? const CircularProgressIndicator(
-                              strokeWidth: 3,
-                              strokeCap: StrokeCap.round,
-                            )
+                                    strokeWidth: 3,
+                                    strokeCap: StrokeCap.round,
+                                  )
                                 : null,
                             showCheckmark: !_isSysHealthLoading,
                           ),
@@ -337,12 +339,16 @@ class _SettingsPageState extends State<SettingsPage> {
                             width: 10,
                           ),
                           FilterChip(
-                            label: const Text("Wear OS"),
-                            onSelected: health.capabilities.contains(HealthType.watch)
-                                ? ((isSelected) => _connectWearOS())
-                                : null,
+                            label: Text(
+                                HealthTypeManager.formatType(HealthType.watch)),
+                            onSelected:
+                                health.capabilities.contains(HealthType.watch)
+                                    ? ((isSelected) => _connectWearOS())
+                                    : null,
                             selected: healthType == HealthType.watch,
-                            avatar: _isWatchLoading && health.capabilities.contains(HealthType.watch)
+                            avatar: _isWatchLoading &&
+                                    health.capabilities
+                                        .contains(HealthType.watch)
                                 ? const CircularProgressIndicator(
                                     strokeWidth: 3,
                                     strokeCap: StrokeCap.round,
@@ -353,23 +359,30 @@ class _SettingsPageState extends State<SettingsPage> {
                           const SizedBox(
                             width: 5,
                           ),
-                          IconButton.outlined(onPressed: () async {
-                            setState(() {
-                              _isRefreshing = true;
-                            });
-                            await health.fetchHealthData();
-                            await health.checkConnectionState();
-                            setState(() {
-                              _isRefreshing = false;
-                            });
-                          }, icon: _isRefreshing ? const SizedBox(
-                            width: 15,
-                            height: 15,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              strokeCap: StrokeCap.round,
-                            ),
-                          ) : Icon(Symbols.refresh_rounded, color: theme.colorScheme.onSurface,))
+                          IconButton.outlined(
+                              onPressed: () async {
+                                setState(() {
+                                  _isRefreshing = true;
+                                });
+                                await health.fetchHealthData();
+                                await health.checkConnectionState();
+                                setState(() {
+                                  _isRefreshing = false;
+                                });
+                              },
+                              icon: _isRefreshing
+                                  ? const SizedBox(
+                                      width: 15,
+                                      height: 15,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        strokeCap: StrokeCap.round,
+                                      ),
+                                    )
+                                  : Icon(
+                                      Symbols.refresh_rounded,
+                                      color: theme.colorScheme.onSurface,
+                                    ))
                         ],
                       )
                     ]),
@@ -378,6 +391,14 @@ class _SettingsPageState extends State<SettingsPage> {
         ],
       ),
     );
+  }
+
+  String getErrorText() {
+    if (!_isSystemHealthAutorized && healthType == HealthType.systemManaged) {
+      return "Permissions not granted";
+    } else {
+      return "Not synced";
+    }
   }
 
   double getWidth(BoxConstraints constraints) {
