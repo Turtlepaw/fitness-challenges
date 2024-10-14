@@ -2,6 +2,7 @@ import 'package:fitness_challenges/constants.dart';
 import 'package:fitness_challenges/routes/profile.dart';
 import 'package:fitness_challenges/utils/common.dart';
 import 'package:fitness_challenges/utils/health.dart';
+import 'package:fitness_challenges/utils/sharedLogger.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_advanced_avatar/flutter_advanced_avatar.dart';
@@ -175,6 +176,64 @@ class _SettingsPageState extends State<SettingsPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Settings'),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 5),
+            child: MenuAnchor(
+              menuChildren: <Widget>[
+                  MenuItemButton(
+                    leadingIcon: Icon(
+                      Icons.bug_report_rounded,
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                    child: Text(
+                      "Export Logs",
+                      style: theme.textTheme.bodyLarge
+                          //?.copyWith(color: theme.colorScheme.onPrimary),
+                    ),
+                    onPressed: () async {
+                      final logger = Provider.of<SharedLogger>(context, listen: false);
+                      final file = await logger.exportLogsToFile("debug_logs");
+                      if(file == null) {
+                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                          content: Text("Failed to export logs"),
+                        ));
+                        return;
+                      } else {
+                        print(file.absolute);
+                        showDialog(
+                            context: context,
+                            builder: (context) => ConfirmDialog(
+                              isDestructive: false,
+                              icon: Icons.check_rounded,
+                              title: "Logs Saved",
+                              description: "File saved in **Downloads** folder",
+                            ),
+                            useSafeArea: false);
+                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                          content: Text("Logs saved in Downloads"),
+                        ));
+                        return;
+                      }
+                    },
+                  )
+              ],
+              builder: (BuildContext context, MenuController controller,
+                  Widget? child) {
+                return IconButton(
+                  onPressed: () {
+                    if (controller.isOpen) {
+                      controller.close();
+                    } else {
+                      controller.open();
+                    }
+                  },
+                  icon: const Icon(Icons.more_vert),
+                );
+              },
+            ),
+          )
+        ],
       ),
       body: Column(
         children: [
@@ -252,7 +311,7 @@ class _SettingsPageState extends State<SettingsPage> {
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 14, vertical: 6),
                               child: LoadingBox(
-                                height: 120,
+                                height: 195,
                                 width: MediaQuery.of(context).size.width,
                                 radius: 12,
                               ),
@@ -335,27 +394,27 @@ class _SettingsPageState extends State<SettingsPage> {
                                 : null,
                             showCheckmark: !_isSysHealthLoading,
                           ),
-                          const SizedBox(
-                            width: 10,
-                          ),
-                          FilterChip(
-                            label: Text(
-                                HealthTypeManager.formatType(HealthType.watch)),
-                            onSelected:
-                                health.capabilities.contains(HealthType.watch)
-                                    ? ((isSelected) => _connectWearOS())
-                                    : null,
-                            selected: healthType == HealthType.watch,
-                            avatar: _isWatchLoading &&
-                                    health.capabilities
-                                        .contains(HealthType.watch)
-                                ? const CircularProgressIndicator(
-                                    strokeWidth: 3,
-                                    strokeCap: StrokeCap.round,
-                                  )
-                                : null,
-                            showCheckmark: !_isWatchLoading,
-                          ),
+                          // const SizedBox(
+                          //   width: 10,
+                          // ),
+                          // FilterChip(
+                          //   label: Text(
+                          //       HealthTypeManager.formatType(HealthType.watch)),
+                          //   onSelected:
+                          //       health.capabilities.contains(HealthType.watch)
+                          //           ? ((isSelected) => _connectWearOS())
+                          //           : null,
+                          //   selected: healthType == HealthType.watch,
+                          //   avatar: _isWatchLoading &&
+                          //           health.capabilities
+                          //               .contains(HealthType.watch)
+                          //       ? const CircularProgressIndicator(
+                          //           strokeWidth: 3,
+                          //           strokeCap: StrokeCap.round,
+                          //         )
+                          //       : null,
+                          //   showCheckmark: !_isWatchLoading,
+                          // ),
                           const SizedBox(
                             width: 5,
                           ),
@@ -385,7 +444,7 @@ class _SettingsPageState extends State<SettingsPage> {
                                     ))
                         ],
                       )
-                    ]),
+                    ], height: 195),
             ),
           )
         ],
@@ -409,13 +468,14 @@ class _SettingsPageState extends State<SettingsPage> {
     }
   }
 
-  Widget buildCard(List<Widget> children) {
+  Widget buildCard(List<Widget> children, { double? height }) {
     return LayoutBuilder(builder: (context, constraints) {
       final width = getWidth(constraints);
 
       return Center(
           child: SizedBox(
         width: width,
+        height: height,
         child: Card.outlined(
           //clipBehavior: Clip.hardEdge,
           margin: const EdgeInsets.symmetric(horizontal: 15, vertical: 6),

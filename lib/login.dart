@@ -156,7 +156,13 @@ class _LoginPageState extends State<LoginPage> {
     //final usernameValidator = UsernameValidator(pb: widget.pb);
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Welcome'),
+        title: const Text('Login'),
+        leading: IconButton(
+          icon: const Icon(Symbols.arrow_back_rounded),
+          onPressed: () {
+            Navigator.of(context).pop();
+          },
+        ),
       ),
       body: ReactiveForm(
         formGroup: form,

@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_markdown/flutter_markdown.dart';
 
 class ConfirmDialog extends StatefulWidget {
   final IconData icon;
   final String title;
   final String? description;
-  final void Function() onConfirm;
+  final void Function()? onConfirm;
   final bool isDestructive;
 
   const ConfirmDialog(
-      {super.key, required this.icon, required this.title, required this.onConfirm, this.description, this.isDestructive = false});
+      {super.key, required this.icon, required this.title, this.onConfirm, this.description, this.isDestructive = false});
 
   @override
   _ConfirmDialogState createState() => _ConfirmDialogState();
@@ -49,10 +50,14 @@ class _ConfirmDialogState extends State<ConfirmDialog> {
                   if (widget.description != null)
                     const SizedBox(height: 3,),
                   if (widget.description != null)
-                    Text(
-                      widget.description!,
-                      style: theme.textTheme.bodyLarge,
-                      textAlign: TextAlign.center,
+                    MarkdownBody(
+                      data: widget.description!,
+                      styleSheet: MarkdownStyleSheet(
+                        p: theme.textTheme.bodyLarge,
+                        textAlign: WrapAlignment.center,
+                      ),
+                      // style: theme.textTheme.bodyLarge,
+                      // textAlign: TextAlign.center,
                     ),
                 ],
               )),
@@ -62,15 +67,16 @@ class _ConfirmDialogState extends State<ConfirmDialog> {
             children: [
               FilledButton.tonal(
                   onPressed: _handleClose, child: const Text("Close")),
-              const SizedBox(width: 12),
-              FilledButton(
+              if(widget.onConfirm != null)
+                const SizedBox(width: 12),
+              if(widget.onConfirm != null) FilledButton(
                   onPressed: (){
                     if(!_isLoading){
                       setState(() {
                         _isLoading = true;
                       });
 
-                      widget.onConfirm();
+                      if(widget.onConfirm != null) widget.onConfirm!();
                     }
                   }, child: _isLoading ? SizedBox(
                 width: 15,

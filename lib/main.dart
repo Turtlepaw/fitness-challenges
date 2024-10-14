@@ -7,10 +7,12 @@ import 'package:fitness_challenges/components/navBar.dart';
 import 'package:fitness_challenges/pb.dart';
 import 'package:fitness_challenges/routes/create.dart';
 import 'package:fitness_challenges/routes/join.dart';
+import 'package:fitness_challenges/routes/onboarding.dart';
 import 'package:fitness_challenges/routes/settings.dart';
 import 'package:fitness_challenges/routes/splash.dart';
 import 'package:fitness_challenges/utils/challengeManager.dart';
 import 'package:fitness_challenges/utils/health.dart';
+import 'package:fitness_challenges/utils/sharedLogger.dart';
 import 'package:fitness_challenges/utils/steps/data.dart';
 import 'package:fitness_challenges/utils/wearManager.dart';
 import 'package:flutter/foundation.dart';
@@ -42,7 +44,8 @@ CustomTransitionPage buildPageWithDefaultTransition<T>({
   return CustomTransitionPage<T>(
     key: state.pageKey,
     child: child,
-    transitionDuration: Duration(milliseconds: 150),
+    transitionDuration: const Duration(milliseconds: 250),
+    reverseTransitionDuration: const Duration(milliseconds: 150),
     transitionsBuilder: (context, animation, secondaryAnimation, child) =>
         FadeTransition(opacity: animation, child: child),
   );
@@ -71,7 +74,7 @@ final _router =
                 context.go('/home');
               } else {
                 // User is not logged in, navigate to login
-                context.go('/login');
+                context.go('/introduction');
               }
             }
           })
@@ -103,6 +106,10 @@ final _router =
   GoRoute(
     path: '/login',
     pageBuilder: defaultPageBuilder(const LoginPage()),
+  ),
+  GoRoute(
+    path: '/introduction',
+    pageBuilder: defaultPageBuilder(const Onboarding()),
   ),
   ShellRoute(
     navigatorKey: _shellNavigatorKey,
@@ -149,7 +156,7 @@ void callbackDispatcher() {
       final pb = await initializePocketbase();
       if (!pb.authStore.isValid) return Future.value(false);
       final manager = ChallengeProvider(pb: pb);
-      final healthManager = HealthManager(manager, pb);
+      final healthManager = HealthManager(manager, pb, logger: SharedLogger());
       await manager.init();
       await Health().configure(useHealthConnectIfAvailable: true);
       await healthManager.checkConnectionState();
@@ -212,11 +219,10 @@ void callbackDispatcher() {
           bool isTop = currentPosition == 1; // Assuming top position is rank 1
           print(currentPosition);
 
-
           // 0 or -1 = ended
-          if(storedRankingState != null &&
-              storedRankingState == 0){
-            debugPrint("Challenge ended and notification already sent, no action needed");
+          if (storedRankingState != null && storedRankingState == 0) {
+            debugPrint(
+                "Challenge ended and notification already sent, no action needed");
             return Future.value(true);
           } else if (challenge.getBoolValue("ended") &&
               storedRankingState != null &&
@@ -230,7 +236,8 @@ void callbackDispatcher() {
 
             // Set to 0 to mark the user as notified about the challenge end
             currentPosition = 0;
-            await prefs.setInt(challenge.id, 0); // Update right after notification
+            await prefs.setInt(
+                challenge.id, 0); // Update right after notification
           } else if (isTop &&
               (storedRankingState == null || storedRankingState > 1)) {
             // User reached the top
@@ -268,9 +275,10 @@ void callbackDispatcher() {
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  final logger = SharedLogger();
   final pb = await initializePocketbase();
   final manager = ChallengeProvider(pb: pb);
-  final healthManager = HealthManager(manager, pb);
+  final healthManager = HealthManager(manager, pb, logger: logger);
   manager.init();
   healthManager.checkConnectionState();
   //healthManager.fetchHealthData();
@@ -304,6 +312,9 @@ void main() async {
         ),
         ChangeNotifierProvider.value(
           value: healthManager,
+        ),
+        Provider<SharedLogger>.value(
+          value: logger,
         )
       ],
       child: const App(),

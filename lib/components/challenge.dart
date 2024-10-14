@@ -47,7 +47,7 @@ class _ChallengeState extends State<Challenge> {
     widget.pb.collection("challenges").subscribe(widget.challenge.id,
         (newValue) {
       print("Got update (${newValue.action})");
-      Provider.of<ChallengeProvider>(context, listen: true)
+      Provider.of<ChallengeProvider>(context, listen: false)
           .saveExisting(newValue.record!);
       setState(() {
         _challenge = newValue.record!;

@@ -5,6 +5,7 @@ import 'package:fitness_challenges/constants.dart';
 import 'package:fitness_challenges/types/challenges.dart';
 import 'package:fitness_challenges/types/collections.dart';
 import 'package:fitness_challenges/utils/data_source_manager.dart';
+import 'package:fitness_challenges/utils/sharedLogger.dart';
 import 'package:fitness_challenges/utils/steps/data.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_wear_os_connectivity/flutter_wear_os_connectivity.dart';
@@ -17,8 +18,9 @@ import 'challengeManager.dart';
 class HealthManager with ChangeNotifier {
   final ChallengeProvider challengeProvider;
   final PocketBase pb;
+  final SharedLogger logger;
 
-  HealthManager(this.challengeProvider, this.pb);
+  HealthManager(this.challengeProvider, this.pb, {required this.logger});
 
   int? _steps;
 
@@ -80,14 +82,22 @@ class HealthManager with ChangeNotifier {
     final health = Health();
     final type = await HealthTypeManager().getHealthType();
 
-    if (!pb.authStore.isValid) return;
+
+    if (!pb.authStore.isValid) {
+      logger.debug("Pocketbase auth store not valid");
+      return;
+    }
     var userId = pb.authStore.model?.id;
 
+    logger.debug("Using ${HealthTypeManager.formatType(type)} to sync health data");
     if (type == HealthType.systemManaged && Platform.isAndroid) {
       final isAvailable = types
           .map((type) => health.isDataTypeAvailable(type))
           .every((item) => item == true);
-      if (!isAvailable) return;
+      if (!isAvailable) {
+        logger.debug("Missing some health types");
+        return;
+      }
 
       final hasPermissions =
           await health.hasPermissions(types, permissions: permissions);
@@ -98,6 +108,7 @@ class HealthManager with ChangeNotifier {
         _steps = await Health().getTotalStepsInInterval(midnight, now);
         _isConnected = true;
         notifyListeners(); // Notify listeners about the change
+        logger.debug("Successfully synced $_steps steps");
       }
     } else if (type == HealthType.watch && Platform.isAndroid) {
       try {
@@ -107,7 +118,7 @@ class HealthManager with ChangeNotifier {
         await flutterWearOsConnectivity.configureWearableAPI();
         var devices = await flutterWearOsConnectivity.getConnectedDevices();
         if (devices.isEmpty) {
-          debugPrint("No connected devices");
+          logger.debug("No connected devices");
           return;
         }
 
@@ -141,14 +152,14 @@ class HealthManager with ChangeNotifier {
             _steps = data.first.mapData[id];
 
             notifyListeners(); // Notify listeners about the change
-            debugPrint("Steps are at $_steps");
+            logger.debug("Synced $_steps steps from Wear OS client");
           } else {
-            debugPrint("No steps from today");
+            logger.debug("No steps from today using Wear OS client");
           }
         }
       } catch (e, stacktrace) {
-        debugPrint("Error fetching health data from Wear OS: $e");
-        debugPrint(stacktrace.toString());
+        logger.error("Error fetching health data from Wear OS: $e");
+        logger.error(stacktrace.toString());
       }
     }
 
@@ -162,7 +173,7 @@ class HealthManager with ChangeNotifier {
         final manager =
             StepsDataManager.fromJson(challenge.getDataValue("data"));
 
-        print("Updating ${challenge.getStringValue("name")} to ${steps}");
+        logger.debug("Updating ${challenge.getStringValue("name")} to ${steps}");
         manager.updateUserActivity(userId, steps!);
 
         final dataSourceManager =
@@ -176,8 +187,8 @@ class HealthManager with ChangeNotifier {
                 'dataSources': dataSourceManager.toJson()
               });
         } catch (e, stacktrace) {
-          debugPrint("Error updating challenge: $e");
-          debugPrint(stacktrace.toString());
+          logger.error("Error updating challenge: $e");
+          logger.error(stacktrace.toString());
         }
       }
     }
