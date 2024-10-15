@@ -25,5 +25,6 @@
         <item name="android:navigationBarColor">@android:color/transparent</item>
         <!-- Enable handling for display cutouts (notch) on devices with cutout areas -->
         <item name="android:windowLayoutInDisplayCutoutMode" tools:targetApi="o_mr1">shortEdges</item>
+        <item name="android:forceDarkAllowed">false</item>
     </style>
 </resources>

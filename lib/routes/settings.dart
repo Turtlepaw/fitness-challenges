@@ -418,9 +418,9 @@ class _SettingsPageState extends State<SettingsPage> {
       final width = getWidth(constraints);
 
       return Center(
-          child: SizedBox(
+          child: Container(
+            constraints: BoxConstraints(minHeight: height ?? 0.0),
         width: width,
-        height: height,
         child: Card.outlined(
           //clipBehavior: Clip.hardEdge,
           margin: const EdgeInsets.symmetric(horizontal: 15, vertical: 6),

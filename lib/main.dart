@@ -337,11 +337,17 @@ void main() async {
     ),
   );
 
-  SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
-    statusBarColor: Colors.transparent,  // Makes the status bar transparent
-    systemNavigationBarColor: Colors.transparent,  // Makes the navigation bar transparent
-    systemNavigationBarIconBrightness: Brightness.dark,  // Adjust icons to be visible on light background
-    statusBarIconBrightness: Brightness.dark,  // Adjust icons to be visible on light background
+  // Detect the system brightness (light or dark)
+  final Brightness brightness = WidgetsBinding.instance.window.platformBrightness;
+
+  // Set the system overlay based on brightness
+  SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
+    statusBarColor: Colors.transparent,
+    systemNavigationBarColor: Colors.transparent,
+    systemNavigationBarIconBrightness:
+    brightness == Brightness.dark ? Brightness.light : Brightness.dark,
+    statusBarIconBrightness:
+    brightness == Brightness.dark ? Brightness.light : Brightness.dark,
   ));
 }
 
