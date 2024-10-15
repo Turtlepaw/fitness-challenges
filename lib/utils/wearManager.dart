@@ -1,5 +1,6 @@
 import 'dart:developer';
 
+import 'package:fitness_challenges/utils/sharedLogger.dart';
 import 'package:flutter_wear_os_connectivity/flutter_wear_os_connectivity.dart';
 import 'package:pocketbase/pocketbase.dart';
 
@@ -21,7 +22,7 @@ class WearManager {
     }
   }
 
-  Future<WearManager> sendAuthentication() async {
+  Future<WearManager> sendAuthentication(SharedLogger sharedLogger) async {
     final isConnected = await checkConnection();
     if (pb.authStore.isValid && isConnected) {
       print("Sending auth details");
@@ -29,15 +30,19 @@ class WearManager {
           path: "/auth", data: {"token": pb.authStore.token}, isUrgent: true);
     }
 
-    var devices = await flutterWearOsConnectivity.getConnectedDevices();
+    try {
+      var devices = await flutterWearOsConnectivity.getConnectedDevices();
 
-    if (devices.isNotEmpty) {
-      flutterWearOsConnectivity
-          .messageReceived(pathURI: Uri(path: "/auth_request"))
-          .listen((message) {
-            print(message);
-        inspect(message);
-      });
+      if (devices.isNotEmpty) {
+        flutterWearOsConnectivity
+            .messageReceived(pathURI: Uri(path: "/auth_request"))
+            .listen((message) {
+          print(message);
+          inspect(message);
+        });
+      }
+    } catch (e) {
+      sharedLogger.error("Failed to get connected devices: $e");
     }
 
     return this;

@@ -87,6 +87,8 @@ dependencies:
   open_file: ^3.5.8
   flutter_markdown: ^0.7.4
   pair: ^0.1.2
+  receive_intent: ^0.2.5
+  flutter_statusbarcolor_ns: ^0.6.0
   #share_plus: 10.0.0
 
 dev_dependencies:

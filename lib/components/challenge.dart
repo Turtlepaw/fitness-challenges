@@ -154,6 +154,7 @@ class _ChallengeState extends State<Challenge> {
       builder: (context) {
         return ChallengeDialog(challenge: _challenge, pb: widget.pb);
       },
+        useSafeArea: false
     ).then((_) async {
       final data = await widget.pb
           .collection(Collection.challenges)
@@ -492,7 +493,7 @@ class _ChallengeDialogState extends State<ChallengeDialog> {
   }
 
   Widget _buildBottomDetails(BuildContext context) {
-    final format = DateFormat('MMMM dd');
+    final format = DateFormat('EEEE, MMMM d');
     final theme = Theme.of(context);
     return Column(
       children: [
@@ -504,9 +505,9 @@ class _ChallengeDialogState extends State<ChallengeDialog> {
             Text(
               switch (_challenge.getBoolValue("ended")) {
                 true =>
-                  "This challenge has ended and will be deleted ${DateTime.parse(_challenge.getDataValue("deleteDate")).relativeTime(context)}",
+                  "This challenge has ended and will be deleted ${DateTime.parse(_challenge.getDataValue("deleteDate")).relativeTime(context)} (${format.format(DateTime.parse(_challenge.getDataValue("deleteDate")))})",
                 false =>
-                  "Ends ${DateTime.parse(_challenge.getDataValue("endDate")).relativeTime(context)}"
+                  "Ends ${DateTime.parse(_challenge.getDataValue("endDate")).relativeTime(context)} (${format.format(DateTime.parse(_challenge.getDataValue("endDate")))})"
               },
               style: Theme.of(context).textTheme.titleMedium,
               textAlign: TextAlign.center,

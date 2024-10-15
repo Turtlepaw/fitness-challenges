@@ -1,5 +1,6 @@
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
@@ -19,11 +20,11 @@ class _OnboardingState extends State<Onboarding> {
     final theme = Theme.of(context);
     return Scaffold(
         appBar: AppBar(
-          title: const Text('Introduction'),
+          systemOverlayStyle: const SystemUiOverlayStyle(statusBarColor: Colors.transparent),
         ),
         body: Stack(
           children: [
-            Column(
+            ListView(
               children: [
                 const Icon(
                   Symbols.rocket_launch_rounded,
@@ -31,20 +32,24 @@ class _OnboardingState extends State<Onboarding> {
                 ),
                 const SizedBox(height: 20),
                 // Add some space between the icon and the text
-                Text(
-                  "Your fitness journey starts here.",
-                  style: theme.textTheme.headlineLarge,
-                  textAlign: TextAlign.center,
-                  softWrap: true, // Allows the text to wrap
-                  overflow: TextOverflow
-                      .visible, // Prevent overflow, and add ellipsis if text is too long
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 15),
+                  child: Text(
+                    "Your fitness journey starts here.",
+                    style: theme.textTheme.headlineLarge,
+                    textAlign: TextAlign.center,
+                    softWrap: true, // Allows the text to wrap
+                    overflow: TextOverflow
+                        .visible, // Prevent overflow, and add ellipsis if text is too long
+                  ),
                 ),
                 const SizedBox(
                   height: 20,
                 ),
                 Card(
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20), side: BorderSide(width: 1.1, color: theme.colorScheme.surfaceContainerHighest)),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20), side: BorderSide(width: 1.1, color: theme.colorScheme.surfaceContainerHighest, style: BorderStyle.solid, strokeAlign: BorderSide.strokeAlignCenter)),
                   color: theme.colorScheme.surfaceContainer,
+                  shadowColor: Colors.transparent,
                   margin:
                       const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
                   child: Container(
@@ -53,7 +58,7 @@ class _OnboardingState extends State<Onboarding> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Symbols.heart_check_rounded, size: 50),
+                        const Icon(Symbols.heart_check_rounded, size: 50),
                         const SizedBox(width: 15),
                         Expanded(
                           child: Column(
@@ -123,7 +128,7 @@ class _OnboardingState extends State<Onboarding> {
                 ),
                 CarouselSlider(
                   options: CarouselOptions(
-                      height: 250.0,
+                      height: 270.0,
                       autoPlay: true,
                       autoPlayInterval: const Duration(seconds: 3)),
                   items: [
@@ -176,7 +181,7 @@ class _OnboardingState extends State<Onboarding> {
               ],
             ),
             Positioned(
-              bottom: 16, // Adjust as needed
+              bottom: 30, // Adjust as needed
               right: 16, // Adjust as needed
               child: FilledButton(
                 onPressed: () {

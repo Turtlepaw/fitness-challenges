@@ -17,6 +17,7 @@ import 'package:fitness_challenges/utils/steps/data.dart';
 import 'package:fitness_challenges/utils/wearManager.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:go_router/go_router.dart';
@@ -25,8 +26,10 @@ import 'package:material_symbols_icons/material_symbols_icons.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:pocketbase/pocketbase.dart';
 import 'package:provider/provider.dart';
+import 'package:receive_intent/receive_intent.dart';
 import 'package:relative_time/relative_time.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:workmanager/workmanager.dart';
 
 import 'login.dart';
@@ -272,6 +275,18 @@ void callbackDispatcher() {
   });
 }
 
+void checkLaunchIntent() async {
+  final receivedIntent = await ReceiveIntent.getInitialIntent();
+
+  if (receivedIntent != null &&
+      receivedIntent.action == 'android.intent.action.VIEW_PERMISSION_USAGE') {
+    launchUrl(Uri.parse("https://gist.github.com/Turtlepaw/e14d65c181a071b4facfc1aef323b2d4"));
+  } else {
+    // App was launched normally
+    print('Launched normally');
+  }
+}
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -283,7 +298,8 @@ void main() async {
   healthManager.checkConnectionState();
   //healthManager.fetchHealthData();
   Health().configure(useHealthConnectIfAvailable: true);
-  final wearManager = WearManager(pb).sendAuthentication();
+  final wearManager = WearManager(pb).sendAuthentication(logger);
+  checkLaunchIntent();
 
   // Background work
   if (kDebugMode) {
@@ -320,6 +336,13 @@ void main() async {
       child: const App(),
     ),
   );
+
+  SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+    statusBarColor: Colors.transparent,  // Makes the status bar transparent
+    systemNavigationBarColor: Colors.transparent,  // Makes the navigation bar transparent
+    systemNavigationBarIconBrightness: Brightness.dark,  // Adjust icons to be visible on light background
+    statusBarIconBrightness: Brightness.dark,  // Adjust icons to be visible on light background
+  ));
 }
 
 class App extends StatefulWidget {
@@ -330,11 +353,11 @@ class App extends StatefulWidget {
 }
 
 class _AppState extends State<App> {
+  static final _color = Color(0xff15a4bc);
   static final _defaultLightColorScheme =
-      ColorScheme.fromSwatch(primarySwatch: Colors.deepPurple);
+      ColorScheme.fromSeed(seedColor: _color);
 
-  static final _defaultDarkColorScheme = ColorScheme.fromSwatch(
-      primarySwatch: Colors.deepPurple, brightness: Brightness.dark);
+  static final _defaultDarkColorScheme = ColorScheme.fromSeed(seedColor: _color, brightness: Brightness.dark);
 
   late bool isLoggedIn; // Track login status locally
   late PocketBase pb;
@@ -391,13 +414,13 @@ class _AppState extends State<App> {
   Widget build(BuildContext context) {
     return DynamicColorBuilder(builder: (lightColorScheme, darkColorScheme) {
       return MaterialApp.router(
-        localizationsDelegates: [
+        localizationsDelegates: const [
           GlobalMaterialLocalizations.delegate,
           GlobalWidgetsLocalizations.delegate,
           GlobalCupertinoLocalizations.delegate,
           RelativeTimeLocalizations.delegate
         ],
-        supportedLocales: [
+        supportedLocales: const [
           Locale('en'), // English
           Locale('es'), // Spanish
         ],
@@ -450,16 +473,18 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _showBottomSheet(BuildContext context) {
+    final theme = Theme.of(context);
     showFlexibleBottomSheet(
         minHeight: 0,
-        initHeight: 0.2,
-        maxHeight: 0.3,
+        initHeight: 0.23,
+        maxHeight: 0.4,
         useRootScaffold: true,
         useRootNavigator: true,
         context: context,
         builder: _buildBottomSheet,
         anchors: [0, 0.2],
-        isSafeArea: true,
+        isSafeArea: false,
+        bottomSheetColor: theme.colorScheme.surfaceContainer,
         bottomSheetBorderRadius: const BorderRadius.vertical(
           top: Radius.circular(20),
         ));

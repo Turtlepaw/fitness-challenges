@@ -1,18 +1,15 @@
-import 'package:fitness_challenges/utils/challengeManager.dart';
 import 'package:fitness_challenges/types/challenges.dart';
 import 'package:fitness_challenges/types/collections.dart';
+import 'package:fitness_challenges/utils/challengeManager.dart';
 import 'package:fitness_challenges/utils/manager.dart';
 import 'package:fitness_challenges/utils/steps/data.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:health/health.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
 import 'package:pocketbase/pocketbase.dart';
 import 'package:provider/provider.dart';
 import 'package:reactive_forms/reactive_forms.dart';
 
-import '../constants.dart';
 import '../utils/health.dart';
 
 class JoinDialog extends StatefulWidget {
@@ -31,7 +28,7 @@ class _JoinDialogState extends State<JoinDialog> {
 
   // Form definition
   final form = FormGroup({
-    joinCode: FormControl<String>(validators: [Validators.required]),
+    joinCode: FormControl<String>(validators: [Validators.required, Validators.minLength(6), Validators.maxLength(6)]),
   });
 
   @override
@@ -72,6 +69,16 @@ class _JoinDialogState extends State<JoinDialog> {
                     "Join Challenge",
                     style: theme.textTheme.headlineSmall,
                   ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(top: 5, left: 10, bottom: 10),
+                child: Align(
+                  alignment: Alignment.topLeft,
+                  child: Text(
+                        "Join a challenge using a code.",
+                        style: theme.textTheme.bodyLarge,
+                      )
                 ),
               ),
               // Align(

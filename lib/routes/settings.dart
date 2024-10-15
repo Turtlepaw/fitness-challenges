@@ -2,7 +2,6 @@ import 'package:fitness_challenges/constants.dart';
 import 'package:fitness_challenges/routes/profile.dart';
 import 'package:fitness_challenges/utils/common.dart';
 import 'package:fitness_challenges/utils/health.dart';
-import 'package:fitness_challenges/utils/sharedLogger.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_advanced_avatar/flutter_advanced_avatar.dart';
@@ -14,6 +13,7 @@ import 'package:pocketbase/pocketbase.dart';
 import 'package:provider/provider.dart';
 
 import '../components/challenges/confirmDialog.dart';
+import '../components/debug_panel.dart';
 import '../components/loader.dart';
 
 class SettingsPage extends StatefulWidget {
@@ -176,66 +176,11 @@ class _SettingsPageState extends State<SettingsPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Settings'),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 5),
-            child: MenuAnchor(
-              menuChildren: <Widget>[
-                  MenuItemButton(
-                    leadingIcon: Icon(
-                      Icons.bug_report_rounded,
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
-                    child: Text(
-                      "Export Logs",
-                      style: theme.textTheme.bodyLarge
-                          //?.copyWith(color: theme.colorScheme.onPrimary),
-                    ),
-                    onPressed: () async {
-                      final logger = Provider.of<SharedLogger>(context, listen: false);
-                      final file = await logger.exportLogsToFile("debug_logs");
-                      if(file == null) {
-                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                          content: Text("Failed to export logs"),
-                        ));
-                        return;
-                      } else {
-                        print(file.absolute);
-                        showDialog(
-                            context: context,
-                            builder: (context) => ConfirmDialog(
-                              isDestructive: false,
-                              icon: Icons.check_rounded,
-                              title: "Logs Saved",
-                              description: "File saved in **Downloads** folder",
-                            ),
-                            useSafeArea: false);
-                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                          content: Text("Logs saved in Downloads"),
-                        ));
-                        return;
-                      }
-                    },
-                  )
-              ],
-              builder: (BuildContext context, MenuController controller,
-                  Widget? child) {
-                return IconButton(
-                  onPressed: () {
-                    if (controller.isOpen) {
-                      controller.close();
-                    } else {
-                      controller.open();
-                    }
-                  },
-                  icon: const Icon(Icons.more_vert),
-                );
-              },
-            ),
-          )
+        actions: const [
+          DebugPanel()
         ],
       ),
-      body: Column(
+      body: ListView(
         children: [
           buildCard(
             [
@@ -484,6 +429,7 @@ class _SettingsPageState extends State<SettingsPage> {
             child: Column(
               mainAxisSize: MainAxisSize.max,
               crossAxisAlignment: CrossAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.center,
               children: children,
             ),
           ),
@@ -517,7 +463,7 @@ class _SettingsPageState extends State<SettingsPage> {
               description: "Are you sure you want to logout?",
               onConfirm: () async {
                 pb.authStore.clear();
-                context.go("/login");
+                context.go("/introduction");
               },
             ),
         useSafeArea: false);

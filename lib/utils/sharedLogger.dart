@@ -1,5 +1,7 @@
 import 'dart:io';
 
+import 'package:device_info_plus/device_info_plus.dart';
+import 'package:icons_launcher/cli_commands.dart';
 import 'package:logger/logger.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -18,17 +20,38 @@ class SharedLogger {
   void debug(String message){
     _logger.d(message);
     String timestamp = DateTime.now().toIso8601String();
-    _logs.add('[$timestamp] $message'); // Add log to memory
+    _logs.add('Debug [$timestamp]: $message'); // Add log to memory
   }
 
   void error(String message){
     _logger.e(message);
     String timestamp = DateTime.now().toIso8601String();
-    _logs.add('[$timestamp] $message'); // Add log to memory
+    _logs.add('ERROR [$timestamp]: $message'); // Add log to memory
   }
 
   // Export logs to a file when requested
   Future<File?> exportLogsToFile(String fileName) async {
+    var info = await DeviceInfoPlugin().androidInfo;
+    final properties = {
+      'brand': info.brand,
+      'device': info.device,
+      'model': info.model,
+      'product': info.product,
+      'version.baseOS': info.version.baseOS,
+      'version.codename': info.version.codename,
+      'version.incremental': info.version.incremental,
+      'version.previewSdkInt': info.version.previewSdkInt,
+      'version.release': info.version.release,
+      'version.sdkInt': info.version.sdkInt,
+      'version.securityPatch': info.version.securityPatch,
+      'tags': info.tags,
+      'board': info.board,
+    };
+
+    for (var entry in properties.entries) {
+      debug('${entry.key.capitalize()}: ${entry.value}');
+    }
+
     // Request storage permissions
     String content = _logs.join('\n');
     try {
