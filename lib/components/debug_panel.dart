@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:material_symbols_icons/material_symbols_icons.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -17,7 +18,7 @@ class DebugPanel extends StatelessWidget {
         menuChildren: <Widget>[
           MenuItemButton(
             leadingIcon: Icon(
-              Icons.bug_report_rounded,
+              Symbols.bug_report_rounded,
               color: theme.colorScheme.onSurfaceVariant,
             ),
             child: Text(
@@ -63,6 +64,26 @@ class DebugPanel extends StatelessWidget {
             ),
             onPressed: () async {
               launchUrl(Uri.parse("https://discord.gg/3u2bWnzg3x"));
+            },
+          ),
+          MenuItemButton(
+            // leadingIcon: Image.asset(
+            //   "./images/github-mark.png",
+            //   width: 25,
+            //   height: 25,
+            //   color: theme.colorScheme.onSurfaceVariant,
+            // ),
+            leadingIcon: Icon(
+              Icons.code_rounded,
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+            child: Text(
+                "Github",
+                style: theme.textTheme.bodyLarge
+              //?.copyWith(color: theme.colorScheme.onPrimary),
+            ),
+            onPressed: () async {
+              launchUrl(Uri.parse("https://github.com/Turtlepaw/fitness-challenges"));
             },
           )
         ],
