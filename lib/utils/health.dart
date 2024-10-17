@@ -230,8 +230,8 @@ class HealthTypeManager {
 
   /// Gets the health type, defaults to HealthType.systemManaged
   Future<HealthType?> getHealthType() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    final data = prefs.getInt(dataId);
+    final prefs = SharedPreferencesAsync();
+    final data = await prefs.getInt(dataId);
     return data != null ? HealthType.values.elementAt(data) : null;
   }
 

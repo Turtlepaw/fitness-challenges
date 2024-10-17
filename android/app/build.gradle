@@ -53,7 +53,7 @@ android {
     defaultConfig {
         applicationId = "com.turtlepaw.fitness_challenges"
         minSdk 26
-        targetSdk 34
+        targetSdk 35
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName
         multiDexEnabled true
@@ -101,6 +101,7 @@ android {
         ciRelease {
             dimension "default"
             buildTypes {
+                signingConfig signingConfigs.ciRelease
                 release {
                     minifyEnabled true
                     proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
