@@ -44,7 +44,7 @@ jobs:
 
       - name: Build AAB
         if: ${{ github.event.inputs.buildType == 'aab' }}
-        run: flutter build appbundle --flavor ciRelease --release
+        run: flutter build appbundle --release
         env:
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
@@ -63,5 +63,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: AAB
-          path: build/app/outputs/bundle/ciReleaseRelease/*.aab
+          path: build/app/outputs/bundle/release/*.aab
           compression-level: 0
