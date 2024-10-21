@@ -89,7 +89,7 @@ class HealthManager with ChangeNotifier {
     }
     var userId = pb.authStore.model?.id;
 
-    logger.debug("Using ${HealthTypeManager.formatType(type)} to sync health data");
+    logger.debug("Using ${HealthTypeManager.formatType(type)} ($type) to sync health data");
     if (type == HealthType.systemManaged && Platform.isAndroid) {
       final isAvailable = types
           .map((type) => health.isDataTypeAvailable(type))
@@ -223,9 +223,14 @@ class HealthTypeManager {
   final dataId = "healthType";
 
   /// Sets the health type
-  void setHealthType(HealthType type) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    prefs.setInt(dataId, type.index);
+  Future<void> setHealthType(HealthType type) async {
+    final prefs = SharedPreferencesAsync();
+    await prefs.setInt(dataId, type.index);
+  }
+
+  void clearHealthType() async {
+    final prefs = SharedPreferencesAsync();
+    await prefs.remove(dataId);
   }
 
   /// Gets the health type, defaults to HealthType.systemManaged

@@ -313,11 +313,17 @@ void main() async {
   }
 
   Workmanager().registerPeriodicTask("background-sync", "BackgroundSync",
-      frequency: const Duration(hours: 1));
-  print("registered bg work");
+      frequency: const Duration(hours: 1), initialDelay: const Duration(minutes: 15));
+  logger.debug("Background sync registered");
   if (pb.authStore.isValid)
     Workmanager().registerOneOffTask(
         "background-sync-one-time", "BackgroundSyncOneTime");
+
+  if (kReleaseMode) {
+    debugPrint = (String? message, {int? wrapWidth}) {
+      print(message); // Redirect to print in release mode
+    };
+  }
 
   runApp(
     MultiProvider(
