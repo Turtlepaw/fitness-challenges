@@ -36,7 +36,7 @@ jobs:
 
       - name: Build APK
         if: ${{ github.event.inputs.buildType == 'apk' }}
-        run: flutter build apk --flavor ciRelease --release
+        run: flutter build apk --release
         env:
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
