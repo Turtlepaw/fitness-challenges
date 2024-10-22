@@ -58,10 +58,10 @@ android {
         release {
             if (System.getenv("CI") != null) {
                 // CI environment, use keystore from environment variables
-                keyAlias System.getenv("KEY_ALIAS")
-                keyPassword System.getenv("KEY_PASSWORD")
-                storeFile file(System.getenv("KEYSTORE_PATH"))
-                storePassword System.getenv("KEYSTORE_PASSWORD")
+            storeFile file("keystore.jks")
+            storePassword System.getenv("KEYSTORE_PASSWORD")
+            keyAlias System.getenv("KEY_ALIAS")
+            keyPassword System.getenv("KEY_PASSWORD")
             } else {
                 // Local environment, use key.properties
                 def keystoreProperties = new Properties()
