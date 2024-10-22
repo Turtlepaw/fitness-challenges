@@ -21,6 +21,11 @@ class CustomNavigationBar extends StatelessWidget {
           icon: Icon(Symbols.home_rounded, fill: 0),
           label: 'Home',
         ),
+        const NavigationDestination(
+          selectedIcon: Icon(Symbols.people_rounded),
+          icon: Icon(Symbols.people_rounded, fill: 0),
+          label: 'Community',
+        ),
         NavigationDestination(
           selectedIcon: const Icon(Symbols.settings_rounded),
           icon: health.isConnected
@@ -31,13 +36,16 @@ class CustomNavigationBar extends StatelessWidget {
       ],
       selectedIndex: switch (state?.fullPath) {
         "/home" => 0,
-        "/settings" => 1,
+        "/community" => 1,
+        "/settings" => 2,
         _ => 0
       },
       onDestinationSelected: (index) {
         if (index == 0) {
           context.go('/home');
         } else if (index == 1) {
+          context.go('/community');
+        } else if(index == 2){
           context.go('/settings');
         }
       },

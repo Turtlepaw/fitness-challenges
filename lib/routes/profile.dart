@@ -145,14 +145,64 @@ class ProfileWidget extends StatelessWidget {
               const SizedBox(
                 width: 15,
               ),
-              Text(
-                pb.authStore.model?.getStringValue("username"),
-                style: theme.textTheme.displaySmall,
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    pb.authStore.model?.getStringValue("username"),
+                    style: theme.textTheme.displaySmall,
+                  ),
+                  Text(
+                    pb.authStore.model?.getStringValue("email"),
+                    style: theme.textTheme.bodyLarge,
+                  )
+                ],
               )
             ],
           ),
         ),
-        _buildTextFields(theme)
+        _buildTextFields(theme),
+        // Padding(
+        //     padding: const EdgeInsets.only(left: 25)
+        //         .add(const EdgeInsets.symmetric(vertical: 25)),
+        //     child: Column(
+        //       crossAxisAlignment: CrossAxisAlignment.start,
+        //       children: [
+        //         Row(mainAxisAlignment: MainAxisAlignment.start, children: [
+        //           Icon(Symbols.warning_rounded, color: theme.colorScheme.error, size: 28,),
+        //           const SizedBox(
+        //             width: 10,
+        //           ),
+        //           Text("Danger Zone", style: theme.textTheme.headlineSmall?.copyWith(
+        //               color: theme.colorScheme.error
+        //           ),)
+        //         ]),
+        //         const SizedBox(
+        //           height: 10,
+        //         ),
+        //         FilledButton(onPressed: (){
+        //           final pb = Provider.of<PocketBase>(context, listen: false);
+        //           showDialog(
+        //               context: context,
+        //               builder: (context) => ConfirmDialog(
+        //                 isDestructive: true,
+        //                 icon: Icons.delete_forever_rounded,
+        //                 title: "Delete account",
+        //                 description: "Are you sure you want to delete your account?",
+        //                 onConfirm: () async {
+        //                   pb.authStore.clear();
+        //                   context.go("/introduction");
+        //                 },
+        //               ),
+        //               useSafeArea: false);
+        //         }, style: ButtonStyle(
+        //           backgroundColor: WidgetStateProperty.all(theme.colorScheme.error)
+        //         ), child: const Text("Delete my account"),
+        //         ),
+        //         const Padding(padding: EdgeInsets.only(top: 10),
+        //         child: Text("Permanently delete your account and your challenges."),)
+        //       ],
+        //     ))
         //FilledButton(onPressed: (){}, child: Text("Create"))
       ],
     );

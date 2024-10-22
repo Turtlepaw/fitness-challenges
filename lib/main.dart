@@ -5,6 +5,8 @@ import 'package:fitness_challenges/components/challenge.dart';
 import 'package:fitness_challenges/components/loader.dart';
 import 'package:fitness_challenges/components/navBar.dart';
 import 'package:fitness_challenges/pb.dart';
+import 'package:fitness_challenges/routes/challenge.dart';
+import 'package:fitness_challenges/routes/community.dart';
 import 'package:fitness_challenges/routes/create.dart';
 import 'package:fitness_challenges/routes/join.dart';
 import 'package:fitness_challenges/routes/onboarding.dart';
@@ -114,6 +116,13 @@ final _router =
     path: '/introduction',
     pageBuilder: defaultPageBuilder(const Onboarding()),
   ),
+  GoRoute(
+      path: '/challenge/:id',
+      pageBuilder: (context, state) {
+        return defaultPageBuilder(
+                ChallengeDialog(challenge: state.pathParameters['id']!))(
+            context, state);
+      }),
   ShellRoute(
     navigatorKey: _shellNavigatorKey,
     pageBuilder: (context, state, child) {
@@ -130,7 +139,11 @@ final _router =
       GoRoute(
         path: '/settings',
         pageBuilder: defaultPageBuilder(const SettingsPage()),
-      )
+      ),
+      GoRoute(
+        path: '/community',
+        pageBuilder: defaultPageBuilder(const CommunityPage()),
+      ),
     ],
   )
 ]);
@@ -280,7 +293,8 @@ void checkLaunchIntent() async {
 
   if (receivedIntent != null &&
       receivedIntent.action == 'android.intent.action.VIEW_PERMISSION_USAGE') {
-    launchUrl(Uri.parse("https://gist.github.com/Turtlepaw/e14d65c181a071b4facfc1aef323b2d4"));
+    launchUrl(Uri.parse(
+        "https://gist.github.com/Turtlepaw/e14d65c181a071b4facfc1aef323b2d4"));
   } else {
     // App was launched normally
     print('Launched normally');
@@ -313,7 +327,8 @@ void main() async {
   }
 
   Workmanager().registerPeriodicTask("background-sync", "BackgroundSync",
-      frequency: const Duration(hours: 1), initialDelay: const Duration(minutes: 15));
+      frequency: const Duration(hours: 1),
+      initialDelay: const Duration(minutes: 15));
   logger.debug("Background sync registered");
   if (pb.authStore.isValid)
     Workmanager().registerOneOffTask(
@@ -344,16 +359,17 @@ void main() async {
   );
 
   // Detect the system brightness (light or dark)
-  final Brightness brightness = WidgetsBinding.instance.window.platformBrightness;
+  final Brightness brightness =
+      WidgetsBinding.instance.window.platformBrightness;
 
   // Set the system overlay based on brightness
   SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
     statusBarColor: Colors.transparent,
     systemNavigationBarColor: Colors.transparent,
     systemNavigationBarIconBrightness:
-    brightness == Brightness.dark ? Brightness.light : Brightness.dark,
+        brightness == Brightness.dark ? Brightness.light : Brightness.dark,
     statusBarIconBrightness:
-    brightness == Brightness.dark ? Brightness.light : Brightness.dark,
+        brightness == Brightness.dark ? Brightness.light : Brightness.dark,
   ));
 }
 
@@ -369,7 +385,8 @@ class _AppState extends State<App> {
   static final _defaultLightColorScheme =
       ColorScheme.fromSeed(seedColor: _color);
 
-  static final _defaultDarkColorScheme = ColorScheme.fromSeed(seedColor: _color, brightness: Brightness.dark);
+  static final _defaultDarkColorScheme =
+      ColorScheme.fromSeed(seedColor: _color, brightness: Brightness.dark);
 
   late bool isLoggedIn; // Track login status locally
   late PocketBase pb;
@@ -547,20 +564,6 @@ class _HomePageState extends State<HomePage> {
         // Center is a layout widget. It takes a single child and positions it
         // in the middle of the parent.
         child: ListView(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          //
-          // TRY THIS: Invoke "debug painting" (choose the "Toggle Debug Paint"
-          // action in the IDE, or press "p" in the console), to see the
-          // wireframe for each widget.
-
           children: <Widget>[
             if (challengeProvider.isLoading)
               ...List.generate(3, (index) {

@@ -34,7 +34,7 @@ class _CreateDialogState extends State<CreateDialog> {
   final form = FormGroup({
     type: FormControl<int>(validators: [Validators.required], value: 1),
     title: FormControl<String>(validators: [Validators.required]),
-    date: FormControl<DateTime>(validators: [Validators.required]),
+    date: FormControl<DateTime>(validators: []),
     autoEnd: FormControl<bool>(value: false),
     difficulty: FormControl<int>(value: 1)
   });
@@ -252,7 +252,7 @@ class CreateWidget extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Text(
-                "Challenge",
+                "Challenge Type",
                 style: theme.typography.englishLike.labelLarge,
               ),
               const SizedBox(
@@ -276,7 +276,7 @@ class CreateWidget extends StatelessWidget {
                           ? null
                           : Icon(c.icon),
                       label: Text(c.name),
-                      onSelected: index == 1
+                      onSelected: index == 1 || index == 0
                           ? (value) {
                         form
                             .control(type)

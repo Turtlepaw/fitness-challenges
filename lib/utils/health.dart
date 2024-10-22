@@ -169,16 +169,16 @@ class HealthManager with ChangeNotifier {
 
       var challengeType = TypesExtension.of(challenge.getIntValue("type"));
 
+      final dataSourceManager =
+      DataSourceManager.fromChallenge(challenge)
+          .setDataSource(userId, getSource(type!));
+
       if (challengeType == Types.steps && steps != null) {
         final manager =
             StepsDataManager.fromJson(challenge.getDataValue("data"));
 
         logger.debug("Updating ${challenge.getStringValue("name")} to ${steps}");
         manager.updateUserActivity(userId, steps!);
-
-        final dataSourceManager =
-            DataSourceManager.fromChallenge(challenge)
-                .setDataSource(userId, getSource(type!));
 
         try {
           await pb.collection(Collection.challenges).update(challenge.id,
@@ -190,6 +190,11 @@ class HealthManager with ChangeNotifier {
           logger.error("Error updating challenge: $e");
           logger.error(stacktrace.toString());
         }
+      } else if(challengeType == Types.bingo) {
+        await pb.collection(Collection.challenges).update(challenge.id,
+            body: {
+              'dataSources': dataSourceManager.toJson()
+            });
       }
     }
 

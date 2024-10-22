@@ -25,6 +25,9 @@ class _ConfirmDialogState extends State<ConfirmDialog> {
       false => theme.colorScheme.onSurface,
       true => theme.colorScheme.error,
     };
+    final destructiveButtonStyle = ButtonStyle(
+        backgroundColor: WidgetStateProperty.all(theme.colorScheme.error  )
+    );
 
     return Dialog(
         child: Padding(
@@ -66,10 +69,12 @@ class _ConfirmDialogState extends State<ConfirmDialog> {
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
               FilledButton.tonal(
+                  style: widget.isDestructive ? destructiveButtonStyle : null,
                   onPressed: _handleClose, child: const Text("Close")),
               if(widget.onConfirm != null)
                 const SizedBox(width: 12),
               if(widget.onConfirm != null) FilledButton(
+                style: widget.isDestructive ? destructiveButtonStyle : null,
                   onPressed: (){
                     if(!_isLoading){
                       setState(() {
