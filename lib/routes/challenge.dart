@@ -660,16 +660,17 @@ class _ChallengeDialogState extends State<ChallengeDialog> {
     );
   }
 
+  UserBingoData? _selectedBingoData;
+  
   Widget _buildBingoCard(BuildContext context) {
     var theme = Theme.of(context);
     final challenge = _challenge;
     Map<String, dynamic> jsonMap = challenge!.getDataValue("data");
     final manager = BingoDataManager.fromJson(jsonMap);
-    print(manager.usersBingoData.toString());
 
-    // Provide a default UserBingoData if not found
-    final bingoActivities = manager.usersBingoData.firstWhere(
-      (value) => value.userId == pb.authStore.model?.id,
+    // If no card is selected, default to the current user's bingo data
+    _selectedBingoData ??= manager.data.firstWhere(
+          (value) => value.userId == pb.authStore.model?.id,
       orElse: () => UserBingoData(userId: "", activities: []),
     );
 
@@ -677,26 +678,28 @@ class _ChallengeDialogState extends State<ChallengeDialog> {
       builder: (context, constraints) {
         final crossAxisCount = (constraints.maxWidth / 100).floor();
 
+        // TODO: don't let current user modify other users' bingo cards
         return Container(
           padding: const EdgeInsets.all(10.0),
           child: ListView(
-            shrinkWrap: true, // This will make the ListView take the height of its content
-            physics: ClampingScrollPhysics(), // You can adjust the scroll behavior if needed
+            shrinkWrap: true,
+            physics: ClampingScrollPhysics(),
             children: [
               _buildTopDetails(context, null),
+
+              // Main bingo card display based on the selected user's data
               GridView.builder(
-                physics: NeverScrollableScrollPhysics(), // Disable GridView's own scrolling
-                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: crossAxisCount > 1 ? crossAxisCount : 1,
+                physics: NeverScrollableScrollPhysics(),
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 5,
                   crossAxisSpacing: 5.0,
                   mainAxisSpacing: 5.0,
+                  childAspectRatio: 0.68,
                 ),
-                itemCount: bingoActivities.activities.length,
+                itemCount: _selectedBingoData!.activities.length,
                 shrinkWrap: true,
-                // Prevent unbounded height error
-                //physics: const NeverScrollableScrollPhysics(), // Disable GridView scrolling
                 itemBuilder: (context, index) {
-                  final activity = bingoActivities.activities[index];
+                  final activity = _selectedBingoData!.activities[index];
 
                   return Card(
                     clipBehavior: Clip.hardEdge,
@@ -705,23 +708,23 @@ class _ChallengeDialogState extends State<ChallengeDialog> {
                       splashColor: theme.colorScheme.onPrimary.withAlpha(30),
                       onTap: activity.type != BingoDataType.filled
                           ? () async {
-                              final data = manager.updateUserBingoActivity(
-                                pb.authStore.model?.id,
-                                index,
-                                BingoDataType.filled,
-                              );
-                              if (data != null) {
-                                final updatedChallenge = await pb.collection("challenges").update(
-                                    _challenge!.id,
-                                    body: {"data": data.toJson()});
-                                setState(() {
-                                  _challenge = updatedChallenge;
-                                });
-                              } else {
-                                debugPrint(
-                                    "Manager#updateUserBingoActivity returned null");
-                              }
-                            }
+                        final data = manager.updateUserBingoActivity(
+                          pb.authStore.model?.id,
+                          index,
+                          BingoDataType.filled,
+                        );
+                        if (data != null) {
+                          final updatedChallenge = await pb.collection("challenges").update(
+                              _challenge!.id,
+                              body: {"data": data.toJson()});
+                          setState(() {
+                            _challenge = updatedChallenge;
+                          });
+                        } else {
+                          debugPrint(
+                              "Manager#updateUserBingoActivity returned null");
+                        }
+                      }
                           : null,
                       child: Center(
                         child: Column(
@@ -746,6 +749,10 @@ class _ChallengeDialogState extends State<ChallengeDialog> {
                   );
                 },
               ),
+
+              // Horizontal scroll of other users' bingo cards
+              _buildOtherUsersCards(manager),
+
               _buildBottomDetails(context),
             ],
           ),
@@ -753,4 +760,85 @@ class _ChallengeDialogState extends State<ChallengeDialog> {
       },
     );
   }
+
+  Widget _buildOtherUsersCards(BingoDataManager manager) {
+    var theme = Theme.of(context);
+
+    // Get the currently selected user's data (if any)
+    final selectedUser = _challenge!.expand["users"]!
+        .firstWhere((u) => u.id == _selectedBingoData?.userId);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Text indicating that this is the section for other users
+        Padding(
+          padding: const EdgeInsets.only(left: 5, top: 15, bottom: 5),
+          child: Text(
+            "Other users",
+            style: theme.textTheme.titleLarge,
+          ),
+        ),
+
+        // Horizontal list of other users' bingo cards
+        Container(
+          margin: const EdgeInsets.only(top: 5.0),
+          height: 120.0, // Height for the horizontal card list
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal,
+            itemCount: manager.data.length,
+            itemBuilder: (context, index) {
+              final userBingoData = manager.data[index];
+              final isSelected = userBingoData.userId == _selectedBingoData?.userId;
+              final user = _challenge!.expand["users"]!
+                  .firstWhere((u) => u.id == userBingoData.userId);
+
+              return Card.outlined(
+                clipBehavior: Clip.hardEdge,
+                child: InkWell(
+                  splashColor: theme.colorScheme.primary.withAlpha(30),
+                  onTap: () {
+                    setState(() {
+                      _selectedBingoData = userBingoData;
+                    });
+                  },
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 15),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        AdvancedAvatar(
+                          name: user.getStringValue("username"),
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            color: theme.colorScheme.onPrimary,
+                          ),
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.primary,
+                            borderRadius: BorderRadius.circular(50),
+                          ),
+                          child: selectedUser.id == user.id ? Icon(Symbols.check_rounded, color: theme.colorScheme.onPrimary,) : null,
+                        ),
+                        const SizedBox(height: 10.0),
+                        Text(
+                          user.getStringValue("username"),
+                          style: theme.textTheme.bodyLarge?.copyWith(
+                            color: isSelected
+                                ? theme.colorScheme.secondary
+                                : theme.colorScheme.onSurface,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+
 }
