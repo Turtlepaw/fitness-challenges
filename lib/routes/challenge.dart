@@ -66,6 +66,7 @@ class _ChallengeDialogState extends State<ChallengeDialog> {
     // Run your code here
     print('Dialog opened');
     pb = Provider.of<PocketBase>(context, listen: false);
+    await Future.delayed(const Duration(milliseconds: 300));
     final data = await pb
         .collection(Collection.challenges)
         .getOne(widget.challenge, expand: "users");
@@ -303,7 +304,7 @@ class _ChallengeDialogState extends State<ChallengeDialog> {
           ],
           title: Text(challenge == null ? "Loading..." : challenge.getStringValue("name")),
         ),
-        body: AnimatedSwitcher(duration: const Duration(milliseconds: 150), child: challenge == null ? Padding(
+        body: AnimatedSwitcher(duration: const Duration(milliseconds: 200), child: challenge == null ? Padding(
           padding: const EdgeInsets.only(top: 15),
           child: Center(
             heightFactor: 1,

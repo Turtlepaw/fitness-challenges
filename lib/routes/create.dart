@@ -276,7 +276,7 @@ class CreateWidget extends StatelessWidget {
                           ? null
                           : Icon(c.icon),
                       label: Text(c.name),
-                      onSelected: index == 1 || index == 0
+                      onSelected: index == 1
                           ? (value) {
                         form
                             .control(type)

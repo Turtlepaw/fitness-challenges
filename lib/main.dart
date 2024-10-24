@@ -165,19 +165,26 @@ void notificationTapBackground(NotificationResponse notificationResponse) {
     'vm:entry-point') // Mandatory if the App is obfuscated or using Flutter 3.1+
 void callbackDispatcher() {
   Workmanager().executeTask((task, inputData) async {
+    final logger = SharedLogger();
     try {
-      print("Native called background task: $task");
+      logger.debug("Native called background task: $task");
+      logger.debug("Syncing...");
 
-      print("Syncing...");
       final pb = await initializePocketbase();
       if (!pb.authStore.isValid) return Future.value(false);
+      final type = await HealthTypeManager().getHealthType();
+      if(type == null) {
+        logger.debug("Health type not set, canceling work");
+        return Future.value(false);
+      }
+
       final manager = ChallengeProvider(pb: pb);
-      final healthManager = HealthManager(manager, pb, logger: SharedLogger());
+      final healthManager = HealthManager(manager, pb, logger: logger);
       await manager.init();
       await Health().configure(useHealthConnectIfAvailable: true);
       await healthManager.checkConnectionState();
       await healthManager.fetchHealthData();
-      print("Sync complete, ${healthManager.steps}");
+      logger.debug("Sync complete, ${healthManager.steps}");
 
       FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
           FlutterLocalNotificationsPlugin();
@@ -233,7 +240,7 @@ void callbackDispatcher() {
           if (currentPosition == -2) continue;
 
           bool isTop = currentPosition == 1; // Assuming top position is rank 1
-          print(currentPosition);
+          logger.debug("Current position: $currentPosition");
 
           // 0 or -1 = ended
           if (storedRankingState != null && storedRankingState == 0) {
@@ -278,10 +285,10 @@ void callbackDispatcher() {
         }
       }
 
-      print("Notification sent"); //simpleTask will be emitted here.
+      logger.debug("Notification sent"); //simpleTask will be emitted here.
       return Future.value(true);
     } catch (err, stackTrace) {
-      print(err);
+      logger.error(err.toString());
       debugPrintStack(stackTrace: stackTrace);
       return Future.value(false);
     }
@@ -310,7 +317,7 @@ void main() async {
   final healthManager = HealthManager(manager, pb, logger: logger);
   manager.init();
   healthManager.checkConnectionState();
-  //healthManager.fetchHealthData();
+  healthManager.fetchHealthData();
   Health().configure(useHealthConnectIfAvailable: true);
   final wearManager = WearManager(pb).sendAuthentication(logger);
   checkLaunchIntent();
@@ -320,6 +327,7 @@ void main() async {
     Workmanager().initialize(
         callbackDispatcher, // The top level function, aka callbackDispatcher
         isInDebugMode: true);
+    Workmanager().registerOneOffTask("single-sync", "BackgroundSingleSync");
   } else {
     Workmanager().initialize(
       callbackDispatcher, // The top level function, aka callbackDispatcher
@@ -681,8 +689,6 @@ class _HomePageState extends State<HomePage> {
               TextButton(
                 onPressed: () async {
                   await challengeProvider.reloadChallenges(context);
-                  var nav = Navigator.of(context);
-                  nav.pop();
                 },
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,

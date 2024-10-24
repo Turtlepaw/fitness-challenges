@@ -181,7 +181,7 @@ class _SettingsPageState extends State<SettingsPage> {
                               tooltip: "Edit Profile",
                               icon: Icon(
                                 Symbols.edit_rounded,
-                                color: theme.colorScheme.onPrimaryContainer,
+                                color: theme.colorScheme.onPrimary,
                               )),
                         ],
                       )
@@ -192,175 +192,152 @@ class _SettingsPageState extends State<SettingsPage> {
             ],
           ),
           // Health panel or loading box
-          Expanded(
-              flex: 0,
-              child: AnimatedSwitcher(
-                duration: const Duration(milliseconds: 150),
-                transitionBuilder: (Widget child, Animation<double> animation) {
-                  return FadeTransition(opacity: animation, child: child);
-                },
-                child: _isLoading
-                    ? LayoutBuilder(builder: (context, constraints) {
-                        final width = getWidth(constraints);
-                        return SizedBox(
-                          width: width,
-                          child: Column(
-                            children: [
-                              Padding(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 14, vertical: 6),
-                                child: LoadingBox(
-                                  height: 195,
-                                  width: MediaQuery.of(context).size.width,
-                                  radius: 12,
-                                ),
-                              )
-                            ],
-                          ),
-                        );
-                      })
-                    : buildCard([
-                        Text(
-                          _isAvailable
-                              ? (healthType != null
-                                  ? "Health connected via ${HealthTypeManager.formatType(healthType)}"
-                                  : "Connect a health platform")
-                              : "Health unavailable",
-                          style: theme.textTheme.titleLarge,
-                          textAlign: TextAlign.center,
+          SizedBox(  // Replace Expanded with SizedBox
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 150),
+              transitionBuilder: (Widget child, Animation<double> animation) {
+                return FadeTransition(opacity: animation, child: child);
+              },
+              child: _isLoading
+                  ? LayoutBuilder(builder: (context, constraints) {
+                final width = getWidth(constraints);
+                return SizedBox(
+                  width: width,
+                  child: Column(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 14, vertical: 6),
+                        child: LoadingBox(
+                          height: 195,
+                          width: MediaQuery.of(context).size.width,
+                          radius: 12,
                         ),
-                        const SizedBox(height: 5),
-                        if (healthType == null)
-                          const Text(
-                            "Connect a health platform to create and join challenges",
-                            textAlign: TextAlign.center,
-                          )
-                        else if (health.steps != null)
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                Symbols.steps_rounded,
-                                color: theme.colorScheme.primary,
-                              ),
-                              const SizedBox(width: 8),
-                              Text("${formatNumber(health.steps as int)} steps")
-                            ],
-                          )
-                        else
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                Symbols.refresh_rounded,
-                                color: theme.colorScheme.error,
-                              ),
-                              const SizedBox(width: 8),
-                              Text(
-                                getErrorText(),
-                                style: theme.textTheme.bodyLarge
-                                    ?.copyWith(color: theme.colorScheme.error),
-                              )
-                            ],
-                          ),
-                        const SizedBox(height: 10),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            FilterChip(
-                              onDeleted: healthType != null
-                                  ? () {
-                                      setState(() {
-                                        _isLoading = true;
-                                      });
-                                      HealthTypeManager().clearHealthType();
-                                      setState(() {
-                                        _isLoading = false;
-                                        healthType = null;
-                                      });
-                                    }
-                                  : null,
-                              onSelected: (_isAvailable
-                                  ? _connectSystemHealthPlatform
-                                  : null),
-                              label: Text(health.capabilities
-                                      .contains(HealthType.systemManaged)
-                                  ? ((health.isConnected &&
-                                          healthType ==
-                                              HealthType.systemManaged)
-                                      ? "Connected"
-                                      : HealthTypeManager.formatType(
-                                          HealthType.systemManaged))
-                                  : "Unavailable"),
-                              selected: healthType == HealthType.systemManaged,
-                              avatar: _isSysHealthLoading &&
-                                      health.capabilities
-                                          .contains(HealthType.systemManaged)
-                                  ? const CircularProgressIndicator(
-                                      strokeWidth: 3,
-                                      strokeCap: StrokeCap.round,
-                                    )
-                                  : null,
-                              showCheckmark: !_isSysHealthLoading,
+                      )
+                    ],
+                  ),
+                );
+              })
+                  : buildCard([
+                Text(
+                  _isAvailable
+                      ? (healthType != null
+                      ? "Health connected via ${HealthTypeManager.formatType(healthType)}"
+                      : "Connect a health platform")
+                      : "Health unavailable",
+                  style: theme.textTheme.titleLarge,
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 5),
+                if (healthType == null)
+                  const Text(
+                    "Connect a health platform to create and join challenges",
+                    textAlign: TextAlign.center,
+                  )
+                else if (health.steps != null)
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Symbols.steps_rounded,
+                        color: theme.colorScheme.primary,
+                      ),
+                      const SizedBox(width: 8),
+                      Text("${formatNumber(health.steps as int)} steps")
+                    ],
+                  )
+                else
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Symbols.refresh_rounded,
+                        color: theme.colorScheme.error,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        getErrorText(),
+                        style: theme.textTheme.bodyLarge
+                            ?.copyWith(color: theme.colorScheme.error),
+                      )
+                    ],
+                  ),
+                const SizedBox(height: 10),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    FilterChip(
+                      onDeleted: healthType != null
+                          ? () {
+                        setState(() {
+                          _isLoading = true;
+                        });
+                        HealthTypeManager().clearHealthType();
+                        setState(() {
+                          _isLoading = false;
+                          healthType = null;
+                        });
+                      }
+                          : null,
+                      onSelected: (_isAvailable
+                          ? _connectSystemHealthPlatform
+                          : null),
+                      label: Text(health.capabilities
+                          .contains(HealthType.systemManaged)
+                          ? ((health.isConnected &&
+                          healthType == HealthType.systemManaged)
+                          ? "Connected"
+                          : HealthTypeManager.formatType(
+                          HealthType.systemManaged))
+                          : "Unavailable"),
+                      selected: healthType == HealthType.systemManaged,
+                      avatar: _isSysHealthLoading &&
+                          health.capabilities
+                              .contains(HealthType.systemManaged)
+                          ? const CircularProgressIndicator(
+                        strokeWidth: 3,
+                        strokeCap: StrokeCap.round,
+                      )
+                          : null,
+                      showCheckmark: !_isSysHealthLoading,
+                    ),
+                    const SizedBox(width: 5),
+                    Tooltip(
+                      message: "Refresh",
+                      child: IconButton.outlined(
+                          onPressed: () async {
+                            setState(() {
+                              _isRefreshing = true;
+                            });
+                            await health.fetchHealthData();
+                            await health.checkConnectionState();
+                            setState(() {
+                              _isRefreshing = false;
+                            });
+                          },
+                          icon: _isRefreshing
+                              ? const SizedBox(
+                            width: 15,
+                            height: 15,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              strokeCap: StrokeCap.round,
                             ),
-                            // const SizedBox(
-                            //   width: 10,
-                            // ),
-                            // FilterChip(
-                            //   label: Text(
-                            //       HealthTypeManager.formatType(HealthType.watch)),
-                            //   onSelected:
-                            //       health.capabilities.contains(HealthType.watch)
-                            //           ? ((isSelected) => _connectWearOS())
-                            //           : null,
-                            //   selected: healthType == HealthType.watch,
-                            //   avatar: _isWatchLoading &&
-                            //           health.capabilities
-                            //               .contains(HealthType.watch)
-                            //       ? const CircularProgressIndicator(
-                            //           strokeWidth: 3,
-                            //           strokeCap: StrokeCap.round,
-                            //         )
-                            //       : null,
-                            //   showCheckmark: !_isWatchLoading,
-                            // ),
-                            const SizedBox(
-                              width: 5,
-                            ),
-                            Tooltip(
-                              message: "Refresh",
-                              child: IconButton.outlined(
-                                  onPressed: () async {
-                                    setState(() {
-                                      _isRefreshing = true;
-                                    });
-                                    await health.fetchHealthData();
-                                    await health.checkConnectionState();
-                                    setState(() {
-                                      _isRefreshing = false;
-                                    });
-                                  },
-                                  icon: _isRefreshing
-                                      ? const SizedBox(
-                                          width: 15,
-                                          height: 15,
-                                          child: CircularProgressIndicator(
-                                            strokeWidth: 2,
-                                            strokeCap: StrokeCap.round,
-                                          ),
-                                        )
-                                      : Icon(
-                                          Symbols.refresh_rounded,
-                                          color: theme.colorScheme.onSurface,
-                                        )),
-                            )
-                          ],
-                        )
-                      ], height: 195),
-              ))
+                          )
+                              : Icon(
+                            Symbols.refresh_rounded,
+                            color: theme.colorScheme.onSurface,
+                          )),
+                    )
+                  ],
+                )
+              ], height: 195),
+            ),
+          ),
         ],
       ),
     );
+
   }
 
   String getErrorText() {

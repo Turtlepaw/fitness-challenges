@@ -152,9 +152,17 @@ class ProfileWidget extends StatelessWidget {
                     pb.authStore.model?.getStringValue("username"),
                     style: theme.textTheme.displaySmall,
                   ),
-                  Text(
-                    pb.authStore.model?.getStringValue("email"),
-                    style: theme.textTheme.bodyLarge,
+                  Row(
+                    children: [
+                      Text(
+                        pb.authStore.model?.getStringValue("email"),
+                        style: theme.textTheme.bodyLarge,
+                      ),
+                      const SizedBox(
+                        width: 5,
+                      ),
+                      Icon(Symbols.lock_rounded, size: 15, color: theme.colorScheme.onSurfaceVariant)
+                    ],
                   )
                 ],
               )

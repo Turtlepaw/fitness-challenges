@@ -168,10 +168,12 @@ class HealthManager with ChangeNotifier {
       if (challenge.getBoolValue("ended") == true) continue;
 
       var challengeType = TypesExtension.of(challenge.getIntValue("type"));
+      var dataSourceManager = DataSourceManager.fromChallenge(challenge);
 
-      final dataSourceManager =
-      DataSourceManager.fromChallenge(challenge)
-          .setDataSource(userId, getSource(type!));
+      if(type != null){
+        dataSourceManager
+            .setDataSource(userId, getSource(type));
+      }
 
       if (challengeType == Types.steps && steps != null) {
         final manager =

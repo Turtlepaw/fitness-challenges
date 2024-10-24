@@ -1,8 +1,8 @@
-import 'package:fitness_challenges/components/challenge.dart';
+import 'package:fitness_challenges/components/communityChallenge.dart';
 import 'package:fitness_challenges/components/loader.dart';
 import 'package:fitness_challenges/types/collections.dart';
-import 'package:fitness_challenges/utils/health.dart';
 import 'package:flutter/material.dart';
+import 'package:material_symbols_icons/material_symbols_icons.dart';
 import 'package:pocketbase/pocketbase.dart';
 import 'package:provider/provider.dart';
 
@@ -40,13 +40,11 @@ class _CommunityPageState extends State<CommunityPage> {
   @override
   void dispose() {
     super.dispose();
-    pb.collection("users").unsubscribe();
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final health = Provider.of<HealthManager>(context);
 
     return Scaffold(
       appBar: AppBar(
@@ -67,15 +65,23 @@ class _CommunityPageState extends State<CommunityPage> {
             ...challenges.map((value) {
               return Padding(
                 padding: const EdgeInsets.symmetric(vertical: 5),
-                child: Challenge(challenge: value, pb: pb),
+                child: CommunityChallenge(challenge: value, pb: pb),
               );
             })
           else
-            const Center(
+            Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.center,
-                children: [Text("No challenges...")],
+                children: [
+                  Icon(Symbols.travel_explore_rounded, size: 60, color: theme.colorScheme.onSurfaceVariant,),
+                  const SizedBox(height: 5,),
+                  Text("No community challenges", style: theme.textTheme.headlineSmall,),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 10),
+                    child: Text("We're always creating new community challenges though, so check back here!", style: theme.textTheme.bodyLarge, textAlign: TextAlign.center,),
+                  ),
+                ],
               ),
             ),
           const SizedBox(height: 25)

@@ -106,7 +106,7 @@ class _JoinDialogState extends State<JoinDialog> {
                       onPressed: () {
                         Navigator.of(context).pop();
                       },
-                      child: Text("Cancel")),
+                      child: const Text("Cancel")),
                   const SizedBox(width: 15),
                   ReactiveFormConsumer(
                       builder: (context, form, widget) => FilledButton(
@@ -165,66 +165,75 @@ class _JoinDialogState extends State<JoinDialog> {
     setState(() {
       _isJoining = true;
     });
-    try {
-      String joinCodeValue = form.control(joinCode).value;
+    handleJoin(form.control(joinCode).value, widget.pb, context);
+    setState(() {
+      _isJoining = false;
+    });
+  }
+}
 
-      final joinData = await widget.pb.send("/api/hooks/join",
-          method: "POST",
-          query: {"code": joinCodeValue, "id": widget.pb.authStore.model?.id});
+Future<bool> handleJoin(String joinCodeValue, PocketBase pb, BuildContext context) async {
+  try {
+    final joinData = await pb.send("/api/hooks/join",
+        method: "POST",
+        query: {"code": joinCodeValue, "id": pb.authStore.model?.id});
 
-      // Add user to data
-      final userId = widget.pb.authStore.model?.id;
-      final type = TypesExtension.of(joinData['type']);
-      final dataManager = Manager.fromData(joinData['data'], type);
-      if (!dataManager.data.any((value) => value.userId == userId)) {
-        if (type == Types.steps) {
-          final data =
-              StepsDataManager.fromJson(joinData['data']).addUser(userId);
+    // Add user to data
+    final userId = pb.authStore.model?.id;
+    final type = TypesExtension.of(joinData['type']);
+    final dataManager = Manager.fromData(joinData['data'], type);
+    if (!dataManager.data.any((value) => value.userId == userId)) {
+      if (type == Types.steps) {
+        final data =
+        StepsDataManager.fromJson(joinData['data']).addUser(userId);
 
-          await widget.pb
-              .collection(Collection.challenges)
-              .update(joinData['id'], body: {'data': data.toJson()});
-        } else {
-          debugPrint("Failed to add user to data");
-        }
+        await pb
+            .collection(Collection.challenges)
+            .update(joinData['id'], body: {'data': data.toJson()});
       } else {
-        // the user data already exists
-        // we don't need to create a entry
-        debugPrint("User data already exists, skipping Manager#addUser");
+        debugPrint("Failed to add user to data");
       }
-
-      if (mounted) {
-        Provider.of<ChallengeProvider>(context, listen: false)
-            .reloadChallenges(context);
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Joined challenge'),
-          ),
-        );
-        Navigator.of(context).pop();
-      }
-    } catch (error, stackTrace) {
-      if (kDebugMode) {
-        debugPrint('Error: $error');
-        debugPrintStack(stackTrace: stackTrace);
-      }
-
-      if (mounted) {
-        var message = "Failed to join challenge";
-        if (error is ClientException) {
-          message = error.response['message'];
-        }
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(message),
-          ),
-        );
-      }
-      setState(() {
-        _isJoining = false;
-      });
+    } else {
+      // the user data already exists
+      // we don't need to create a entry
+      debugPrint("User data already exists, skipping Manager#addUser");
     }
+
+    if (context.mounted) {
+      await Provider.of<ChallengeProvider>(context, listen: false)
+          .reloadChallenges(context);
+
+      await Provider.of<HealthManager>(context, listen: false)
+          .fetchHealthData(context: context);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Joined challenge'),
+        ),
+      );
+      Navigator.of(context).pop();
+    }
+
+    return true;
+  } catch (error, stackTrace) {
+    if (kDebugMode) {
+      debugPrint('Error: $error');
+      debugPrintStack(stackTrace: stackTrace);
+    }
+
+    if (context.mounted) {
+      var message = "Failed to join challenge";
+      if (error is ClientException) {
+        message = error.response['message'];
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(message),
+        ),
+      );
+    }
+
+    return false;
   }
 }
 
