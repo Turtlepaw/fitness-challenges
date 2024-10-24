@@ -70,7 +70,7 @@ class _ConfirmDialogState extends State<ConfirmDialog> {
             children: [
               FilledButton.tonal(
                   style: widget.isDestructive ? destructiveButtonStyle : null,
-                  onPressed: _handleClose, child: const Text("Close")),
+                  onPressed: _handleClose, child: Text("Close", style: theme.textTheme.labelLarge?.copyWith(color: theme.colorScheme.onError),)),
               if(widget.onConfirm != null)
                 const SizedBox(width: 12),
               if(widget.onConfirm != null) FilledButton(

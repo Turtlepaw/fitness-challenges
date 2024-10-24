@@ -1,3 +1,4 @@
+import 'package:fitness_challenges/types/challenges.dart';
 import 'package:fitness_challenges/utils/manager.dart';
 
 class StepsEntry {
@@ -72,7 +73,7 @@ class StepsDataManager extends Manager<UserStepsData> {
   }
 
   @override
-  StepsDataManager addUser(String userId) {
+  StepsDataManager addUser(String userId, { Difficulty difficulty = Difficulty.easy }) {
     data.add(UserStepsData(userId: userId, entries: []));
     return this;
   }

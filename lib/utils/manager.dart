@@ -2,6 +2,8 @@ import 'package:fitness_challenges/types/challenges.dart';
 import 'package:fitness_challenges/utils/steps/data.dart';
 import 'package:pocketbase/pocketbase.dart';
 
+import 'bingo/data.dart';
+
 abstract class Manager<T> {
   final List<T> data;
 
@@ -9,7 +11,7 @@ abstract class Manager<T> {
 
   Map<String, dynamic> toJson();
 
-  Manager<T> addUser(String userId);
+  Manager<T> addUser(String userId, { Difficulty difficulty = Difficulty.easy });
 
   Manager<T> removeUser(String userId);
 
@@ -38,7 +40,7 @@ abstract class Manager<T> {
         return StepsDataManager.fromJson(data);
       case Types.bingo:
       // Implement and return BingoDataManager here
-        throw UnimplementedError();
+        throw BingoDataManager.fromJson(data);
       case Types.sleep:
       // Implement and return SleepDataManager here
         throw UnimplementedError();

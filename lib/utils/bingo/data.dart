@@ -1,6 +1,10 @@
 import 'package:flutter/cupertino.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
 
+import '../../types/challenges.dart';
+import '../manager.dart';
+import 'manager.dart';
+
 enum BingoDataType { filled, steps, distance, azm }
 
 extension BingoDataTypeExtension on BingoDataType {
@@ -71,17 +75,13 @@ class UserBingoData {
   }
 }
 
-class BingoDataManager {
-  final List<UserBingoData> usersBingoData;
-
-  BingoDataManager({
-    required this.usersBingoData,
-  });
+class BingoDataManager extends Manager<UserBingoData> {
+  BingoDataManager(super.data);
 
   // Factory method to create a Challenge from JSON
   factory BingoDataManager.fromJson(Map<String, dynamic> json) {
     return BingoDataManager(
-      usersBingoData: (json['usersBingoData'] as List<dynamic>)
+      (json['usersBingoData'] as List<dynamic>)
           .map((userJson) =>
               UserBingoData.fromJson(userJson as Map<String, dynamic>))
           .toList(),
@@ -89,17 +89,18 @@ class BingoDataManager {
   }
 
   // Method to convert a Challenge to JSON
+  @override
   Map<String, dynamic> toJson() {
     return {
       'usersBingoData':
-          usersBingoData.map((userData) => userData.toJson()).toList(),
+          data.map((userData) => userData.toJson()).toList(),
     };
   }
 
   // Method to update a user's bingo activity
   BingoDataManager? updateUserBingoActivity(
       String userId, int index, BingoDataType newType) {
-    for (var user in usersBingoData) {
+    for (var user in data) {
       if (user.userId == userId) {
         if (index >= 0 && index < user.activities.length) {
           var activity = user.activities[index];
@@ -110,5 +111,17 @@ class BingoDataManager {
       }
     }
     return null;
+  }
+
+  @override
+  BingoDataManager addUser(String userId, { Difficulty difficulty = Difficulty.easy }) {
+    data.add(UserBingoData(userId: userId, activities: Bingo().generateBingoActivities(difficulty)));
+    return this;
+  }
+
+  @override
+  BingoDataManager removeUser(String userId) {
+    data.removeWhere((value) => value.userId == userId);
+    return this;
   }
 }

@@ -141,7 +141,7 @@ class _CreateDialogState extends State<CreateDialog> {
           .control(type)
           .value) {
         0 =>
-            BingoDataManager(usersBingoData: [
+            BingoDataManager([
               UserBingoData(
                 userId: widget.pb.authStore.model.id,
                 activities: Bingo().generateBingoActivities(
