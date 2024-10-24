@@ -99,8 +99,11 @@ class HealthManager with ChangeNotifier {
         return;
       }
 
-      final hasPermissions =
-          await health.hasPermissions(types, permissions: permissions);
+      final hasPermissions = await Future.wait(types.map((type) async {
+    final hasPermission = await health.hasPermissions([type], permissions: permissions);
+    logger.debug("Permission for $type is ${hasPermission ? 'granted' : 'denied'}");
+    return hasPermission;
+  })).then((results) => results.every((item) => item == true));
 
       if (hasPermissions == true) {
         var now = DateTime.now();
