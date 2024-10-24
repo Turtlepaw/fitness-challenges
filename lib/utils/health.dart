@@ -109,6 +109,8 @@ class HealthManager with ChangeNotifier {
         _isConnected = true;
         notifyListeners(); // Notify listeners about the change
         logger.debug("Successfully synced $_steps steps");
+      } else {
+        logger.debug("No health permissions, sync failed");
       }
     } else if (type == HealthType.watch && Platform.isAndroid) {
       try {
