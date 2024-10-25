@@ -152,7 +152,7 @@ class ProfileWidget extends StatelessWidget {
                     pb.authStore.model?.getStringValue("username"),
                     style: theme.textTheme.displaySmall,
                   ),
-                  Row(
+                  if(pb.authStore.model?.getStringValue("email")?.isNotEmpty == true) Row(
                     children: [
                       Text(
                         pb.authStore.model?.getStringValue("email"),

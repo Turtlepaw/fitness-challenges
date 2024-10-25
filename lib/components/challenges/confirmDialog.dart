@@ -70,7 +70,7 @@ class _ConfirmDialogState extends State<ConfirmDialog> {
             children: [
               FilledButton.tonal(
                   style: widget.isDestructive ? destructiveButtonStyle : null,
-                  onPressed: _handleClose, child: Text("Close", style: theme.textTheme.labelLarge?.copyWith(color: theme.colorScheme.onError),)),
+                  onPressed: _handleClose, child: Text("Close", style: theme.textTheme.labelLarge?.copyWith(color: widget.isDestructive ? theme.colorScheme.onError : theme.colorScheme.onSecondaryContainer),)),
               if(widget.onConfirm != null)
                 const SizedBox(width: 12),
               if(widget.onConfirm != null) FilledButton(
@@ -87,7 +87,7 @@ class _ConfirmDialogState extends State<ConfirmDialog> {
                 width: 15,
                 height: 15,
                 child: CircularProgressIndicator(strokeCap: StrokeCap.round, strokeWidth: 3, color: theme.colorScheme.onPrimary,),
-              ) : const Text("Confirm"))
+              ) : Text("Confirm", style: theme.textTheme.labelLarge?.copyWith(color: widget.isDestructive ? theme.colorScheme.onError : theme.colorScheme.onSecondaryContainer),))
             ],
           )
         ],
