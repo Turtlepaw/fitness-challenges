@@ -2,7 +2,6 @@ import 'package:fitness_challenges/types/challenges.dart';
 import 'package:fitness_challenges/types/collections.dart';
 import 'package:fitness_challenges/utils/challengeManager.dart';
 import 'package:fitness_challenges/utils/manager.dart';
-import 'package:fitness_challenges/utils/steps/data.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
@@ -183,14 +182,14 @@ Future<bool> handleJoin(String joinCodeValue, PocketBase pb, BuildContext contex
     final type = TypesExtension.of(joinData['type']);
     final dataManager = Manager.fromData(joinData['data'], type);
     if (!dataManager.data.any((value) => value.userId == userId)) {
-      if (type == Types.steps) {
+      if (type == Types.steps || type == Types.bingo) {
         final data =
-        StepsDataManager.fromJson(joinData['data']).addUser(userId);
+        Manager.fromData(joinData['data'], type).addUser(userId);
 
         await pb
             .collection(Collection.challenges)
             .update(joinData['id'], body: {'data': data.toJson()});
-      } else {
+      }else {
         debugPrint("Failed to add user to data");
       }
     } else {

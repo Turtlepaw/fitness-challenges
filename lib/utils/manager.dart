@@ -21,7 +21,7 @@ abstract class Manager<T> {
         return StepsDataManager.fromJson(data);
       case Types.bingo:
       // Implement and return BingoDataManager here
-        throw UnimplementedError();
+        return BingoDataManager.fromJson(data);
       case Types.sleep:
       // Implement and return SleepDataManager here
         throw UnimplementedError();
@@ -40,7 +40,7 @@ abstract class Manager<T> {
         return StepsDataManager.fromJson(data);
       case Types.bingo:
       // Implement and return BingoDataManager here
-        throw BingoDataManager.fromJson(data);
+        return BingoDataManager.fromJson(data);
       case Types.sleep:
       // Implement and return SleepDataManager here
         throw UnimplementedError();

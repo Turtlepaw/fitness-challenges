@@ -2,7 +2,9 @@ import 'dart:math';
 
 import 'package:collection/collection.dart';
 import 'package:confetti/confetti.dart';
+import 'package:dynamic_color/dynamic_color.dart';
 import 'package:fitness_challenges/components/loader.dart';
+import 'package:fitness_challenges/routes/challenges/bingo.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_advanced_avatar/flutter_advanced_avatar.dart';
 import 'package:flutter_emoji_feedback/flutter_emoji_feedback.dart';
@@ -85,7 +87,8 @@ class _ChallengeDialogState extends State<ChallengeDialog> {
     final unsubscribe = await pb
         .collection("challenges")
         .subscribe(widget.challenge, (newValue) {
-      print("Got update (dialog)");
+      final logger = Provider.of<SharedLogger>(context, listen: false);
+      logger.debug("Update received in dialog");
       Provider.of<ChallengeProvider>(context, listen: false)
           .saveExisting(newValue.record!);
       if (mounted && newValue.record != null) {
@@ -93,7 +96,6 @@ class _ChallengeDialogState extends State<ChallengeDialog> {
           _challenge = newValue.record!;
         });
       } else {
-        final logger = Provider.of<SharedLogger>(context, listen: false);
         logger.debug(
             "Not mounted, not updating dialog (realtime _ChallengeDialogState)");
       }
@@ -111,7 +113,6 @@ class _ChallengeDialogState extends State<ChallengeDialog> {
     super.dispose();
   }
 
-  @override
   void _openDialog(Widget dialog) {
     setState(() {
       _isDialogOpen = true;
@@ -311,7 +312,11 @@ class _ChallengeDialogState extends State<ChallengeDialog> {
             child: LoadingBox(width: MediaQuery.of(context).size.width - 30, height: 200),
           ),
         ) : switch (challenge.getIntValue("type")) {
-          0 => _buildBingoCard(context),
+          0 => BingoCardWidget(
+            buildTopDetails: (context) => _buildTopDetails(context, challenge.getStringValue("winner")),
+            buildBottomDetails: _buildBottomDetails,
+            challenge: challenge,
+          ),
           1 => _buildStepsCards(context),
           _ => const Text("unknown challenge type")
         },),
@@ -661,7 +666,7 @@ class _ChallengeDialogState extends State<ChallengeDialog> {
   }
 
   UserBingoData? _selectedBingoData;
-  
+
   Widget _buildBingoCard(BuildContext context) {
     var theme = Theme.of(context);
     final challenge = _challenge;
@@ -674,22 +679,37 @@ class _ChallengeDialogState extends State<ChallengeDialog> {
       orElse: () => UserBingoData(userId: "", activities: []),
     );
 
+    final selectedUser = _challenge?.expand["users"]?.firstWhere(
+          (u) => u.id == _selectedBingoData?.userId,
+      orElse: () => pb.authStore.model!,
+    ) ??
+        pb.authStore.model;
+
     return LayoutBuilder(
       builder: (context, constraints) {
         final crossAxisCount = (constraints.maxWidth / 100).floor();
 
-        // TODO: don't let current user modify other users' bingo cards
         return Container(
           padding: const EdgeInsets.all(10.0),
           child: ListView(
             shrinkWrap: true,
-            physics: ClampingScrollPhysics(),
+            physics: const ClampingScrollPhysics(),
             children: [
               _buildTopDetails(context, null),
 
+              // Display who owns the current bingo card
+              Padding(
+                padding: const EdgeInsets.only(left: 8),
+                child: Text(
+                  "${selectedUser.id == pb.authStore.model?.id ? "Your" : "${selectedUser.getStringValue("username")}'s"} bingo card",
+                  style: theme.textTheme.titleLarge,
+                ),
+              ),
+              const SizedBox(height: 10),
+
               // Main bingo card display based on the selected user's data
               GridView.builder(
-                physics: NeverScrollableScrollPhysics(),
+                physics: const NeverScrollableScrollPhysics(),
                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: 5,
                   crossAxisSpacing: 5.0,
@@ -706,7 +726,7 @@ class _ChallengeDialogState extends State<ChallengeDialog> {
                     color: theme.colorScheme.primary,
                     child: InkWell(
                       splashColor: theme.colorScheme.onPrimary.withAlpha(30),
-                      onTap: activity.type != BingoDataType.filled
+                      onTap: (activity.type != BingoDataType.filled && pb.authStore.model?.id == selectedUser.id)
                           ? () async {
                         final data = manager.updateUserBingoActivity(
                           pb.authStore.model?.id,
@@ -715,14 +735,16 @@ class _ChallengeDialogState extends State<ChallengeDialog> {
                         );
                         if (data != null) {
                           final updatedChallenge = await pb.collection("challenges").update(
-                              _challenge!.id,
-                              body: {"data": data.toJson()});
+                            _challenge!.id,
+                            body: {"data": data.toJson()},
+                            expand: "users",
+                          );
                           setState(() {
                             _challenge = updatedChallenge;
+                            _selectedBingoData = data.data.firstWhere((value) => value.userId == pb.authStore.model?.id);
                           });
                         } else {
-                          debugPrint(
-                              "Manager#updateUserBingoActivity returned null");
+                          debugPrint("Manager#updateUserBingoActivity returned null");
                         }
                       }
                           : null,
@@ -740,7 +762,8 @@ class _ChallengeDialogState extends State<ChallengeDialog> {
                               activity.amount.toString(),
                               textAlign: TextAlign.center,
                               style: theme.textTheme.labelLarge?.copyWith(
-                                  color: theme.colorScheme.onPrimary),
+                                color: theme.colorScheme.onPrimary,
+                              ),
                             ),
                           ],
                         ),
@@ -765,8 +788,8 @@ class _ChallengeDialogState extends State<ChallengeDialog> {
     var theme = Theme.of(context);
 
     // Get the currently selected user's data (if any)
-    final selectedUser = _challenge!.expand["users"]!
-        .firstWhere((u) => u.id == _selectedBingoData?.userId);
+    final selectedUser = _challenge?.expand["users"]?.
+        firstWhere((u) => u.id == _selectedBingoData?.userId) ?? pb.authStore.model;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -823,8 +846,15 @@ class _ChallengeDialogState extends State<ChallengeDialog> {
                           user.getStringValue("username"),
                           style: theme.textTheme.bodyLarge?.copyWith(
                             color: isSelected
-                                ? theme.colorScheme.secondary
+                                ? theme.colorScheme.onSurfaceVariant.harmonizeWith(theme.colorScheme.primary)
                                 : theme.colorScheme.onSurface,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        if(user.id == pb.authStore.model?.id) Text(
+                          "You",
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant
                           ),
                           overflow: TextOverflow.ellipsis,
                         ),

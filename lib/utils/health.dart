@@ -82,14 +82,14 @@ class HealthManager with ChangeNotifier {
     final health = Health();
     final type = await HealthTypeManager().getHealthType();
 
-
     if (!pb.authStore.isValid) {
       logger.debug("Pocketbase auth store not valid");
       return;
     }
     var userId = pb.authStore.model?.id;
 
-    logger.debug("Using ${HealthTypeManager.formatType(type)} ($type) to sync health data");
+    logger.debug(
+        "Using ${HealthTypeManager.formatType(type)} ($type) to sync health data");
     if (type == HealthType.systemManaged && Platform.isAndroid) {
       final isAvailable = types
           .map((type) => health.isDataTypeAvailable(type))
@@ -100,10 +100,13 @@ class HealthManager with ChangeNotifier {
       }
 
       final hasPermissions = await Future.wait(types.map((type) async {
-    final hasPermission = await health.hasPermissions([type], permissions: permissions) ?? false;
-    logger.debug("Permission for $type is ${hasPermission ? 'granted' : 'denied'}");
-    return hasPermission;
-  })).then((results) => results.every((item) => item == true));
+        final hasPermission = await health
+                .hasPermissions([type], permissions: [HealthDataAccess.READ]) ??
+            false;
+        logger.debug(
+            "Permission for $type is ${hasPermission ? 'granted ✅' : 'denied ❌'}");
+        return hasPermission;
+      })).then((results) => results.every((item) => item == true));
 
       if (hasPermissions == true) {
         var now = DateTime.now();
@@ -175,16 +178,16 @@ class HealthManager with ChangeNotifier {
       var challengeType = TypesExtension.of(challenge.getIntValue("type"));
       var dataSourceManager = DataSourceManager.fromChallenge(challenge);
 
-      if(type != null){
-        dataSourceManager
-            .setDataSource(userId, getSource(type));
+      if (type != null) {
+        dataSourceManager.setDataSource(userId, getSource(type));
       }
 
       if (challengeType == Types.steps && steps != null) {
         final manager =
             StepsDataManager.fromJson(challenge.getDataValue("data"));
 
-        logger.debug("Updating ${challenge.getStringValue("name")} to ${steps}");
+        logger
+            .debug("Updating ${challenge.getStringValue("name")} to ${steps}");
         manager.updateUserActivity(userId, steps!);
 
         try {
@@ -197,11 +200,9 @@ class HealthManager with ChangeNotifier {
           logger.error("Error updating challenge: $e");
           logger.error(stacktrace.toString());
         }
-      } else if(challengeType == Types.bingo) {
+      } else if (challengeType == Types.bingo) {
         await pb.collection(Collection.challenges).update(challenge.id,
-            body: {
-              'dataSources': dataSourceManager.toJson()
-            });
+            body: {'dataSources': dataSourceManager.toJson()});
       }
     }
 

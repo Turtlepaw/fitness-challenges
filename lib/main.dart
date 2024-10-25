@@ -317,7 +317,9 @@ void main() async {
   final healthManager = HealthManager(manager, pb, logger: logger);
   manager.init();
   healthManager.checkConnectionState();
-  healthManager.fetchHealthData();
+  Future.delayed(const Duration(seconds: 1), () {
+      healthManager.fetchHealthData();
+  });
   Health().configure(useHealthConnectIfAvailable: true);
   final wearManager = WearManager(pb).sendAuthentication(logger);
   checkLaunchIntent();
