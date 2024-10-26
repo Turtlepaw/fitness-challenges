@@ -127,12 +127,20 @@ class _BingoCardWidgetState extends State<BingoCardWidget> {
               // Display who owns the current bingo card
               Padding(
                 padding: const EdgeInsets.only(left: 8),
-                child: Text(
-                  "${selectedUser.id == pb.authStore.model?.id ? "Your" : "${selectedUser.getStringValue("username")}'s"} bingo card",
-                  style: theme.textTheme.titleLarge,
+                child: Row(
+                  children: [
+                    const Icon(
+                        Symbols.playing_cards_rounded
+                    ),
+                    const SizedBox(width: 10),
+                    Text(
+                      "${selectedUser.id == pb.authStore.model?.id ? "Your" : "${selectedUser.getStringValue("username")}'s"} bingo card",
+                      style: theme.textTheme.headlineSmall,
+                    )
+                  ],
                 ),
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 15),
 
               // Main bingo card display based on the selected user's data
               GridView.builder(
@@ -141,31 +149,34 @@ class _BingoCardWidgetState extends State<BingoCardWidget> {
                   crossAxisCount: 5,
                   crossAxisSpacing: 5.0,
                   mainAxisSpacing: 5.0,
-                  childAspectRatio: 0.68,
+                  childAspectRatio: 0.73,
                 ),
                 itemCount: _selectedBingoData!.activities.length,
                 shrinkWrap: true,
                 itemBuilder: (context, index) {
                   final activity = _selectedBingoData!.activities[index];
                   final isCompleted = _completedCards[index];
+                  final isAllowed = activity.type != BingoDataType.filled && selectedUser.id == pb.authStore.model?.id;
 
                   return Stack(
                       alignment: Alignment.center,
                       children: [
                         // This AnimatedContainer only handles scale and rotation
                         AnimatedScale(
-                          scale: _isAnimating[index] ? 1.2 : 1.0,
-                          duration: const Duration(milliseconds: 200),
+                          scale: _isAnimating[index] ? 1.3 : 1.0,
+                          duration: const Duration(milliseconds: 300),
+                          filterQuality: FilterQuality.high,
                           curve: Curves.easeInOut,
                           child: AnimatedRotation(
-                            turns: _isAnimating[index] ? 0.05 : 0,
-                            duration: const Duration(milliseconds: 200),
+                            turns: _isAnimating[index] ? 0.02 : 0,
+                            duration: const Duration(milliseconds: 350),
+                            filterQuality: FilterQuality.high,
                             child: Card(
-                              elevation: 4, // Add card elevation for a raised effect
-                              color: isCompleted ? Colors.greenAccent.harmonizeWith(theme.colorScheme.primary) : theme.colorScheme.primary, // Card handles color
+                              elevation: 5, // Add card elevation for a raised effect
+                              color: !isAllowed ? theme.colorScheme.primary.withAlpha(210) : theme.colorScheme.primary, // Card handles color
                               clipBehavior: Clip.hardEdge,
                               child: InkWell(
-                                onTap: (activity.type != BingoDataType.filled && selectedUser.id == pb.authStore.model?.id)
+                                onTap: isAllowed
                                     ? () async {
                                   setState(() {
                                     _isAnimating[index] = true;
@@ -277,9 +288,17 @@ class _BingoCardWidgetState extends State<BingoCardWidget> {
         // Text indicating that this is the section for other users
         Padding(
           padding: const EdgeInsets.only(left: 5, top: 15, bottom: 5),
-          child: Text(
-            "Other users",
-            style: theme.textTheme.titleLarge,
+          child: Row(
+            children: [
+              const Icon(
+                Symbols.group_rounded
+              ),
+              const SizedBox(width: 10),
+              Text(
+                "Other users",
+                style: theme.textTheme.titleLarge,
+              )
+            ],
           ),
         ),
 
@@ -306,50 +325,54 @@ class _BingoCardWidgetState extends State<BingoCardWidget> {
                       selectedUser = user;
                     });
                   },
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 15),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        AdvancedAvatar(
-                          name: user.getStringValue("username"),
-                          style: theme.textTheme.titleMedium?.copyWith(
-                            color: theme.colorScheme.onPrimary,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 15),
+                      constraints: const BoxConstraints(
+                        minWidth: 90
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          AdvancedAvatar(
+                            name: user.getStringValue("username"),
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              color: theme.colorScheme.onPrimary,
+                            ),
+                            decoration: BoxDecoration(
+                              color: theme.colorScheme.primary,
+                              borderRadius: BorderRadius.circular(50),
+                            ),
+                            child: selectedUser.id == user.id
+                                ? Icon(
+                              Symbols.check_rounded,
+                              color: theme.colorScheme.onPrimary,
+                            )
+                                : null,
                           ),
-                          decoration: BoxDecoration(
-                            color: theme.colorScheme.primary,
-                            borderRadius: BorderRadius.circular(50),
-                          ),
-                          child: selectedUser.id == user.id
-                              ? Icon(
-                            Symbols.check_rounded,
-                            color: theme.colorScheme.onPrimary,
-                          )
-                              : null,
-                        ),
-                        const SizedBox(height: 10.0),
-                        Text(
-                          user.getStringValue("username"),
-                          style: theme.textTheme.bodyLarge?.copyWith(
-                            color: isSelected
-                                ? theme.colorScheme.onSurfaceVariant
-                                .harmonizeWith(theme.colorScheme.primary)
-                                : theme.colorScheme.onSurface,
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        if (user.id == currentUserId)
+                          const SizedBox(height: 10.0),
                           Text(
-                            "You",
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: theme.colorScheme.onSurfaceVariant,
+                            user.getStringValue("username"),
+                            style: theme.textTheme.bodyLarge?.copyWith(
+                              color: isSelected
+                                  ? theme.colorScheme.onSurfaceVariant
+                                  .harmonizeWith(theme.colorScheme.primary)
+                                  : theme.colorScheme.onSurface,
                             ),
                             overflow: TextOverflow.ellipsis,
                           ),
-                      ],
+                          if (user.id == currentUserId)
+                            Text(
+                              "You",
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: theme.colorScheme.onSurfaceVariant,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                        ],
+                      ),
                     ),
                   ),
-                ),
               );
             },
           ),
