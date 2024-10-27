@@ -117,7 +117,7 @@ class _BingoCardWidgetState extends State<BingoCardWidget> {
         final crossAxisCount = (constraints.maxWidth / 100).floor();
 
         return Container(
-          padding: const EdgeInsets.all(10.0),
+          padding: const EdgeInsets.symmetric(horizontal: 10.0),
           child: ListView(
             shrinkWrap: true,
             physics: const ClampingScrollPhysics(),
@@ -143,22 +143,34 @@ class _BingoCardWidgetState extends State<BingoCardWidget> {
               const SizedBox(height: 15),
 
               // Main bingo card display based on the selected user's data
-              GridView.builder(
-                physics: const NeverScrollableScrollPhysics(),
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 5,
-                  crossAxisSpacing: 5.0,
-                  mainAxisSpacing: 5.0,
-                  childAspectRatio: 0.73,
+              Container(
+                padding: const EdgeInsets.all(10.0),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.surfaceContainer,
+                  borderRadius: BorderRadius.circular(15),
+                  border: Border.all(
+                    color: theme.colorScheme.surfaceContainerHighest,
+                    width: 1.1,
+                    style: BorderStyle.solid,
+                    strokeAlign: BorderSide.strokeAlignCenter,
+                  )
                 ),
-                itemCount: _selectedBingoData!.activities.length,
-                shrinkWrap: true,
-                itemBuilder: (context, index) {
-                  final activity = _selectedBingoData!.activities[index];
-                  final isCompleted = _completedCards[index];
-                  final isAllowed = activity.type != BingoDataType.filled && selectedUser.id == pb.authStore.model?.id;
+                child: GridView.builder(
+                  physics: const NeverScrollableScrollPhysics(),
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 5,
+                    crossAxisSpacing: 5.0,
+                    mainAxisSpacing: 5.0,
+                    childAspectRatio: 0.73,
+                  ),
+                  itemCount: _selectedBingoData!.activities.length,
+                  shrinkWrap: true,
+                  itemBuilder: (context, index) {
+                    final activity = _selectedBingoData!.activities[index];
+                    final isCompleted = _completedCards[index];
+                    final isAllowed = activity.type != BingoDataType.filled && selectedUser.id == pb.authStore.model?.id;
 
-                  return Stack(
+                    return Stack(
                       alignment: Alignment.center,
                       children: [
                         // This AnimatedContainer only handles scale and rotation
@@ -210,28 +222,28 @@ class _BingoCardWidgetState extends State<BingoCardWidget> {
                                 }
                                     : null,
                                 child: Center(
-                                child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Icon(
-                                      activity.type.asIcon(),
-                                      size: 40,
-                                      color: theme.colorScheme.onPrimary,
-                                    ),
-                                    const SizedBox(height: 10),
-                                    Text(
-                                      activity.amount.toString(),
-                                      textAlign: TextAlign.center,
-                                      style: theme.textTheme.labelLarge?.copyWith(
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(
+                                        activity.type.asIcon(),
+                                        size: 40,
                                         color: theme.colorScheme.onPrimary,
                                       ),
-                                    ),
-                                  ],
+                                      const SizedBox(height: 10),
+                                      Text(
+                                        activity.amount.toString(),
+                                        textAlign: TextAlign.center,
+                                        style: theme.textTheme.labelLarge?.copyWith(
+                                          color: theme.colorScheme.onPrimary,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               ),
                             ),
                           ),
-                        ),
                         ),
 
                         // Confetti effect for completed activity
@@ -253,7 +265,8 @@ class _BingoCardWidgetState extends State<BingoCardWidget> {
                           ),
                       ],
                     );
-                },
+                  },
+                ),
               ),
 
               // Horizontal scroll of other users' bingo cards

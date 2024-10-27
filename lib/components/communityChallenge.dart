@@ -134,8 +134,7 @@ class _CommunityChallengeState extends State<CommunityChallenge> {
                       mainAxisSize: MainAxisSize.max,
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        SizedBox(
-                          width: 240,
+                        Expanded(
                           child: OverlapStack(
                             align: OverlapStackAlign.start,
                             minSpacing: 1,
