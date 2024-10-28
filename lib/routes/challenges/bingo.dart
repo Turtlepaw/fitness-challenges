@@ -184,6 +184,7 @@ class _BingoCardWidgetState extends State<BingoCardWidget> {
                             duration: const Duration(milliseconds: 350),
                             filterQuality: FilterQuality.high,
                             child: Card(
+                              shadowColor: theme.colorScheme.shadow.withAlpha(100),
                               elevation: 5, // Add card elevation for a raised effect
                               color: !isAllowed ? theme.colorScheme.primary.withAlpha(210) : theme.colorScheme.primary, // Card handles color
                               clipBehavior: Clip.hardEdge,
