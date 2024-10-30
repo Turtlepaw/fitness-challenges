@@ -269,6 +269,15 @@ packages:
       url: "https://github.com/Turtlepaw/flutter_emoji_feedback.git"
     source: git
     version: "0.3.2"
+  flutter_health_connect:
+    dependency: "direct main"
+    description:
+      path: "."
+      ref: HEAD
+      resolved-ref: fcba88afe7afcc887519d3bbb2d965419bdf48a2
+      url: "https://github.com/quentinleguennec/flutter_health_connect.git"
+    source: git
+    version: "4.1.0"
   flutter_image_stack:
     dependency: "direct main"
     description:

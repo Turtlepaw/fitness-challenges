@@ -75,12 +75,12 @@ class _CreateDialogState extends State<CreateDialog> {
                 ReactiveFormConsumer(builder: (context, form, widget) =>
                 _isCreating
                     ? const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 15),
+                    padding: EdgeInsets.only(right: 25),
                     child: SizedBox(
                       width: 15,
                       height: 15,
                       child: CircularProgressIndicator(
-                          strokeCap: StrokeCap.round),
+                          strokeCap: StrokeCap.round, strokeWidth: 3.2,),
                     )
                 )
                     : TextButton(
@@ -287,7 +287,7 @@ class CreateWidget extends StatelessWidget {
                           .control(type)
                           .value == index,
                     );
-                  }).toList(),
+                  }),
                 ],
               ),
               // const SizedBox(

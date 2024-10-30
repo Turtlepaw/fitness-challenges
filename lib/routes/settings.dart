@@ -1,6 +1,7 @@
 import 'package:fitness_challenges/components/loader.dart';
 import 'package:fitness_challenges/constants.dart';
 import 'package:fitness_challenges/routes/profile.dart';
+import 'package:fitness_challenges/utils/bingo/data.dart';
 import 'package:fitness_challenges/utils/common.dart';
 import 'package:fitness_challenges/utils/health.dart';
 import 'package:flutter/material.dart';
@@ -72,8 +73,8 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   Future<void> _connectSystemHealthPlatform(bool _) async {
-    final result = await Health().requestAuthorization(types,
-        permissions: [HealthDataAccess.READ, HealthDataAccess.READ]);
+    final result =
+        await Health().requestAuthorization(types, permissions: permissions);
 
     if (result == true) {
       if (mounted) {
@@ -81,16 +82,17 @@ class _SettingsPageState extends State<SettingsPage> {
         await HealthTypeManager().setHealthType(HealthType.systemManaged);
 
         setState(() {
-          healthType = HealthType.systemManaged;
+          //healthType = HealthType.systemManaged;
           _isRefreshing = true;
         });
 
         Future.delayed(const Duration(seconds: 1));
 
-        await Provider.of<HealthManager>(context, listen: false)
+        var result = await Provider.of<HealthManager>(context, listen: false)
             .fetchHealthData(context: context);
 
         setState(() {
+          if (result == true) healthType = HealthType.systemManaged;
           _isRefreshing = false;
         });
       } else {
@@ -107,7 +109,8 @@ class _SettingsPageState extends State<SettingsPage> {
         _isLoading = true;
       });
 
-      final result = await Health().hasPermissions(types);
+      final result =
+          await Health().hasPermissions(types, permissions: permissions);
 
       if (result == true) {
         setState(() {
@@ -192,7 +195,8 @@ class _SettingsPageState extends State<SettingsPage> {
             ],
           ),
           // Health panel or loading box
-          SizedBox(  // Replace Expanded with SizedBox
+          SizedBox(
+            // Replace Expanded with SizedBox
             child: AnimatedSwitcher(
               duration: const Duration(milliseconds: 150),
               transitionBuilder: (Widget child, Animation<double> animation) {
@@ -200,144 +204,179 @@ class _SettingsPageState extends State<SettingsPage> {
               },
               child: _isLoading
                   ? LayoutBuilder(builder: (context, constraints) {
-                final width = getWidth(constraints);
-                return SizedBox(
-                  width: width,
-                  child: Column(
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 14, vertical: 6),
-                        child: LoadingBox(
-                          height: 195,
-                          width: MediaQuery.of(context).size.width,
-                          radius: 12,
+                      final width = getWidth(constraints);
+                      return SizedBox(
+                        width: width,
+                        child: Column(
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 14, vertical: 6),
+                              child: LoadingBox(
+                                height: 195,
+                                width: MediaQuery.of(context).size.width,
+                                radius: 12,
+                              ),
+                            )
+                          ],
                         ),
-                      )
-                    ],
-                  ),
-                );
-              })
+                      );
+                    })
                   : buildCard([
-                Text(
-                  _isAvailable
-                      ? (healthType != null
-                      ? "Health connected via ${HealthTypeManager.formatType(healthType)}"
-                      : "Connect a health platform")
-                      : "Health unavailable",
-                  style: theme.textTheme.titleLarge,
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 5),
-                if (healthType == null)
-                  const Text(
-                    "Connect a health platform to create and join challenges",
-                    textAlign: TextAlign.center,
-                  )
-                else if (health.steps != null)
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Symbols.steps_rounded,
-                        color: theme.colorScheme.primary,
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 15).copyWith(bottom: 5),
+                        child: Text(
+                          _isAvailable
+                              ? (healthType != null
+                              ? "Health connected via ${HealthTypeManager.formatType(healthType)}"
+                              : "Connect a health platform")
+                              : "Health unavailable",
+                          style: theme.textTheme.titleLarge,
+                          textAlign: TextAlign.center,
+                        ),
                       ),
-                      const SizedBox(width: 8),
-                      Text("${formatNumber(health.steps as int)} steps")
-                    ],
-                  )
-                else
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Symbols.refresh_rounded,
-                        color: theme.colorScheme.error,
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        getErrorText(),
-                        style: theme.textTheme.bodyLarge
-                            ?.copyWith(color: theme.colorScheme.error),
-                      )
-                    ],
-                  ),
-                const SizedBox(height: 10),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    FilterChip(
-                      onDeleted: healthType != null
-                          ? () {
-                        setState(() {
-                          _isLoading = true;
-                        });
-                        HealthTypeManager().clearHealthType();
-                        setState(() {
-                          _isLoading = false;
-                          healthType = null;
-                        });
-                      }
-                          : null,
-                      onSelected: (_isAvailable
-                          ? _connectSystemHealthPlatform
-                          : null),
-                      label: Text(health.capabilities
-                          .contains(HealthType.systemManaged)
-                          ? ((health.isConnected &&
-                          healthType == HealthType.systemManaged)
-                          ? "Connected"
-                          : HealthTypeManager.formatType(
-                          HealthType.systemManaged))
-                          : "Unavailable"),
-                      selected: healthType == HealthType.systemManaged,
-                      avatar: _isSysHealthLoading &&
-                          health.capabilities
-                              .contains(HealthType.systemManaged)
-                          ? const CircularProgressIndicator(
-                        strokeWidth: 3,
-                        strokeCap: StrokeCap.round,
-                      )
-                          : null,
-                      showCheckmark: !_isSysHealthLoading,
-                    ),
-                    const SizedBox(width: 5),
-                    Tooltip(
-                      message: "Refresh",
-                      child: IconButton.outlined(
-                          onPressed: () async {
-                            setState(() {
-                              _isRefreshing = true;
-                            });
-                            await health.fetchHealthData();
-                            await health.checkConnectionState();
-                            setState(() {
-                              _isRefreshing = false;
-                            });
-                          },
-                          icon: _isRefreshing
-                              ? const SizedBox(
-                            width: 15,
-                            height: 15,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              strokeCap: StrokeCap.round,
+                      const SizedBox(height: 5),
+                      if (healthType == null)
+                        const Text(
+                          "Connect a health platform to create and join challenges",
+                          textAlign: TextAlign.center,
+                        )
+                      else if (health.steps != null)
+                        Wrap(
+                          spacing: 1, // Space between items horizontally
+                          runSpacing: 5, // Set this to 0 to minimize space between rows
+                          alignment: WrapAlignment.start, // Align items at the start
+                          children: [
+                            buildDataBlock(BingoDataType.steps, health.steps!, theme),
+                            buildDataBlock(BingoDataType.calories, health.calories!, theme),
+                            buildDataBlock(BingoDataType.distance, health.distance!, theme),
+                            buildDataBlock(BingoDataType.water, health.water!, theme),
+                          ],
+                        )
+                      else
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Symbols.refresh_rounded,
+                              color: theme.colorScheme.error,
                             ),
+                            const SizedBox(width: 8),
+                            Text(
+                              getErrorText(),
+                              style: theme.textTheme.bodyLarge
+                                  ?.copyWith(color: theme.colorScheme.error),
+                            )
+                          ],
+                        ),
+                      const SizedBox(height: 5),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          FilterChip(
+                            onDeleted: healthType != null
+                                ? () {
+                                    setState(() {
+                                      _isLoading = true;
+                                    });
+                                    HealthTypeManager().clearHealthType();
+                                    setState(() {
+                                      _isLoading = false;
+                                      healthType = null;
+                                    });
+                                  }
+                                : null,
+                            onSelected: (_isAvailable
+                                ? _connectSystemHealthPlatform
+                                : null),
+                            label: Text(health.capabilities
+                                    .contains(HealthType.systemManaged)
+                                ? ((health.isConnected &&
+                                        healthType == HealthType.systemManaged)
+                                    ? "Connected"
+                                    : HealthTypeManager.formatType(
+                                        HealthType.systemManaged))
+                                : "Unavailable"),
+                            selected: healthType == HealthType.systemManaged,
+                            avatar: _isSysHealthLoading &&
+                                    health.capabilities
+                                        .contains(HealthType.systemManaged)
+                                ? const CircularProgressIndicator(
+                                    strokeWidth: 3,
+                                    strokeCap: StrokeCap.round,
+                                  )
+                                : null,
+                            showCheckmark: !_isSysHealthLoading,
+                          ),
+                          const SizedBox(width: 5),
+                          Tooltip(
+                            message: "Refresh",
+                            child: IconButton.outlined(
+                                onPressed: () async {
+                                  setState(() {
+                                    _isRefreshing = true;
+                                  });
+                                  await health.fetchHealthData();
+                                  await health.checkConnectionState();
+                                  setState(() {
+                                    _isRefreshing = false;
+                                  });
+                                },
+                                icon: _isRefreshing
+                                    ? const SizedBox(
+                                        width: 15,
+                                        height: 15,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                          strokeCap: StrokeCap.round,
+                                        ),
+                                      )
+                                    : Icon(
+                                        Symbols.refresh_rounded,
+                                        color: theme.colorScheme.onSurface,
+                                      )),
                           )
-                              : Icon(
-                            Symbols.refresh_rounded,
-                            color: theme.colorScheme.onSurface,
-                          )),
-                    )
-                  ],
-                )
-              ], height: 195),
+                        ],
+                      )
+                    ], height: 195),
             ),
           ),
         ],
       ),
     );
+  }
 
+  Widget buildDataBlock(BingoDataType type, num amount, ThemeData theme) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 5), // Minimal padding
+      margin: const EdgeInsets.all(2), // Minimal margin
+      decoration: BoxDecoration(
+          color: theme.colorScheme.surfaceContainerLow,
+          borderRadius: BorderRadius.circular(15),
+          border: Border.all(
+            color: theme.colorScheme.surfaceContainerHigh,
+            width: 1.1,
+            style: BorderStyle.solid,
+            strokeAlign: BorderSide.strokeAlignCenter,
+          )
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min, // Minimize row size
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Icon(
+            type.asIcon(),
+            color: theme.colorScheme.primary,
+          ),
+          const SizedBox(width: 4), // Smaller space between icon and text
+          Text(
+            "${formatNumber(amount)} ${type.asString()}",
+            textAlign: TextAlign.center, // Center the text
+          ),
+        ],
+      ),
+    );
   }
 
   String getErrorText() {

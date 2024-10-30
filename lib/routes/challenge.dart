@@ -643,7 +643,7 @@ class _ChallengeDialogState extends State<ChallengeDialog> {
                             crossAxisAlignment: CrossAxisAlignment.end,
                             children: [
                               Text(
-                                "${formatNumber(data['totalValue'] as int)} steps",
+                                "${formatInt(data['totalValue'] as int)} steps",
                                 style: theme.textTheme.titleLarge?.copyWith(
                                     color: theme.colorScheme.onPrimary),
                               ),

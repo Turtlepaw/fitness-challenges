@@ -5,10 +5,10 @@ import '../../types/challenges.dart';
 import '../manager.dart';
 import 'manager.dart';
 
-enum BingoDataType { filled, steps, distance, azm }
+enum BingoDataType { filled, steps, distance, azm, calories, water }
 
 extension BingoDataTypeExtension on BingoDataType {
-  BingoDataActivity toActivity(int amount) {
+  BingoDataActivity toActivity(num amount) {
     return BingoDataActivity(type: this, amount: amount);
   }
 
@@ -17,15 +17,29 @@ extension BingoDataTypeExtension on BingoDataType {
       BingoDataType.steps => Symbols.steps_rounded,
       BingoDataType.distance => Symbols.distance_rounded,
       BingoDataType.azm => Symbols.azm_rounded,
-    BingoDataType.filled => Symbols.check_rounded,
+      BingoDataType.filled => Symbols.check_rounded,
+      BingoDataType.calories => Symbols.local_fire_department_rounded,
+      BingoDataType.water => Symbols.water_full_rounded,
       _ => Symbols.indeterminate_question_box_rounded
+    };
+  }
+
+  String asString() {
+    return switch (this) {
+      BingoDataType.steps => "Steps",
+      BingoDataType.distance => "Distance",
+      BingoDataType.azm => "Active Minutes",
+      BingoDataType.filled => "Filled",
+      BingoDataType.calories => "Calories",
+      BingoDataType.water => "Water",
+      _ => "Unknown"
     };
   }
 }
 
 class BingoDataActivity {
   final BingoDataType type;
-  final int amount;
+  final num amount;
 
   BingoDataActivity({required this.type, required this.amount});
 
@@ -33,7 +47,7 @@ class BingoDataActivity {
   factory BingoDataActivity.fromJson(Map<String, dynamic> json) {
     return BingoDataActivity(
       type: BingoDataType.values[json['type'] as int],
-      amount: json['amount'] as int,
+      amount: json['amount'], // No need to cast to int here
     );
   }
 

@@ -173,7 +173,7 @@ void callbackDispatcher() {
       final pb = await initializePocketbase();
       if (!pb.authStore.isValid) return Future.value(false);
       final type = await HealthTypeManager().getHealthType();
-      if(type == null) {
+      if (type == null) {
         logger.debug("Health type not set, canceling work");
         return Future.value(false);
       }
@@ -318,7 +318,7 @@ void main() async {
   manager.init();
   healthManager.checkConnectionState();
   Future.delayed(const Duration(seconds: 1), () {
-      healthManager.fetchHealthData();
+    healthManager.fetchHealthData();
   });
   Health().configure(useHealthConnectIfAvailable: true);
   final wearManager = WearManager(pb).sendAuthentication(logger);
@@ -554,6 +554,7 @@ class _HomePageState extends State<HomePage> {
     final challengeProvider =
         Provider.of<ChallengeProvider>(context, listen: true);
     final mediaQuery = MediaQuery.of(context);
+    final theme = Theme.of(context);
     // This method is rerun every time setState is called, for instance as done
     // by the _incrementCounter method above.
     //
@@ -592,13 +593,42 @@ class _HomePageState extends State<HomePage> {
                 );
               })
             else
-              const Center(
+              Center(
+                  child: Container(
+                padding:
+                    const EdgeInsets.symmetric(vertical: 25, horizontal: 30),
+                decoration: BoxDecoration(
+                    color: theme.colorScheme.surfaceContainerLow,
+                    borderRadius: BorderRadius.circular(15),
+                    border: Border.all(
+                      color: theme.colorScheme.surfaceContainerHigh,
+                      width: 1.1,
+                      style: BorderStyle.solid,
+                      strokeAlign: BorderSide.strokeAlignCenter,
+                    )),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [Text("No challenges...")],
+                  children: [
+                    Icon(
+                      Symbols.travel_explore_rounded,
+                      size: 50,
+                      color: theme.colorScheme.primary,
+                    ),
+                    const SizedBox(height: 15),
+                    Text("You aren't in any challenges yet.",
+                        style: theme.textTheme.titleLarge),
+                    Text("Create or join a challenge to get started.",
+                        style: theme.textTheme.bodyLarge),
+                    const SizedBox(height: 5),
+                    FilledButton.tonalIcon(
+                      onPressed: () => _showBottomSheet(context),
+                      icon: const Icon(Symbols.stylus_note_rounded),
+                      label: const Text("Create or join"),
+                    )
+                  ],
                 ),
-              ),
+              )),
             const SizedBox(height: 25)
           ],
         ),

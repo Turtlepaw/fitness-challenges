@@ -7,7 +7,8 @@ import 'package:fitness_challenges/types/collections.dart';
 import 'package:fitness_challenges/utils/data_source_manager.dart';
 import 'package:fitness_challenges/utils/sharedLogger.dart';
 import 'package:fitness_challenges/utils/steps/data.dart';
-import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_health_connect/flutter_health_connect.dart';
 import 'package:flutter_wear_os_connectivity/flutter_wear_os_connectivity.dart';
 import 'package:health/health.dart';
 import 'package:pocketbase/pocketbase.dart';
@@ -29,6 +30,18 @@ class HealthManager with ChangeNotifier {
   int? _azm;
 
   int? get activeMinutes => _azm;
+
+  num? _calories;
+
+  num? get calories => _calories;
+
+  num? _water;
+
+  num? get water => _water;
+
+  num? _distance;
+
+  num? get distance => _distance;
 
   bool _isConnected = false;
 
@@ -77,14 +90,33 @@ class HealthManager with ChangeNotifier {
     notifyListeners();
   }
 
+  Future<num> getDataFromType(DateTime start, HealthDataType type) async {
+    var points = await Health().getHealthDataFromTypes(
+        startTime: start, endTime: DateTime.now(), types: [type]);
+    final data = Health().removeDuplicates(points).map((it) {
+      final value = it.value;
+      if (value is NumericHealthValue) {
+        return value.numericValue;
+      } else {
+        return 0;
+      }
+    });
+
+    if (data.isEmpty) {
+      return 0; // Return 0 if data is empty
+    } else {
+      return data.reduce((value, element) => value + element);
+    }
+  }
+
   /// Attempts to fetch health data if all permissions are granted
-  Future<void> fetchHealthData({BuildContext? context}) async {
+  Future<bool> fetchHealthData({BuildContext? context}) async {
     final health = Health();
     final type = await HealthTypeManager().getHealthType();
 
     if (!pb.authStore.isValid) {
       logger.debug("Pocketbase auth store not valid");
-      return;
+      return false;
     }
     var userId = pb.authStore.model?.id;
 
@@ -96,7 +128,15 @@ class HealthManager with ChangeNotifier {
           .every((item) => item == true);
       if (!isAvailable) {
         logger.debug("Missing some health types");
-        return;
+        HealthTypeManager().clearHealthType();
+        if(context != null && context.mounted){
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Sync failed: Missing data types'),
+            ),
+          );
+        }
+        return false;
       }
 
       final hasPermissions = await Future.wait(types.map((type) async {
@@ -111,12 +151,28 @@ class HealthManager with ChangeNotifier {
       if (hasPermissions == true) {
         var now = DateTime.now();
         var midnight = DateTime(now.year, now.month, now.day);
+        final startTime = midnight;
         _steps = await Health().getTotalStepsInInterval(midnight, now);
+        _calories = await getDataFromType(startTime, HealthDataType.TOTAL_CALORIES_BURNED);
+        _water = await getDataFromType(startTime, HealthDataType.WATER);
+        _distance = await getDataFromType(startTime, HealthDataType.DISTANCE_DELTA);
         _isConnected = true;
         notifyListeners(); // Notify listeners about the change
-        logger.debug("Successfully synced $_steps steps");
+        logger.debug("Successfully synced:\n\n👟 Steps: $steps\n🔥 Calories: $calories\n💦 Water: $water\n🏃 Distance: $distance");
       } else {
         logger.debug("No health permissions, sync failed");
+        HealthTypeManager().clearHealthType();
+        if(context != null && context.mounted){
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Text('Sync failed: Missing permissions'),
+              action: SnackBarAction(label: "Fix", onPressed: () async {
+                await HealthConnectFactory.openHealthConnectSettings();
+              }),
+            ),
+          );
+        }
+        return false;
       }
     } else if (type == HealthType.watch && Platform.isAndroid) {
       try {
@@ -127,7 +183,7 @@ class HealthManager with ChangeNotifier {
         var devices = await flutterWearOsConnectivity.getConnectedDevices();
         if (devices.isEmpty) {
           logger.debug("No connected devices");
-          return;
+          return false;
         }
 
         for (var device in devices) {
@@ -149,7 +205,8 @@ class HealthManager with ChangeNotifier {
         if (devices.isNotEmpty) _isConnected = true;
 
         if (data.isEmpty) {
-          return debugPrint("No steps from today");
+          logger.debug("No data from Wear OS client");
+          return false;
         }
 
         if (data?.first?.mapData[id] != null) {
@@ -163,11 +220,13 @@ class HealthManager with ChangeNotifier {
             logger.debug("Synced $_steps steps from Wear OS client");
           } else {
             logger.debug("No steps from today using Wear OS client");
+            return false;
           }
         }
       } catch (e, stacktrace) {
         logger.error("Error fetching health data from Wear OS: $e");
         logger.error(stacktrace.toString());
+        return false;
       }
     }
 
@@ -210,6 +269,8 @@ class HealthManager with ChangeNotifier {
       await Future.delayed(const Duration(seconds: 2));
       await challengeProvider.reloadChallenges(context);
     }
+
+    return true;
   }
 
   DataSource getSource(HealthType type) {

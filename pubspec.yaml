@@ -89,6 +89,9 @@ dependencies:
   pair: ^0.1.2
   receive_intent: ^0.2.5
   flutter_statusbarcolor_ns: ^0.6.0
+  flutter_health_connect:
+    git:
+      url: https://github.com/quentinleguennec/flutter_health_connect.git
   #share_plus: 10.0.0
 
 dev_dependencies:

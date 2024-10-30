@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'package:confetti/confetti.dart'; // Import the confetti package
 import 'package:dynamic_color/dynamic_color.dart';
+import 'package:fitness_challenges/utils/health.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_advanced_avatar/flutter_advanced_avatar.dart';
 import 'package:material_symbols_icons/symbols.dart';
@@ -9,6 +10,7 @@ import 'package:pocketbase/pocketbase.dart';
 import 'package:provider/provider.dart';
 
 import '../../utils/bingo/data.dart';
+import '../../utils/common.dart';
 
 class BingoCardWidget extends StatefulWidget {
   final Widget Function(BuildContext) buildTopDetails;
@@ -111,6 +113,7 @@ class _BingoCardWidgetState extends State<BingoCardWidget> {
   @override
   Widget build(BuildContext context) {
     var theme = Theme.of(context);
+    final health = Provider.of<HealthManager>(context);
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -233,7 +236,7 @@ class _BingoCardWidgetState extends State<BingoCardWidget> {
                                       ),
                                       const SizedBox(height: 10),
                                       Text(
-                                        activity.amount.toString(),
+                                        formatNumber(activity.amount),
                                         textAlign: TextAlign.center,
                                         style: theme.textTheme.labelLarge?.copyWith(
                                           color: theme.colorScheme.onPrimary,
@@ -270,6 +273,25 @@ class _BingoCardWidgetState extends State<BingoCardWidget> {
                 ),
               ),
 
+              Padding(
+                padding: const EdgeInsets.only(left: 8),
+                child: GridView(
+                  physics: const NeverScrollableScrollPhysics(),
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 5,
+                    crossAxisSpacing: 5.0,
+                    mainAxisSpacing: 5.0,
+                  ),
+                  shrinkWrap: true,
+                  children: [
+                    _buildDataBlock(
+                      health.steps
+                    ),
+
+                  ],
+                ),
+              ),
+
               // Horizontal scroll of other users' bingo cards
               _buildOtherUsersCards(manager),
 
@@ -278,6 +300,24 @@ class _BingoCardWidgetState extends State<BingoCardWidget> {
           ),
         );
       },
+    );
+  }
+
+  Widget _buildDataBlock(int? value){
+    var theme = Theme.of(context);
+
+    return Row(
+      children: [
+        const Icon(
+            Symbols.steps_rounded,
+          size: 15,
+        ),
+        const SizedBox(width: 8),
+        Text(
+          formatNumber(value ?? 0),
+          style: theme.textTheme.bodyLarge,
+        )
+      ],
     );
   }
 

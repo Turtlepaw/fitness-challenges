@@ -10,23 +10,44 @@ class Bingo {
     final stepsRange = _getStepsRange(difficulty);
     final distanceRange = _getDistanceRange(difficulty);
     final activeMinutesRange = _getActiveMinutesRange(difficulty);
+    final caloriesRange = _getCaloriesRange(difficulty);
+    final waterRange = _getWaterRange(difficulty);
 
     final List<BingoDataActivity> activities = List.generate(25, (index) {
-      if (index % 3 == 0) {
-        final steps = ((random.nextInt(stepsRange[1] - stepsRange[0] + 1) + stepsRange[0])
-            .roundToNearest(5))
-            .clamp(stepsRange[0], stepsRange[1]);
-        return BingoDataType.steps.toActivity(steps);
-      } else if (index % 3 == 1) {
-        final distance = ((random.nextInt(distanceRange[1] - distanceRange[0] + 1) + distanceRange[0])
-            .roundToNearest(5))
-            .clamp(distanceRange[0], distanceRange[1]);
-        return BingoDataType.distance.toActivity(distance);
-      } else {
-        final activeMinutes = ((random.nextInt(activeMinutesRange[1] - activeMinutesRange[0] + 1) + activeMinutesRange[0])
-            .roundToNearest(5))
-            .clamp(activeMinutesRange[0], activeMinutesRange[1]);
-        return BingoDataType.azm.toActivity(activeMinutes);
+      switch (index % 5) {
+        case 0:
+          final steps = (random.nextInt(stepsRange[1] - stepsRange[0] + 1) + stepsRange[0])
+              .roundToNearest(50)
+              .clamp(stepsRange[0], stepsRange[1]);
+          return BingoDataType.steps.toActivity(steps);
+
+        case 1:
+          final distance = ((random.nextDouble() * (distanceRange[1] - distanceRange[0]) + distanceRange[0])
+              .roundToNearestNum(0.5))  // Use as double to keep precision
+              .clamp(distanceRange[0], distanceRange[1]);
+          return BingoDataType.distance.toActivity(distance); // Convert to int for compatibility
+
+        case 2:
+          final activeMinutes = (random.nextInt(activeMinutesRange[1] - activeMinutesRange[0] + 1) + activeMinutesRange[0])
+              .roundToNearest(5)
+              .clamp(activeMinutesRange[0], activeMinutesRange[1]);
+          return BingoDataType.azm.toActivity(activeMinutes);
+
+        case 3:
+          final calories = (random.nextInt(caloriesRange[1] - caloriesRange[0] + 1) + caloriesRange[0])
+              .roundToNearest(10)
+              .clamp(caloriesRange[0], caloriesRange[1]);
+          return BingoDataType.calories.toActivity(calories);
+
+        case 4:
+        // Only include water intake if the user is comfortable with it
+          final water = (random.nextInt(waterRange[1] - waterRange[0] + 1) + waterRange[0])
+              .roundToNearest(250)
+              .clamp(waterRange[0], waterRange[1]);
+          return BingoDataType.water.toActivity(water);
+
+        default:
+          return BingoDataType.steps.toActivity(stepsRange[0]);
       }
     });
 
@@ -37,26 +58,26 @@ class Bingo {
   List<int> _getStepsRange(Difficulty difficulty) {
     switch (difficulty) {
       case Difficulty.easy:
-        return [1000, 5000];
+        return [500, 3000];
       case Difficulty.medium:
-        return [5000, 10000];
+        return [3000, 8000];
       case Difficulty.hard:
-        return [10000, 20000];
+        return [8000, 15000];
       default:
-        return [1000, 5000];
+        return [500, 3000];
     }
   }
 
-  List<int> _getDistanceRange(Difficulty difficulty) {
+  List<double> _getDistanceRange(Difficulty difficulty) {
     switch (difficulty) {
       case Difficulty.easy:
-        return [1, 5];
+        return [0.5, 3.0];
       case Difficulty.medium:
-        return [5, 10];
+        return [3.0, 8.0];
       case Difficulty.hard:
-        return [10, 20];
+        return [8.0, 12.0];
       default:
-        return [1, 5];
+        return [0.5, 3.0];
     }
   }
 
@@ -67,9 +88,35 @@ class Bingo {
       case Difficulty.medium:
         return [30, 60];
       case Difficulty.hard:
-        return [60, 120];
+        return [60, 90];
       default:
         return [10, 30];
+    }
+  }
+
+  List<int> _getCaloriesRange(Difficulty difficulty) {
+    switch (difficulty) {
+      case Difficulty.easy:
+        return [50, 150];
+      case Difficulty.medium:
+        return [150, 300];
+      case Difficulty.hard:
+        return [300, 600];
+      default:
+        return [50, 150];
+    }
+  }
+
+  List<int> _getWaterRange(Difficulty difficulty) {
+    switch (difficulty) {
+      case Difficulty.easy:
+        return [500, 1000];
+      case Difficulty.medium:
+        return [1000, 1500];
+      case Difficulty.hard:
+        return [1500, 2000];
+      default:
+        return [500, 1000];
     }
   }
 }
@@ -77,5 +124,9 @@ class Bingo {
 extension on num {
   int roundToNearest(int n) {
     return (this / n).round() * n;
+  }
+
+  double roundToNearestNum(num n) { // Return a double to preserve precision
+    return (this / n).roundToDouble() * n; // Use roundToDouble() to avoid potential errors
   }
 }
