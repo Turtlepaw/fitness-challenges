@@ -1,9 +1,14 @@
+import 'package:fitness_challenges/components/dialog/changePassword.dart';
+import 'package:fitness_challenges/utils/sharedLogger.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_advanced_avatar/flutter_advanced_avatar.dart';
+import 'package:go_router/go_router.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
 import 'package:pocketbase/pocketbase.dart';
 import 'package:provider/provider.dart';
 import 'package:reactive_forms/reactive_forms.dart';
+
+import '../components/dialog/confirmDialog.dart';
 
 class ProfileDialog extends StatefulWidget {
   final PocketBase pb;
@@ -15,6 +20,7 @@ class ProfileDialog extends StatefulWidget {
 }
 
 const username = "username";
+const email = "email";
 
 class _ProfileDialogState extends State<ProfileDialog> {
   // bool _isDialogLoading = true;
@@ -25,6 +31,9 @@ class _ProfileDialogState extends State<ProfileDialog> {
   final form = FormGroup({
     username: FormControl<String>(
         validators: [Validators.required, Validators.minLength(3)]),
+    email: FormControl<String>(
+      validators: [Validators.email],
+    )
   });
 
   @override
@@ -33,6 +42,16 @@ class _ProfileDialogState extends State<ProfileDialog> {
 
     form.control(username).value =
         (widget.pb.authStore.model as RecordModel).getStringValue("username");
+  }
+
+  @override
+  void didChangeDependencies() {
+    final pb = Provider.of<PocketBase>(context, listen: false);
+    if(pb.authStore.model?.getStringValue("email")?.isNotEmpty == true){
+      form.control(email).value = pb.authStore.model?.getStringValue("email");
+    }
+
+    super.didChangeDependencies();
   }
 
   @override
@@ -83,9 +102,15 @@ class _ProfileDialogState extends State<ProfileDialog> {
       String usernameValue = form.control(username).value;
       final user = widget.pb.authStore.model;
 
+      var body = {"username": usernameValue};
+      if(form.control(email).value?.isNotEmpty == true){
+        print("Updating email to ${form.control(email).value}");
+        body["email"] = form.control(email).value.toString().trim();
+      }
+
       await widget.pb
           .collection("users")
-          .update(user.id, body: {"username": usernameValue});
+          .update(user.id, body: body);
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -93,7 +118,11 @@ class _ProfileDialogState extends State<ProfileDialog> {
             content: Text('Updated profile'),
           ),
         );
-        Navigator.of(context).pop();
+        //Navigator.of(context).pop();
+
+        setState(() {
+          _isUpdating = false;
+        });
       }
     } catch (error, stackTrace) {
       print('Error updating profile: $error');
@@ -119,14 +148,13 @@ class ProfileWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     var theme = Theme.of(context);
-    final pb = Provider.of<PocketBase>(context, listen: false);
+    final pb = Provider.of<PocketBase>(context);
 
-    return Column(
-      mainAxisSize: MainAxisSize.min,
+    return ListView(
+      padding: const EdgeInsets.only(left: 25),
       children: [
         Padding(
-          padding: const EdgeInsets.only(left: 25)
-              .add(const EdgeInsets.symmetric(vertical: 25)),
+          padding: const EdgeInsets.symmetric(vertical: 25),
           child: Row(
             children: [
               AdvancedAvatar(
@@ -169,10 +197,21 @@ class ProfileWidget extends StatelessWidget {
             ],
           ),
         ),
-        _buildTextFields(theme),
+        _buildTextFields(theme, pb),
+        Wrap(
+          spacing: 10, // Space between items horizontally
+          runSpacing: 5, // Set this to 0 to minimize space between rows
+          alignment: WrapAlignment.start, // Align items at the start
+          children: [
+            FilledButton(onPressed: () => onRequestChangePassword(context), child: const Text("Change Password")),
+            FilledButton(onPressed: () => onRequestDeleteAccount(context), style: ButtonStyle(
+                backgroundColor: WidgetStateProperty.all(theme.colorScheme.error)
+            ), child: Text("Delete my account", style: theme.textTheme.labelLarge?.copyWith(color: theme.colorScheme.onError),),
+            ),
+          ],
+        ),
         // Padding(
-        //     padding: const EdgeInsets.only(left: 25)
-        //         .add(const EdgeInsets.symmetric(vertical: 25)),
+        //     padding: const EdgeInsets.symmetric(vertical: 25),
         //     child: Column(
         //       crossAxisAlignment: CrossAxisAlignment.start,
         //       children: [
@@ -216,7 +255,50 @@ class ProfileWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildTextFields(ThemeData theme) {
+  void onRequestDeleteAccount(BuildContext context){
+    final pb = Provider.of<PocketBase>(context, listen: false);
+    showDialog(
+        context: context,
+        builder: (context) => ConfirmDialog(
+          isDestructive: true,
+          icon: Icons.delete_forever_rounded,
+          title: "Delete account",
+          description: "Are you sure you want to delete your account?",
+          onConfirm: () async {
+            pb.collection("users").delete(
+              pb.authStore.model.id
+            );
+            pb.authStore.clear();
+            context.go("/introduction");
+          },
+        ),
+        useSafeArea: false);
+  }
+
+  void onRequestChangePassword(BuildContext context) async {
+    final pb = Provider.of<PocketBase>(context, listen: false);
+    try {
+      await pb.collection("users").requestPasswordReset((pb.authStore.model as RecordModel).getStringValue("email"));
+      showDialog(
+          context: context,
+          builder: (context) => const ChangePasswordDialog(),
+          useSafeArea: false);
+    } catch (e) {
+      Provider.of<SharedLogger>(context, listen: false).error(e.toString())
+      .debug("Email is \"${pb.authStore.model?.getStringValue("email")}\"");
+      var text = "Failed to send email";
+      if(pb.authStore.model?.getStringValue("email")?.isEmpty){
+        text = "No email associated with account";
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(text),
+        ),
+      );
+    }
+  }
+
+  Widget _buildTextFields(ThemeData theme, PocketBase pb) {
     return LayoutBuilder(
         builder: (BuildContext context, BoxConstraints constraints) {
       return ConstraintsTransformBox(
@@ -225,7 +307,9 @@ class ProfileWidget extends StatelessWidget {
                     constraints.maxWidth > 450 ? 400 : constraints.maxWidth,
               ),
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+            padding: const EdgeInsets.symmetric(vertical: 10).add(
+              const EdgeInsets.only(right: 20)
+            ),
             child: Column(
               children: [
                 ReactiveTextField(
@@ -234,6 +318,18 @@ class ProfileWidget extends StatelessWidget {
                     border: OutlineInputBorder(),
                     labelText: 'Display Name',
                     icon: Icon(Symbols.person_rounded),
+                  ),
+                ),
+                const SizedBox(
+                  height: 15,
+                ),
+                ReactiveTextField(
+                  formControlName: email,
+                  decoration: InputDecoration(
+                    border: const OutlineInputBorder(),
+                    labelText: 'Email',
+                    icon: const Icon(Symbols.email_rounded),
+                    hintText: pb.authStore.model?.getStringValue("email"),
                   ),
                 )
               ],

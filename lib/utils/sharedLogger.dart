@@ -23,10 +23,11 @@ class SharedLogger {
     _logs.add('Debug [$timestamp]: $message'); // Add log to memory
   }
 
-  void error(String message){
+  SharedLogger error(String message){
     _logger.e(message);
     String timestamp = DateTime.now().toIso8601String();
     _logs.add('ERROR [$timestamp]: $message'); // Add log to memory
+    return this;
   }
 
   // Export logs to a file when requested

@@ -1,5 +1,6 @@
 import 'package:fitness_challenges/components/debug_panel.dart';
 import 'package:fitness_challenges/components/loader.dart';
+import 'package:fitness_challenges/utils/challengeManager.dart';
 import 'package:fitness_challenges/utils/sharedLogger.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -105,6 +106,8 @@ class _LoginPageState extends State<LoginPage> {
             content: Text('Logged in!'),
           ),
         );
+
+        Provider.of<ChallengeProvider>(context).reloadChallenges(context);
 
         logger.debug("Successfully logged in");
         context.go("/home");
@@ -313,6 +316,7 @@ class _LoginPageState extends State<LoginPage> {
           Text(
             "Sign in with username",
             style: theme.textTheme.headlineMedium,
+            textAlign: TextAlign.center,
           ),
           const SizedBox(height: 5),
           Padding(

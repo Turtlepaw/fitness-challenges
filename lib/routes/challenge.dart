@@ -14,9 +14,9 @@ import 'package:pocketbase/pocketbase.dart';
 import 'package:provider/provider.dart';
 import 'package:relative_time/relative_time.dart';
 
-import '../components/challenges/codeDialog.dart';
-import '../components/challenges/confirmDialog.dart';
-import '../components/challenges/userDialog.dart';
+import '../components/dialog/codeDialog.dart';
+import '../components/dialog/confirmDialog.dart';
+import '../components/dialog/userDialog.dart';
 import '../types/collections.dart';
 import '../utils/bingo/data.dart';
 import '../utils/challengeManager.dart';

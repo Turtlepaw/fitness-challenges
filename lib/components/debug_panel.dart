@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../utils/sharedLogger.dart';
-import 'challenges/confirmDialog.dart';
+import 'dialog/confirmDialog.dart';
 
 class DebugPanel extends StatelessWidget {
   const DebugPanel({super.key});

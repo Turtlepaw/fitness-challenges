@@ -12,8 +12,8 @@ import 'package:material_symbols_icons/material_symbols_icons.dart';
 import 'package:pocketbase/pocketbase.dart';
 import 'package:provider/provider.dart';
 
-import '../components/challenges/confirmDialog.dart';
 import '../components/debug_panel.dart';
+import '../components/dialog/confirmDialog.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
