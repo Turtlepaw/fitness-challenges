@@ -14,6 +14,7 @@ import 'package:health/health.dart';
 import 'package:pocketbase/pocketbase.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'bingo/data.dart';
 import 'challengeManager.dart';
 
 class HealthManager with ChangeNotifier {
@@ -288,6 +289,21 @@ class HealthManager with ChangeNotifier {
     return date.year == now.year &&
         date.month == now.month &&
         date.day == now.day;
+  }
+
+  num getValue(BingoDataType type) {
+    switch (type) {
+      case BingoDataType.steps:
+        return steps ?? 0;
+      case BingoDataType.calories:
+        return calories ?? 0;
+      case BingoDataType.water:
+        return water ?? 0;
+      case BingoDataType.distance:
+        return distance ?? 0;
+      default:
+        return 0;
+    }
   }
 }
 

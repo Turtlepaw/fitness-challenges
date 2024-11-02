@@ -242,16 +242,19 @@ class _SettingsPageState extends State<SettingsPage> {
                           textAlign: TextAlign.center,
                         )
                       else if (health.steps != null)
-                        Wrap(
-                          spacing: 1, // Space between items horizontally
-                          runSpacing: 5, // Set this to 0 to minimize space between rows
-                          alignment: WrapAlignment.start, // Align items at the start
-                          children: [
-                            buildDataBlock(BingoDataType.steps, health.steps!, theme),
-                            buildDataBlock(BingoDataType.calories, health.calories!, theme),
-                            buildDataBlock(BingoDataType.distance, health.distance!, theme),
-                            buildDataBlock(BingoDataType.water, health.water!, theme),
-                          ],
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 10),
+                          child: Wrap(
+                            spacing: 5, // Space between items horizontally
+                            runSpacing: 5, // Set this to 0 to minimize space between rows
+                            alignment: WrapAlignment.start, // Align items at the start
+                            children: [
+                              buildDataBlock(BingoDataType.steps, health.steps!, theme),
+                              buildDataBlock(BingoDataType.calories, health.calories!, theme),
+                              buildDataBlock(BingoDataType.distance, health.distance!, theme),
+                              buildDataBlock(BingoDataType.water, health.water!, theme),
+                            ],
+                          ),
                         )
                       else
                         Row(

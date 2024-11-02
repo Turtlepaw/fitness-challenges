@@ -5,5 +5,5 @@ String formatInt(int number) {
 }
 
 String formatNumber(num number) {
-  return NumberFormat.decimalPattern().format(number);
+  return NumberFormat.decimalPattern().format(number.toInt());
 }
