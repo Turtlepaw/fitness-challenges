@@ -179,13 +179,16 @@ class _SettingsPageState extends State<SettingsPage> {
                             child: const Text("Logout"),
                           ),
                           const SizedBox(width: 4),
-                          IconButton.filled(
-                              onPressed: _openProfileEditor,
-                              tooltip: "Edit Profile",
-                              icon: Icon(
-                                Symbols.edit_rounded,
-                                color: theme.colorScheme.onPrimary,
-                              )),
+                          Tooltip(
+                            message: "Edit Profile",
+                            child: IconButton.filled(
+                                onPressed: _openProfileEditor,
+                                tooltip: "Edit Profile",
+                                icon: Icon(
+                                  Symbols.edit_rounded,
+                                  color: theme.colorScheme.onPrimary,
+                                )),
+                          ),
                         ],
                       )
                     ],
@@ -313,7 +316,7 @@ class _SettingsPageState extends State<SettingsPage> {
                           ),
                           const SizedBox(width: 5),
                           Tooltip(
-                            message: "Refresh",
+                            message: "Sync",
                             child: IconButton.outlined(
                                 onPressed: () async {
                                   setState(() {

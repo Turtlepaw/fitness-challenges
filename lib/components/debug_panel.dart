@@ -89,15 +89,18 @@ class DebugPanel extends StatelessWidget {
         ],
         builder: (BuildContext context, MenuController controller,
             Widget? child) {
-          return IconButton(
-            onPressed: () {
-              if (controller.isOpen) {
-                controller.close();
-              } else {
-                controller.open();
-              }
-            },
-            icon: const Icon(Icons.more_vert),
+          return Tooltip(
+            message: "App Options",
+            child: IconButton(
+              onPressed: () {
+                if (controller.isOpen) {
+                  controller.close();
+                } else {
+                  controller.open();
+                }
+              },
+              icon: const Icon(Icons.more_vert),
+            ),
           );
         },
       ),

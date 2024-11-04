@@ -140,11 +140,14 @@ class _ChallengeDialogState extends State<ChallengeDialog> {
     return Dialog.fullscreen(
       child: Scaffold(
         appBar: AppBar(
-          leading: IconButton(
-            icon: const Icon(Icons.close),
-            onPressed: () {
-              Navigator.of(context).pop();
-            },
+          leading: Tooltip(
+            message: "Close",
+            child: IconButton(
+              icon: const Icon(Icons.close),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
           ),
           actions: [
             Padding(
@@ -289,15 +292,18 @@ class _ChallengeDialogState extends State<ChallengeDialog> {
                 ],
                 builder: (BuildContext context, MenuController controller,
                     Widget? child) {
-                  return IconButton(
-                    onPressed: () {
-                      if (controller.isOpen) {
-                        controller.close();
-                      } else {
-                        controller.open();
-                      }
-                    },
-                    icon: const Icon(Icons.more_vert),
+                  return Tooltip(
+                    message: "Options",
+                    child: IconButton(
+                      onPressed: () {
+                        if (controller.isOpen) {
+                          controller.close();
+                        } else {
+                          controller.open();
+                        }
+                      },
+                      icon: const Icon(Icons.more_vert),
+                    ),
                   );
                 },
               ),

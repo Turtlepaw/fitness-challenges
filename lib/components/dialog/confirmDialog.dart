@@ -26,7 +26,7 @@ class _ConfirmDialogState extends State<ConfirmDialog> {
       true => theme.colorScheme.error,
     };
     final destructiveButtonStyle = ButtonStyle(
-        backgroundColor: WidgetStateProperty.all(theme.colorScheme.error  )
+        backgroundColor: WidgetStateProperty.all(theme.colorScheme.error)
     );
 
     return Dialog(
@@ -87,7 +87,7 @@ class _ConfirmDialogState extends State<ConfirmDialog> {
                 width: 15,
                 height: 15,
                 child: CircularProgressIndicator(strokeCap: StrokeCap.round, strokeWidth: 3, color: theme.colorScheme.onPrimary,),
-              ) : Text("Confirm", style: theme.textTheme.labelLarge?.copyWith(color: widget.isDestructive ? theme.colorScheme.onError : theme.colorScheme.onSecondaryContainer),))
+              ) : Text("Confirm", style: theme.textTheme.labelLarge?.copyWith(color: widget.isDestructive ? theme.colorScheme.onError : theme.colorScheme.onPrimary),))
             ],
           )
         ],

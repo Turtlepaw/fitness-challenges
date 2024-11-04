@@ -16,6 +16,9 @@
 - Obtain app logs (More [three dots] -> 🪲 Debug Logs)
   - ⚠️ May contain sensitive information!
 
+##### Small changes
+- Improve accessibility by adding tooltips to more buttons
+
 #### Internal
 
 We've really cleaned up a lot of code, and added the [`SharedLogger`](/lib/utils/sharedLogger.dart) which allows logs to be exported. As always, we've also fixed a bunch of bugs, and you'll notice several improvements throughout the app.
