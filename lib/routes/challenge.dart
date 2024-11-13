@@ -4,6 +4,7 @@ import 'package:collection/collection.dart';
 import 'package:confetti/confetti.dart';
 import 'package:dynamic_color/dynamic_color.dart';
 import 'package:fitness_challenges/components/loader.dart';
+import 'package:fitness_challenges/constants.dart';
 import 'package:fitness_challenges/routes/challenges/bingo.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_advanced_avatar/flutter_advanced_avatar.dart';
@@ -330,14 +331,6 @@ class _ChallengeDialogState extends State<ChallengeDialog> {
     );
   }
 
-  String trimString(String input, int maxCharacters) {
-    if (input.length <= maxCharacters) {
-      return input;
-    } else {
-      return '${input.substring(0, maxCharacters - 3)}...';
-    }
-  }
-
   Path drawStar(Size size) {
     // Method to convert degree to radians
     double degToRad(double deg) => deg * (pi / 180.0);
@@ -396,7 +389,8 @@ class _ChallengeDialogState extends State<ChallengeDialog> {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 8, vertical: 1),
                       child: Text(
-                        user.getStringValue("username", "Unknown"),
+                          trimString(user.getStringValue("username", "Unknown"),
+                              MAX_USERNAME_LENGTH),
                         // Substitute for user.getStringValue("username")
                         style: theme.textTheme.headlineSmall,
                       ),
@@ -584,7 +578,7 @@ class _ChallengeDialogState extends State<ChallengeDialog> {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final maxUsernameLength = (constraints.maxWidth / 30).floor();
+        final maxUsernameLength = (constraints.maxWidth / MAX_USERNAME_LENGTH).floor();
 
         return Container(
           padding: const EdgeInsets.all(10.0),

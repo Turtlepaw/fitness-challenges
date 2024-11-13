@@ -1,4 +1,5 @@
 import 'package:fitness_challenges/components/loader.dart';
+import 'package:fitness_challenges/components/privacy.dart';
 import 'package:fitness_challenges/constants.dart';
 import 'package:fitness_challenges/routes/profile.dart';
 import 'package:fitness_challenges/utils/bingo/data.dart';
@@ -143,208 +144,269 @@ class _SettingsPageState extends State<SettingsPage> {
         title: const Text('Settings'),
         actions: const [DebugPanel()],
       ),
-      body: ListView(
-        children: [
-          buildCard(
-            [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
+      body: CustomScrollView(
+        slivers: [
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.only(left: 20, top: 5, bottom: 10),
+              child: Row(
                 children: [
-                  AdvancedAvatar(
-                    name: pb.authStore.model?.getStringValue("username"),
-                    style: theme.textTheme.titleMedium
-                        ?.copyWith(color: theme.colorScheme.onPrimary),
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.primary,
-                      borderRadius: BorderRadius.circular(50),
-                    ),
-                    size: 50,
+                  Icon(
+                    Symbols.person_rounded,
+                    color: theme.colorScheme.onSurface,
                   ),
-                  const SizedBox(
-                    width: 20,
-                  ),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        "Logged in as $username",
-                        style: theme.textTheme.titleMedium,
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 5),
-                      Row(
-                        children: [
-                          FilledButton(
-                            onPressed: _requestLogoutConfirmation,
-                            child: const Text("Logout"),
-                          ),
-                          const SizedBox(width: 4),
-                          Tooltip(
-                            message: "Edit Profile",
-                            child: IconButton.filled(
-                                onPressed: _openProfileEditor,
-                                tooltip: "Edit Profile",
-                                icon: Icon(
-                                  Symbols.edit_rounded,
-                                  color: theme.colorScheme.onPrimary,
-                                )),
-                          ),
-                        ],
-                      )
-                    ],
-                  ),
+                  const SizedBox(width: 10),
+                  Text("Your Profile", style: theme.textTheme.titleLarge)
                 ],
               ),
-            ],
+            ),
           ),
-          // Health panel or loading box
-          SizedBox(
-            // Replace Expanded with SizedBox
-            child: AnimatedSwitcher(
-              duration: const Duration(milliseconds: 150),
-              transitionBuilder: (Widget child, Animation<double> animation) {
-                return FadeTransition(opacity: animation, child: child);
-              },
-              child: _isLoading
-                  ? LayoutBuilder(builder: (context, constraints) {
-                      final width = getWidth(constraints);
-                      return SizedBox(
-                        width: width,
-                        child: Column(
+          SliverToBoxAdapter(
+            child: buildCard(
+              [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    AdvancedAvatar(
+                      name: pb.authStore.model?.getStringValue("username"),
+                      style: theme.textTheme.titleMedium
+                          ?.copyWith(color: theme.colorScheme.onPrimary),
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.primary,
+                        borderRadius: BorderRadius.circular(50),
+                      ),
+                      size: 50,
+                    ),
+                    const SizedBox(width: 20),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          "Logged in as $username",
+                          style: theme.textTheme.titleMedium,
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 5),
+                        Row(
                           children: [
-                            Padding(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 14, vertical: 6),
-                              child: LoadingBox(
-                                height: 195,
-                                width: MediaQuery.of(context).size.width,
-                                radius: 12,
+                            FilledButton(
+                              onPressed: _requestLogoutConfirmation,
+                              child: const Text("Logout"),
+                            ),
+                            const SizedBox(width: 4),
+                            Tooltip(
+                              message: "Edit Profile",
+                              child: IconButton.filled(
+                                  onPressed: _openProfileEditor,
+                                  tooltip: "Edit Profile",
+                                  icon: Icon(
+                                    Symbols.edit_rounded,
+                                    color: theme.colorScheme.onPrimary,
+                                  )),
+                            ),
+                          ],
+                        )
+                      ],
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.only(left: 20, top: 15, bottom: 10),
+              child: Row(
+                children: [
+                  Icon(
+                    Symbols.ecg_heart_rounded,
+                    color: theme.colorScheme.onSurface,
+                  ),
+                  const SizedBox(width: 10),
+                  Text("Health Data", style: theme.textTheme.titleLarge)
+                ],
+              ),
+            ),
+          ),
+          SliverToBoxAdapter(
+            child: SizedBox(
+              child: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 150),
+                transitionBuilder: (Widget child, Animation<double> animation) {
+                  return FadeTransition(opacity: animation, child: child);
+                },
+                child: _isLoading
+                    ? LayoutBuilder(builder: (context, constraints) {
+                  final width = getWidth(constraints);
+                  return SizedBox(
+                    width: width,
+                    child: Column(
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 14, vertical: 6),
+                          child: LoadingBox(
+                            height: 195,
+                            width: MediaQuery.of(context).size.width,
+                            radius: 12,
+                          ),
+                        )
+                      ],
+                    ),
+                  );
+                })
+                    : buildCard([
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 15)
+                        .copyWith(bottom: 5),
+                    child: Text(
+                      _isAvailable
+                          ? (healthType != null
+                          ? "Health connected via ${HealthTypeManager.formatType(healthType)}"
+                          : "Connect a health platform")
+                          : "Health unavailable",
+                      style: theme.textTheme.titleLarge,
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                  const SizedBox(height: 5),
+                  if (healthType == null)
+                    const Text(
+                      "Connect a health platform to create and join challenges",
+                      textAlign: TextAlign.center,
+                    )
+                  else if (health.steps != null)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 10),
+                      child: Wrap(
+                        spacing: 5,
+                        runSpacing: 5,
+                        alignment: WrapAlignment.start,
+                        children: [
+                          buildDataBlock(
+                              BingoDataType.steps, health.steps!, theme),
+                          buildDataBlock(BingoDataType.calories,
+                              health.calories!, theme),
+                          buildDataBlock(BingoDataType.distance,
+                              health.distance!, theme),
+                          buildDataBlock(
+                              BingoDataType.water, health.water!, theme),
+                        ],
+                      ),
+                    )
+                  else
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Symbols.refresh_rounded,
+                          color: theme.colorScheme.error,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          getErrorText(),
+                          style: theme.textTheme.bodyLarge
+                              ?.copyWith(color: theme.colorScheme.error),
+                        )
+                      ],
+                    ),
+                  const SizedBox(height: 5),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      FilterChip(
+                        onDeleted: healthType != null
+                            ? () {
+                          setState(() {
+                            _isLoading = true;
+                          });
+                          HealthTypeManager().clearHealthType();
+                          setState(() {
+                            _isLoading = false;
+                            healthType = null;
+                          });
+                        }
+                            : null,
+                        onSelected: (_isAvailable
+                            ? _connectSystemHealthPlatform
+                            : null),
+                        label: Text(health.capabilities
+                            .contains(HealthType.systemManaged)
+                            ? ((health.isConnected &&
+                            healthType == HealthType.systemManaged)
+                            ? "Connected"
+                            : HealthTypeManager.formatType(
+                            HealthType.systemManaged))
+                            : "Unavailable"),
+                        selected: healthType == HealthType.systemManaged,
+                        avatar: _isSysHealthLoading &&
+                            health.capabilities
+                                .contains(HealthType.systemManaged)
+                            ? const CircularProgressIndicator(
+                          strokeWidth: 3,
+                          strokeCap: StrokeCap.round,
+                        )
+                            : null,
+                        showCheckmark: !_isSysHealthLoading,
+                      ),
+                      const SizedBox(width: 5),
+                      Tooltip(
+                        message: "Sync",
+                        child: IconButton.outlined(
+                            onPressed: () async {
+                              setState(() {
+                                _isRefreshing = true;
+                              });
+                              await health.fetchHealthData();
+                              await health.checkConnectionState();
+                              setState(() {
+                                _isRefreshing = false;
+                              });
+                            },
+                            icon: _isRefreshing
+                                ? const SizedBox(
+                              width: 15,
+                              height: 15,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                strokeCap: StrokeCap.round,
                               ),
                             )
-                          ],
-                        ),
-                      );
-                    })
-                  : buildCard([
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 15).copyWith(bottom: 5),
-                        child: Text(
-                          _isAvailable
-                              ? (healthType != null
-                              ? "Health connected via ${HealthTypeManager.formatType(healthType)}"
-                              : "Connect a health platform")
-                              : "Health unavailable",
-                          style: theme.textTheme.titleLarge,
-                          textAlign: TextAlign.center,
-                        ),
-                      ),
-                      const SizedBox(height: 5),
-                      if (healthType == null)
-                        const Text(
-                          "Connect a health platform to create and join challenges",
-                          textAlign: TextAlign.center,
-                        )
-                      else if (health.steps != null)
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 10),
-                          child: Wrap(
-                            spacing: 5, // Space between items horizontally
-                            runSpacing: 5, // Set this to 0 to minimize space between rows
-                            alignment: WrapAlignment.start, // Align items at the start
-                            children: [
-                              buildDataBlock(BingoDataType.steps, health.steps!, theme),
-                              buildDataBlock(BingoDataType.calories, health.calories!, theme),
-                              buildDataBlock(BingoDataType.distance, health.distance!, theme),
-                              buildDataBlock(BingoDataType.water, health.water!, theme),
-                            ],
-                          ),
-                        )
-                      else
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
+                                : Icon(
                               Symbols.refresh_rounded,
-                              color: theme.colorScheme.error,
-                            ),
-                            const SizedBox(width: 8),
-                            Text(
-                              getErrorText(),
-                              style: theme.textTheme.bodyLarge
-                                  ?.copyWith(color: theme.colorScheme.error),
-                            )
-                          ],
-                        ),
-                      const SizedBox(height: 5),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          FilterChip(
-                            onDeleted: healthType != null
-                                ? () {
-                                    setState(() {
-                                      _isLoading = true;
-                                    });
-                                    HealthTypeManager().clearHealthType();
-                                    setState(() {
-                                      _isLoading = false;
-                                      healthType = null;
-                                    });
-                                  }
-                                : null,
-                            onSelected: (_isAvailable
-                                ? _connectSystemHealthPlatform
-                                : null),
-                            label: Text(health.capabilities
-                                    .contains(HealthType.systemManaged)
-                                ? ((health.isConnected &&
-                                        healthType == HealthType.systemManaged)
-                                    ? "Connected"
-                                    : HealthTypeManager.formatType(
-                                        HealthType.systemManaged))
-                                : "Unavailable"),
-                            selected: healthType == HealthType.systemManaged,
-                            avatar: _isSysHealthLoading &&
-                                    health.capabilities
-                                        .contains(HealthType.systemManaged)
-                                ? const CircularProgressIndicator(
-                                    strokeWidth: 3,
-                                    strokeCap: StrokeCap.round,
-                                  )
-                                : null,
-                            showCheckmark: !_isSysHealthLoading,
-                          ),
-                          const SizedBox(width: 5),
-                          Tooltip(
-                            message: "Sync",
-                            child: IconButton.outlined(
-                                onPressed: () async {
-                                  setState(() {
-                                    _isRefreshing = true;
-                                  });
-                                  await health.fetchHealthData();
-                                  await health.checkConnectionState();
-                                  setState(() {
-                                    _isRefreshing = false;
-                                  });
-                                },
-                                icon: _isRefreshing
-                                    ? const SizedBox(
-                                        width: 15,
-                                        height: 15,
-                                        child: CircularProgressIndicator(
-                                          strokeWidth: 2,
-                                          strokeCap: StrokeCap.round,
-                                        ),
-                                      )
-                                    : Icon(
-                                        Symbols.refresh_rounded,
-                                        color: theme.colorScheme.onSurface,
-                                      )),
-                          )
-                        ],
+                              color: theme.colorScheme.onSurface,
+                            )),
                       )
-                    ], height: 195),
+                    ],
+                  )
+                ], height: 195),
+              ),
+            ),
+          ),
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.only(left: 20, top: 15, bottom: 10),
+              child: Row(
+                children: [
+                  Icon(
+                    Symbols.visibility_rounded,
+                    color: theme.colorScheme.onSurface,
+                  ),
+                  const SizedBox(width: 10),
+                  Text("Privacy", style: theme.textTheme.titleLarge)
+                ],
+              ),
+            ),
+          ),
+          SliverToBoxAdapter(
+            child: SizedBox(
+              width: MediaQuery.of(context).size.width,
+              child: const PrivacyControls(),
+            ),
+          ),
+          const SliverToBoxAdapter(
+            child: SizedBox(
+              height: 15,
             ),
           ),
         ],
@@ -354,8 +416,10 @@ class _SettingsPageState extends State<SettingsPage> {
 
   Widget buildDataBlock(BingoDataType type, num amount, ThemeData theme) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 5), // Minimal padding
-      margin: const EdgeInsets.all(2), // Minimal margin
+      padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
+      // Minimal padding
+      margin: const EdgeInsets.all(2),
+      // Minimal margin
       decoration: BoxDecoration(
           color: theme.colorScheme.surfaceContainerLow,
           borderRadius: BorderRadius.circular(15),
@@ -364,8 +428,7 @@ class _SettingsPageState extends State<SettingsPage> {
             width: 1.1,
             style: BorderStyle.solid,
             strokeAlign: BorderSide.strokeAlignCenter,
-          )
-      ),
+          )),
       child: Row(
         mainAxisSize: MainAxisSize.min, // Minimize row size
         mainAxisAlignment: MainAxisAlignment.center,

@@ -13,3 +13,4 @@ const types = [
 var permissions = types.map((type) => HealthDataAccess.READ).toList();
 
 final pbDateFormat = DateFormat('yyyy-MM-dd HH:mm:ss');
+const MAX_USERNAME_LENGTH = 30;

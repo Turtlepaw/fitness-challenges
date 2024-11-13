@@ -305,6 +305,12 @@ class HealthManager with ChangeNotifier {
         return 0;
     }
   }
+
+   num getActiveMinutes(Health health){
+    DateTime now = DateTime.now();
+    DateTime yesterday = now.subtract(const Duration(days: 1));
+    return 0;
+   }
 }
 
 enum HealthType { systemManaged, watch }

@@ -340,9 +340,10 @@ void main() async {
       frequency: const Duration(hours: 1),
       initialDelay: const Duration(minutes: 15));
   logger.debug("Background sync registered");
-  if (pb.authStore.isValid)
+  if (pb.authStore.isValid) {
     Workmanager().registerOneOffTask(
         "background-sync-one-time", "BackgroundSyncOneTime");
+  }
 
   if (kReleaseMode) {
     debugPrint = (String? message, {int? wrapWidth}) {

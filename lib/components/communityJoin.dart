@@ -1,6 +1,6 @@
+import 'package:fitness_challenges/components/userPreview.dart';
 import 'package:fitness_challenges/routes/join.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_advanced_avatar/flutter_advanced_avatar.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
 import 'package:pocketbase/pocketbase.dart';
 import 'package:provider/provider.dart';
@@ -89,45 +89,8 @@ class _CommunityJoinDialogState extends State<CommunityJoinDialog> {
             style: theme.textTheme.bodyLarge,
           ),
           const SizedBox(height: 5),
-          IntrinsicWidth(
-            child: Card.outlined(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 20),
-                child: Column(
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        AdvancedAvatar(
-                          name: pb.authStore.model?.getStringValue("username"),
-                          style: theme.textTheme.titleMedium
-                              ?.copyWith(color: theme.colorScheme.onPrimary),
-                          decoration: BoxDecoration(
-                            color: theme.colorScheme.primary,
-                            borderRadius: BorderRadius.circular(50),
-                          ),
-                          size: 35,
-                        ),
-                        const SizedBox(
-                          width: 20,
-                        ),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              (pb.authStore.model as RecordModel)
-                                  .getStringValue("username", "unknown"),
-                              style: theme.textTheme.headlineSmall,
-                              textAlign: TextAlign.center,
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ),
+          const IntrinsicWidth(
+            child: UserPreview(),
           ),
           const SizedBox(height: 10),
           Row(
