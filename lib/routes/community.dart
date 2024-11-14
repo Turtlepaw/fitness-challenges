@@ -104,8 +104,12 @@ class _CommunityPageState extends State<CommunityPage> {
                     PrivacyControls(
                       onChanged: (control, value){
                         if(control == PrivacyControl.hideUsernameInCommunity){
+                          print("Hide username in community changed to $value");
                           setState(() {
                             hideUsername = value;
+                          });
+                          setState(() {
+
                           });
                         }
                       },

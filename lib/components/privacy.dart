@@ -81,7 +81,6 @@ class _PrivacyControlsState extends State<PrivacyControls> {
   }
 
   void _updatePrivacyControl(PrivacyControl control, bool value) {
-    value = !value;
     if (widget.onChanged != null) {
       widget.onChanged!(control, value);
     }
@@ -99,6 +98,8 @@ class _PrivacyControlsState extends State<PrivacyControls> {
     return SizedBox(
       width: 410,
       child: Card(
+        elevation: 0,
+          color: Theme.of(context).colorScheme.surfaceContainer,
           clipBehavior: Clip.hardEdge,
           child: ListTile(
               contentPadding:
@@ -106,10 +107,14 @@ class _PrivacyControlsState extends State<PrivacyControls> {
               leading: Icon(icon),
               title: Text(name),
               subtitle: Text(description),
-              onTap: () => onPressed(value), // Remove ! from !value
+              onTap: () {
+                onPressed(!value);
+              }, // Remove ! from !value
               trailing: Switch(
                 value: value,
-                onChanged: (value) => onPressed(!value),
+                onChanged: (value) {
+                  onPressed(value);
+                },
               ))),
     );
   }

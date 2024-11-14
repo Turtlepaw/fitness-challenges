@@ -4,9 +4,9 @@ import 'package:flutter_advanced_avatar/flutter_advanced_avatar.dart';
 import 'package:pocketbase/pocketbase.dart';
 import 'package:provider/provider.dart';
 
-String getUsernameFromUser(RecordModel user){
+String getUsernameFromUser(RecordModel user, {bool? forceRandomUsername}){
   final hideUsername = user.getBoolValue("hideUsernameInCommunity", false);
-  if(hideUsername){
+  if(forceRandomUsername == true || (hideUsername && forceRandomUsername == null)){
     return "User ${user.id}";
   } else {
     return user.getStringValue("username", "User ${user.id}");
@@ -31,7 +31,7 @@ class UserPreview extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 AdvancedAvatar(
-                  name: getUsernameFromUser(pb.authStore.model!),
+                  name: getUsernameFromUser(pb.authStore.model!, forceRandomUsername: forceRandomUsername),
                   style: theme.textTheme.titleMedium
                       ?.copyWith(color: theme.colorScheme.onPrimary),
                   decoration: BoxDecoration(
@@ -47,7 +47,7 @@ class UserPreview extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      trimString(getUsernameFromUser(pb.authStore.model!), 15),
+                      trimString(getUsernameFromUser(pb.authStore.model!, forceRandomUsername: forceRandomUsername), 15),
                       style: theme.textTheme.headlineSmall,
                       textAlign: TextAlign.center,
                     ),
