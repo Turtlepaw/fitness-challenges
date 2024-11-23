@@ -8,8 +8,9 @@ const hideUsername = "hide_username";
 
 class PrivacyControls extends StatefulWidget {
   final void Function(PrivacyControl, bool)? onChanged;
+  final List<PrivacyControl> showOnly;
 
-  const PrivacyControls({this.onChanged, super.key});
+  const PrivacyControls({this.onChanged, this.showOnly = PrivacyControl.values, super.key});
 
   @override
   _PrivacyControlsState createState() => _PrivacyControlsState();
@@ -44,37 +45,41 @@ class _PrivacyControlsState extends State<PrivacyControls> {
 
   void setFormStates(RecordModel model){
     setState(() {
-      form.control(PrivacyControl.hideUsernameInCommunity.name).value = model.getBoolValue(
-          PrivacyControl.hideUsernameInCommunity.name,
-          false
-      );
-      form.control(PrivacyControl.hideUsernameInPrivateChallenges.name).value = model.getBoolValue(
-          PrivacyControl.hideUsernameInPrivateChallenges.name,
-          false
-      );
+      List<PrivacyControl> controls = [
+        PrivacyControl.hideUsernameInCommunity,
+        PrivacyControl.hideUsernameInPrivateChallenges,
+      ];
+
+      for (var control in controls) {
+        final value = model.getBoolValue(control.name, false);
+        if (widget.onChanged != null) {
+          widget.onChanged!(control, value);
+        }
+      }
     });
   }
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return ReactiveForm(
       formGroup: form,
       child: Column(
         children: [
-          buildPrivacyControl(
+          if(widget.showOnly.contains(PrivacyControl.hideUsernameInCommunity)) buildPrivacyControl(
               "Hide username in community",
               "Display your user ID instead of your username in the community",
               Symbols.disabled_visible_rounded,
               form.control(PrivacyControl.hideUsernameInCommunity.name).value,
                   (value) => _updatePrivacyControl(
-                  PrivacyControl.hideUsernameInCommunity, value)),
-          buildPrivacyControl(
+                  PrivacyControl.hideUsernameInCommunity, value), theme),
+          if(widget.showOnly.contains(PrivacyControl.hideUsernameInPrivateChallenges)) buildPrivacyControl(
               "Hide username in private challenges",
               "Display your user ID instead of your username in the invite only challenges",
               Symbols.shield_lock_rounded,
               form.control(PrivacyControl.hideUsernameInPrivateChallenges.name).value,
                   (value) => _updatePrivacyControl(
-                  PrivacyControl.hideUsernameInPrivateChallenges, value)),
+                  PrivacyControl.hideUsernameInPrivateChallenges, value), theme),
         ],
       ),
     );
@@ -94,12 +99,22 @@ class _PrivacyControlsState extends State<PrivacyControls> {
   }
 
   Widget buildPrivacyControl(String name, String description, IconData icon,
-      bool value, void Function(bool) onPressed) {
+      bool value, void Function(bool) onPressed, ThemeData theme) {
     return SizedBox(
       width: 410,
-      child: Card(
-        elevation: 0,
-          color: Theme.of(context).colorScheme.surfaceContainer,
+      child: Container(
+        margin: const EdgeInsets.symmetric(vertical: 5),
+          decoration: BoxDecoration(
+              color: theme.colorScheme.surfaceContainer,
+              borderRadius: BorderRadius.circular(15),
+              border: Border.all(
+                color: theme.colorScheme.surfaceContainerHighest,
+                width: 1.1,
+                style: BorderStyle.solid,
+                strokeAlign: BorderSide.strokeAlignCenter,
+              )),
+        //elevation: 0,
+          //color: Theme.of(context).colorScheme.surfaceContainer,
           clipBehavior: Clip.hardEdge,
           child: ListTile(
               contentPadding:

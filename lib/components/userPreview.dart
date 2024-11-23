@@ -4,7 +4,7 @@ import 'package:flutter_advanced_avatar/flutter_advanced_avatar.dart';
 import 'package:pocketbase/pocketbase.dart';
 import 'package:provider/provider.dart';
 
-String getUsernameFromUser(RecordModel user, {bool? forceRandomUsername}){
+String getUsernameFromUser(RecordModel user, { bool? forceRandomUsername}){
   final hideUsername = user.getBoolValue("hideUsernameInCommunity", false);
   if(forceRandomUsername == true || (hideUsername && forceRandomUsername == null)){
     return "User ${user.id}";

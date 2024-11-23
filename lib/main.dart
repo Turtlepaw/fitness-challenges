@@ -509,6 +509,7 @@ class _HomePageState extends State<HomePage> {
 
   @override
   void initState() {
+    super.initState();
     pb = Provider.of<PocketBase>(context, listen: false);
   }
 

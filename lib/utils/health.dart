@@ -11,6 +11,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_health_connect/flutter_health_connect.dart';
 import 'package:flutter_wear_os_connectivity/flutter_wear_os_connectivity.dart';
 import 'package:health/health.dart';
+import 'package:pair/pair.dart';
 import 'package:pocketbase/pocketbase.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -130,7 +131,7 @@ class HealthManager with ChangeNotifier {
       if (!isAvailable) {
         logger.debug("Missing some health types");
         HealthTypeManager().clearHealthType();
-        if(context != null && context.mounted){
+        if (context != null && context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('Sync failed: Missing data types'),
@@ -140,36 +141,59 @@ class HealthManager with ChangeNotifier {
         return false;
       }
 
-      final hasPermissions = await Future.wait(types.map((type) async {
+      final permissions = await Future.wait(types.map((type) async {
         final hasPermission = await health
                 .hasPermissions([type], permissions: [HealthDataAccess.READ]) ??
             false;
         logger.debug(
             "Permission for $type is ${hasPermission ? 'granted ✅' : 'denied ❌'}");
-        return hasPermission;
-      })).then((results) => results.every((item) => item == true));
+        return Pair(type, hasPermission);
+      }));
 
-      if (hasPermissions == true) {
+      if (permissions.any((item) => item.value == true)) {
         var now = DateTime.now();
         var midnight = DateTime(now.year, now.month, now.day);
         final startTime = midnight;
-        _steps = await Health().getTotalStepsInInterval(midnight, now);
-        _calories = await getDataFromType(startTime, HealthDataType.TOTAL_CALORIES_BURNED);
-        _water = await getDataFromType(startTime, HealthDataType.WATER);
-        _distance = await getDataFromType(startTime, HealthDataType.DISTANCE_DELTA);
+        if (permissions
+            .firstWhere((element) => element.key == HealthDataType.STEPS)
+            .value) {
+          _steps = await Health().getTotalStepsInInterval(midnight, now);
+        }
+        if (permissions
+            .firstWhere((element) =>
+                element.key == HealthDataType.TOTAL_CALORIES_BURNED)
+            .value) {
+          _calories = await getDataFromType(
+              startTime, HealthDataType.TOTAL_CALORIES_BURNED);
+        }
+        if (permissions
+            .firstWhere((element) => element.key == HealthDataType.WATER)
+            .value) {
+          _water = await getDataFromType(startTime, HealthDataType.WATER);
+        }
+        if (permissions
+            .firstWhere(
+                (element) => element.key == HealthDataType.DISTANCE_DELTA)
+            .value) {
+          _distance =
+              await getDataFromType(startTime, HealthDataType.DISTANCE_DELTA);
+        }
         _isConnected = true;
         notifyListeners(); // Notify listeners about the change
-        logger.debug("Successfully synced:\n\n👟 Steps: $steps\n🔥 Calories: $calories\n💦 Water: $water\n🏃 Distance: $distance");
+        logger.debug(
+            "Successfully synced:\n\n👟 Steps: $steps\n🔥 Calories: $calories\n💦 Water: $water\n🏃 Distance: $distance");
       } else {
         logger.debug("No health permissions, sync failed");
         HealthTypeManager().clearHealthType();
-        if(context != null && context.mounted){
+        if (context != null && context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: const Text('Sync failed: Missing permissions'),
-              action: SnackBarAction(label: "Fix", onPressed: () async {
-                await HealthConnectFactory.openHealthConnectSettings();
-              }),
+              action: SnackBarAction(
+                  label: "Fix",
+                  onPressed: () async {
+                    await HealthConnectFactory.openHealthConnectSettings();
+                  }),
             ),
           );
         }
@@ -306,11 +330,11 @@ class HealthManager with ChangeNotifier {
     }
   }
 
-   num getActiveMinutes(Health health){
+  num getActiveMinutes(Health health) {
     DateTime now = DateTime.now();
     DateTime yesterday = now.subtract(const Duration(days: 1));
     return 0;
-   }
+  }
 }
 
 enum HealthType { systemManaged, watch }
