@@ -660,66 +660,9 @@ class _HomePageState extends State<HomePage> {
           padding: const EdgeInsets.symmetric(horizontal: 10),
           child: Column(
             children: [
-              Card.filled(
-                  clipBehavior: Clip.hardEdge,
-                  child: InkWell(
-                    onTap: () {
-                      _showCreateModal(context);
-                    },
-                    child: Container(
-                        padding: const EdgeInsets.symmetric(
-                            vertical: 10, horizontal: 10),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(
-                              vertical: 5, horizontal: 10),
-                          child: Row(
-                            children: [
-                              const Icon(
-                                Symbols.draw_rounded,
-                                size: 30,
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.only(left: 15),
-                                child: Text(
-                                  "Create a challenge",
-                                  style: theme.textTheme.titleLarge,
-                                ),
-                              )
-                            ],
-                          ),
-                        )),
-                  )),
-              Card.filled(
-                clipBehavior: Clip.hardEdge,
-                child: InkWell(
-                  onTap: () {
-                    _showJoinModal(context);
-                  },
-                  child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          vertical: 10, horizontal: 10),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                            vertical: 5, horizontal: 10),
-                        child: Row(
-                          children: [
-                            const Icon(
-                              Symbols.group_add_rounded,
-                              size: 30,
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.only(left: 15),
-                              child: Text(
-                                "Join a challenge",
-                                style: theme.textTheme.titleLarge,
-                              ),
-                            )
-                          ],
-                        ),
-                      )),
-                ),
-              ),
-              const SizedBox(height: 20),
+              buildSheetAction(Symbols.draw_rounded, "Create a challenge", theme),
+              buildSheetAction(Symbols.group_add_rounded, "Join a challenge", theme),
+              const SizedBox(height: 10),
               TextButton(
                 onPressed: () async {
                   await challengeProvider.reloadChallenges(context);
@@ -743,5 +686,51 @@ class _HomePageState extends State<HomePage> {
             ],
           ))
     ]);
+  }
+
+  Widget buildSheetAction(IconData icon, String title, ThemeData theme) {
+    final mediaQuery = MediaQuery.of(context);
+
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 5),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(15),
+        border: Border.all(
+          color: theme.colorScheme.surfaceContainerHighest,
+          width: 1.1,
+          style: BorderStyle.solid,
+        ),
+      ),
+      child: Material(
+        color: theme.colorScheme.surfaceContainerHigh, // Background color
+        borderRadius: BorderRadius.circular(15), // Match border radius
+        clipBehavior: Clip.antiAlias, // Ensure ripple is clipped
+        child: InkWell(
+          onTap: () {
+            _showJoinModal(context);
+          },
+          child: SizedBox(
+            width: mediaQuery.size.width - 10,
+            height: 60,
+            child: Row(
+              children: [
+                const SizedBox(width: 30),
+                Icon(
+                  icon,
+                  size: 30,
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(left: 15),
+                  child: Text(
+                    title,
+                    style: theme.textTheme.titleLarge,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }

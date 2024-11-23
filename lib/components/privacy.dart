@@ -98,39 +98,48 @@ class _PrivacyControlsState extends State<PrivacyControls> {
     });
   }
 
-  Widget buildPrivacyControl(String name, String description, IconData icon,
-      bool value, void Function(bool) onPressed, ThemeData theme) {
+  Widget buildPrivacyControl(
+      String name,
+      String description,
+      IconData icon,
+      bool value,
+      void Function(bool) onPressed,
+      ThemeData theme,
+      ) {
     return SizedBox(
       width: 410,
       child: Container(
         margin: const EdgeInsets.symmetric(vertical: 5),
-          decoration: BoxDecoration(
-              color: theme.colorScheme.surfaceContainer,
-              borderRadius: BorderRadius.circular(15),
-              border: Border.all(
-                color: theme.colorScheme.surfaceContainerHighest,
-                width: 1.1,
-                style: BorderStyle.solid,
-                strokeAlign: BorderSide.strokeAlignCenter,
-              )),
-        //elevation: 0,
-          //color: Theme.of(context).colorScheme.surfaceContainer,
-          clipBehavior: Clip.hardEdge,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(15),
+          border: Border.all(
+            color: theme.colorScheme.surfaceContainerHighest,
+            width: 1.1,
+            style: BorderStyle.solid,
+          ),
+        ),
+        child: Material(
+          color: theme.colorScheme.surfaceContainer, // Background color
+          borderRadius: BorderRadius.circular(15),
+          clipBehavior: Clip.antiAlias, // Clip the ripple
           child: ListTile(
-              contentPadding:
-              const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
-              leading: Icon(icon),
-              title: Text(name),
-              subtitle: Text(description),
-              onTap: () {
-                onPressed(!value);
-              }, // Remove ! from !value
-              trailing: Switch(
-                value: value,
-                onChanged: (value) {
-                  onPressed(value);
-                },
-              ))),
+            contentPadding:
+            const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
+            leading: Icon(icon),
+            title: Text(name),
+            subtitle: Text(description),
+            onTap: () {
+              onPressed(!value);
+            },
+            trailing: Switch(
+              value: value,
+              onChanged: (value) {
+                onPressed(value);
+              },
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
