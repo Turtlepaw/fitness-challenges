@@ -660,8 +660,12 @@ class _HomePageState extends State<HomePage> {
           padding: const EdgeInsets.symmetric(horizontal: 10),
           child: Column(
             children: [
-              buildSheetAction(Symbols.draw_rounded, "Create a challenge", theme),
-              buildSheetAction(Symbols.group_add_rounded, "Join a challenge", theme),
+              buildSheetAction(Symbols.draw_rounded, "Create a challenge", theme, (){
+                _showCreateModal(context);
+              }),
+              buildSheetAction(Symbols.group_add_rounded, "Join a challenge", theme, (){
+                _showJoinModal(context);
+              }),
               const SizedBox(height: 10),
               TextButton(
                 onPressed: () async {
@@ -688,7 +692,7 @@ class _HomePageState extends State<HomePage> {
     ]);
   }
 
-  Widget buildSheetAction(IconData icon, String title, ThemeData theme) {
+  Widget buildSheetAction(IconData icon, String title, ThemeData theme, void Function() onPressed) {
     final mediaQuery = MediaQuery.of(context);
 
     return Container(
@@ -706,9 +710,7 @@ class _HomePageState extends State<HomePage> {
         borderRadius: BorderRadius.circular(15), // Match border radius
         clipBehavior: Clip.antiAlias, // Ensure ripple is clipped
         child: InkWell(
-          onTap: () {
-            _showJoinModal(context);
-          },
+          onTap: onPressed,
           child: SizedBox(
             width: mediaQuery.size.width - 10,
             height: 60,

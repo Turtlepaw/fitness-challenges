@@ -47,6 +47,12 @@ class _SettingsPageState extends State<SettingsPage> {
     _getHealthType();
   }
 
+  @override
+  void didChangeDependencies() {
+    pb.collection("users").authRefresh();
+    super.didChangeDependencies();
+  }
+
   void _getHealthType() async {
     var type = await HealthTypeManager().getHealthType();
 
@@ -241,154 +247,160 @@ class _SettingsPageState extends State<SettingsPage> {
                 },
                 child: _isLoading
                     ? LayoutBuilder(builder: (context, constraints) {
-                  final width = getWidth(constraints);
-                  return SizedBox(
-                    width: width,
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 14, vertical: 6),
-                          child: LoadingBox(
-                            height: 195,
-                            width: MediaQuery.of(context).size.width,
-                            radius: 12,
-                          ),
-                        )
-                      ],
-                    ),
-                  );
-                })
-                    : buildCard([
-                SizedBox(
-                  width: MediaQuery.of(context).size.width - 75,
-                  child: Column( children: [
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 15)
-                          .copyWith(bottom: 5),
-                      child: Text(
-                        _isAvailable
-                            ? (healthType != null
-                            ? "Health connected via ${HealthTypeManager.formatType(healthType)}"
-                            : "Connect a health platform")
-                            : "Health unavailable",
-                        style: theme.textTheme.titleLarge,
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                    const SizedBox(height: 5),
-                    if (healthType == null)
-                      const Text(
-                        "Connect a health platform to create and join challenges",
-                        textAlign: TextAlign.center,
-                      )
-                    else if (health.steps != null)
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 10),
-                        child: Wrap(
-                          spacing: 5,
-                          runSpacing: 5,
-                          alignment: WrapAlignment.start,
-                          children: [
-                            buildDataBlock(
-                                BingoDataType.steps, health.steps!, theme),
-                            buildDataBlock(BingoDataType.calories,
-                                health.calories!, theme),
-                            buildDataBlock(BingoDataType.distance,
-                                health.distance!, theme),
-                            buildDataBlock(
-                                BingoDataType.water, health.water!, theme),
-                          ],
-                        ),
-                      )
-                    else
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Symbols.refresh_rounded,
-                            color: theme.colorScheme.error,
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            getErrorText(),
-                            style: theme.textTheme.bodyLarge
-                                ?.copyWith(color: theme.colorScheme.error),
-                          )
-                        ],
-                      ),
-                    const SizedBox(height: 5),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        FilterChip(
-                          onDeleted: healthType != null
-                              ? () {
-                            setState(() {
-                              _isLoading = true;
-                            });
-                            HealthTypeManager().clearHealthType();
-                            setState(() {
-                              _isLoading = false;
-                              healthType = null;
-                            });
-                          }
-                              : null,
-                          onSelected: (_isAvailable
-                              ? _connectSystemHealthPlatform
-                              : null),
-                          label: Text(health.capabilities
-                              .contains(HealthType.systemManaged)
-                              ? ((health.isConnected &&
-                              healthType == HealthType.systemManaged)
-                              ? "Connected"
-                              : HealthTypeManager.formatType(
-                              HealthType.systemManaged))
-                              : "Unavailable"),
-                          selected: healthType == HealthType.systemManaged,
-                          avatar: _isSysHealthLoading &&
-                              health.capabilities
-                                  .contains(HealthType.systemManaged)
-                              ? const CircularProgressIndicator(
-                            strokeWidth: 3,
-                            strokeCap: StrokeCap.round,
-                          )
-                              : null,
-                          showCheckmark: !_isSysHealthLoading,
-                        ),
-                        const SizedBox(width: 5),
-                        Tooltip(
-                          message: "Sync",
-                          child: IconButton.outlined(
-                              onPressed: () async {
-                                setState(() {
-                                  _isRefreshing = true;
-                                });
-                                await health.fetchHealthData();
-                                await health.checkConnectionState();
-                                setState(() {
-                                  _isRefreshing = false;
-                                });
-                              },
-                              icon: _isRefreshing
-                                  ? const SizedBox(
-                                width: 15,
-                                height: 15,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  strokeCap: StrokeCap.round,
+                        final width = getWidth(constraints);
+                        return SizedBox(
+                          width: width,
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 14, vertical: 6),
+                                child: LoadingBox(
+                                  height: 195,
+                                  width: MediaQuery.of(context).size.width,
+                                  radius: 12,
                                 ),
                               )
-                                  : Icon(
-                                Symbols.refresh_rounded,
-                                color: theme.colorScheme.onSurface,
-                              )),
+                            ],
+                          ),
+                        );
+                      })
+                    : buildCard([
+                        SizedBox(
+                          width: MediaQuery.of(context).size.width - 75,
+                          child: Column(children: [
+                            Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 15)
+                                      .copyWith(bottom: 5),
+                              child: Text(
+                                _isAvailable
+                                    ? (healthType != null
+                                        ? "Health connected via ${HealthTypeManager.formatType(healthType)}"
+                                        : "Connect a health platform")
+                                    : "Health unavailable",
+                                style: theme.textTheme.titleLarge,
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                            const SizedBox(height: 5),
+                            if (healthType == null)
+                              const Text(
+                                "Connect a health platform to create and join challenges",
+                                textAlign: TextAlign.center,
+                              )
+                            else if (health.steps != null)
+                              Padding(
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 10),
+                                child: Wrap(
+                                  spacing: 5,
+                                  runSpacing: 5,
+                                  alignment: WrapAlignment.start,
+                                  children: [
+                                    buildDataBlock(BingoDataType.steps,
+                                        health.steps!, theme),
+                                    buildDataBlock(BingoDataType.calories,
+                                        health.calories!, theme),
+                                    buildDataBlock(BingoDataType.distance,
+                                        health.distance!, theme),
+                                    buildDataBlock(BingoDataType.water,
+                                        health.water!, theme),
+                                  ],
+                                ),
+                              )
+                            else
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Symbols.refresh_rounded,
+                                    color: theme.colorScheme.error,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    getErrorText(),
+                                    style: theme.textTheme.bodyLarge?.copyWith(
+                                        color: theme.colorScheme.error),
+                                  )
+                                ],
+                              ),
+                            const SizedBox(height: 5),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                FilterChip(
+                                  onDeleted: healthType != null
+                                      ? () {
+                                          setState(() {
+                                            _isLoading = true;
+                                          });
+                                          HealthTypeManager().clearHealthType();
+                                          setState(() {
+                                            _isLoading = false;
+                                            healthType = null;
+                                          });
+                                        }
+                                      : null,
+                                  onSelected: (_isAvailable
+                                      ? _connectSystemHealthPlatform
+                                      : null),
+                                  label: Text(health.capabilities
+                                          .contains(HealthType.systemManaged)
+                                      ? ((health.isConnected &&
+                                              healthType ==
+                                                  HealthType.systemManaged)
+                                          ? "Connected"
+                                          : HealthTypeManager.formatType(
+                                              HealthType.systemManaged))
+                                      : "Unavailable"),
+                                  selected:
+                                      healthType == HealthType.systemManaged,
+                                  avatar: _isSysHealthLoading &&
+                                          health.capabilities.contains(
+                                              HealthType.systemManaged)
+                                      ? const CircularProgressIndicator(
+                                          strokeWidth: 3,
+                                          strokeCap: StrokeCap.round,
+                                        )
+                                      : null,
+                                  showCheckmark: !_isSysHealthLoading,
+                                ),
+                                const SizedBox(width: 5),
+                                Tooltip(
+                                  message: "Sync",
+                                  child: IconButton.outlined(
+                                      onPressed: () async {
+                                        setState(() {
+                                          _isRefreshing = true;
+                                        });
+                                        await health.fetchHealthData();
+                                        await health.checkConnectionState();
+                                        setState(() {
+                                          _isRefreshing = false;
+                                        });
+                                      },
+                                      icon: _isRefreshing
+                                          ? const SizedBox(
+                                              width: 15,
+                                              height: 15,
+                                              child: CircularProgressIndicator(
+                                                strokeWidth: 2,
+                                                strokeCap: StrokeCap.round,
+                                              ),
+                                            )
+                                          : Icon(
+                                              Symbols.refresh_rounded,
+                                              color:
+                                                  theme.colorScheme.onSurface,
+                                            )),
+                                )
+                              ],
+                            )
+                          ]),
                         )
-                      ],
-                    )
-                  ]),
-                )], height: 195, widthFactor: 0.88),
+                      ], height: 195, widthFactor: 0.88),
               ),
             ),
           ),
@@ -408,11 +420,13 @@ class _SettingsPageState extends State<SettingsPage> {
             ),
           ),
           SliverToBoxAdapter(
+              child: Padding(
+            padding: const EdgeInsets.only(left: 15),
             child: SizedBox(
               width: MediaQuery.of(context).size.width,
               child: const PrivacyControls(),
             ),
-          ),
+          )),
           const SliverToBoxAdapter(
             child: SizedBox(
               height: 15,
@@ -473,15 +487,18 @@ class _SettingsPageState extends State<SettingsPage> {
     }
   }
 
-  Widget buildCard(List<Widget> children, {double? height, num widthFactor = 0.8}) {
+  Widget buildCard(List<Widget> children,
+      {double? height, num widthFactor = 0.8}) {
     return LayoutBuilder(builder: (context, constraints) {
-      final width = constraints.maxWidth * widthFactor; // Calculate adaptive width
+      final width =
+          constraints.maxWidth * widthFactor; // Calculate adaptive width
       final theme = Theme.of(context);
 
       return Align(
         alignment: Alignment.centerLeft,
         child: Container(
-          constraints: BoxConstraints(minHeight: height ?? 0.0, maxWidth: width),
+          constraints:
+              BoxConstraints(minHeight: height ?? 0.0, maxWidth: width),
           width: width,
           alignment: Alignment.centerLeft,
           decoration: BoxDecoration(
@@ -492,14 +509,14 @@ class _SettingsPageState extends State<SettingsPage> {
                 width: 1.1,
                 style: BorderStyle.solid,
                 strokeAlign: BorderSide.strokeAlignCenter,
-              )
-          ),
+              )),
           margin: const EdgeInsets.symmetric(horizontal: 15, vertical: 6),
           child: Padding(
             padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 10),
             child: Column(
               mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start, // Align content to the left
+              crossAxisAlignment: CrossAxisAlignment.start,
+              // Align content to the left
               mainAxisAlignment: MainAxisAlignment.center,
               children: children,
             ),

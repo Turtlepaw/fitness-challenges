@@ -144,7 +144,7 @@ class _JoinDialogState extends State<JoinDialog> {
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Icon(
-              Symbols.error_circle_rounded_error_rounded,
+              Symbols.error_circle_rounded,
               color: theme.colorScheme.error,
               size: 45,
             ),

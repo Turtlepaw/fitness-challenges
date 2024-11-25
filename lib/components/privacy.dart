@@ -9,8 +9,9 @@ const hideUsername = "hide_username";
 class PrivacyControls extends StatefulWidget {
   final void Function(PrivacyControl, bool)? onChanged;
   final List<PrivacyControl> showOnly;
+  final CrossAxisAlignment alignment;
 
-  const PrivacyControls({this.onChanged, this.showOnly = PrivacyControl.values, super.key});
+  const PrivacyControls({this.onChanged, this.showOnly = PrivacyControl.values, this.alignment = CrossAxisAlignment.start, super.key});
 
   @override
   _PrivacyControlsState createState() => _PrivacyControlsState();
@@ -33,6 +34,11 @@ class _PrivacyControlsState extends State<PrivacyControls> {
     if(pb.authStore.model != null) setFormStates(pb.authStore.model);
     setupRealtime();
     super.initState();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
   }
 
   void setupRealtime(){
@@ -65,23 +71,26 @@ class _PrivacyControlsState extends State<PrivacyControls> {
     return ReactiveForm(
       formGroup: form,
       child: Column(
-        children: [
-          if(widget.showOnly.contains(PrivacyControl.hideUsernameInCommunity)) buildPrivacyControl(
-              "Hide username in community",
-              "Display your user ID instead of your username in the community",
-              Symbols.disabled_visible_rounded,
-              form.control(PrivacyControl.hideUsernameInCommunity.name).value,
-                  (value) => _updatePrivacyControl(
-                  PrivacyControl.hideUsernameInCommunity, value), theme),
-          if(widget.showOnly.contains(PrivacyControl.hideUsernameInPrivateChallenges)) buildPrivacyControl(
-              "Hide username in private challenges",
-              "Display your user ID instead of your username in the invite only challenges",
-              Symbols.shield_lock_rounded,
-              form.control(PrivacyControl.hideUsernameInPrivateChallenges.name).value,
-                  (value) => _updatePrivacyControl(
-                  PrivacyControl.hideUsernameInPrivateChallenges, value), theme),
-        ],
-      ),
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.max,
+          crossAxisAlignment: widget.alignment,
+          children: [
+            if(widget.showOnly.contains(PrivacyControl.hideUsernameInCommunity)) buildPrivacyControl(
+                "Hide username in community",
+                "Display your user ID instead of your username in the community",
+                Symbols.disabled_visible_rounded,
+                form.control(PrivacyControl.hideUsernameInCommunity.name).value,
+                    (value) => _updatePrivacyControl(
+                    PrivacyControl.hideUsernameInCommunity, value), theme),
+            if(widget.showOnly.contains(PrivacyControl.hideUsernameInPrivateChallenges)) buildPrivacyControl(
+                "Hide username in private challenges",
+                "Display your user ID instead of your username in the invite only challenges",
+                Symbols.shield_lock_rounded,
+                form.control(PrivacyControl.hideUsernameInPrivateChallenges.name).value,
+                    (value) => _updatePrivacyControl(
+                    PrivacyControl.hideUsernameInPrivateChallenges, value), theme),
+          ],
+        ),
     );
   }
 
@@ -106,9 +115,8 @@ class _PrivacyControlsState extends State<PrivacyControls> {
       void Function(bool) onPressed,
       ThemeData theme,
       ) {
-    return SizedBox(
-      width: 410,
-      child: Container(
+    return Container(
+      constraints: const BoxConstraints(maxWidth: 405),
         margin: const EdgeInsets.symmetric(vertical: 5),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(15),
@@ -139,7 +147,6 @@ class _PrivacyControlsState extends State<PrivacyControls> {
             ),
           ),
         ),
-      ),
     );
   }
 }

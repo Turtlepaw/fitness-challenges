@@ -1,3 +1,4 @@
+import 'package:fitness_challenges/components/dialog/loadingDialog.dart';
 import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
 import 'package:provider/provider.dart';
@@ -27,8 +28,21 @@ class DebugPanel extends StatelessWidget {
               //?.copyWith(color: theme.colorScheme.onPrimary),
             ),
             onPressed: () async {
+              showDialog(
+                  context: context,
+                  builder: (context) => const LoadingDialog(
+                    isDestructive: false,
+                    icon: Icons.check_rounded,
+                    title: "Saving Logs",
+                    description: "This will take a few moments.",
+                  ),
+                  useSafeArea: false);
+
               final logger = Provider.of<SharedLogger>(context, listen: false);
               final file = await logger.exportLogsToFile("debug_logs");
+              Future.delayed(Duration.zero, () {
+                Navigator.of(context).pop();
+              });
               if(file == null) {
                 ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
                   content: Text("Failed to export logs"),

@@ -113,7 +113,7 @@ class _CreateDialogState extends State<CreateDialog> {
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Icon(Symbols.error_circle_rounded_error_rounded,
+            Icon(Symbols.error_circle_rounded,
               color: theme.colorScheme.error,
               size: 45,
             ),

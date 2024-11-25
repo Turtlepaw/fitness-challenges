@@ -102,6 +102,7 @@ class _CommunityPageState extends State<CommunityPage> {
                 Column(
                   children: [
                     PrivacyControls(
+                      alignment: CrossAxisAlignment.center,
                       showOnly: const [PrivacyControl.hideUsernameInCommunity],
                       onChanged: (control, value){
                         if(control == PrivacyControl.hideUsernameInCommunity){

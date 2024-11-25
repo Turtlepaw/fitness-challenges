@@ -15,6 +15,10 @@
   - 🕑 End challenge
 - Obtain app logs (More [three dots] -> 🪲 Debug Logs)
   - ⚠️ May contain sensitive information!
+- 🎨 New look for components in:
+  - Challenges
+  - Action Sheets
+  - Settings
 
 ##### Small changes
 - Improve accessibility by adding tooltips to more buttons
