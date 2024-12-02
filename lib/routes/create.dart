@@ -72,34 +72,36 @@ class _CreateDialogState extends State<CreateDialog> {
                 },
               ),
               actions: <Widget>[
-                ReactiveFormConsumer(builder: (context, form, widget) =>
-                _isCreating
-                    ? const Padding(
-                    padding: EdgeInsets.only(right: 25),
-                    child: SizedBox(
-                      width: 15,
-                      height: 15,
-                      child: CircularProgressIndicator(
-                          strokeCap: StrokeCap.round, strokeWidth: 3.2,),
-                    )
-                )
-                    : TextButton(
-                  onPressed: (form.valid && _isHealthAvailable)
-                      ? _handleCreate
-                      : null,
-                  child: const Text("Create"),
-                ),
+                ReactiveFormConsumer(
+                  builder: (context, form, widget) => _isCreating
+                      ? const Padding(
+                          padding: EdgeInsets.only(right: 25),
+                          child: SizedBox(
+                            width: 15,
+                            height: 15,
+                            child: CircularProgressIndicator(
+                              strokeCap: StrokeCap.round,
+                              strokeWidth: 3.2,
+                            ),
+                          ))
+                      : TextButton(
+                          onPressed: (form.valid && _isHealthAvailable)
+                              ? _handleCreate
+                              : null,
+                          child: const Text("Create"),
+                        ),
                 )
               ],
               title: const Text("Create Challenge"),
             ),
             body: _isDialogLoading
                 ? const Center(
-              child: CircularProgressIndicator(strokeCap: StrokeCap.round),)
-                : (
-                _isHealthAvailable ? CreateWidget() : _buildHealthUnavailable(
-                    context)
-            ),
+                    child:
+                        CircularProgressIndicator(strokeCap: StrokeCap.round),
+                  )
+                : (_isHealthAvailable
+                    ? CreateWidget()
+                    : _buildHealthUnavailable(context)),
           ),
         ));
   }
@@ -113,7 +115,8 @@ class _CreateDialogState extends State<CreateDialog> {
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Icon(Symbols.error_circle_rounded,
+            Icon(
+              Symbols.error_circle_rounded,
               color: theme.colorScheme.error,
               size: 45,
             ),
@@ -133,45 +136,30 @@ class _CreateDialogState extends State<CreateDialog> {
     setState(() {
       _isCreating = true;
     });
-    bool autoEndValue = form
-        .control(autoEnd)
-        .value;
+    bool autoEndValue = form.control(autoEnd).value;
     try {
-      final challenge = switch (form
-          .control(type)
-          .value) {
-        0 =>
-            BingoDataManager([
-              UserBingoData(
-                userId: widget.pb.authStore.model.id,
-                activities: Bingo().generateBingoActivities(
-                    DifficultyExtension.of(form
-                        .control(difficulty)
-                        .value)),
-              ),
-            ]).toJson(),
-        1 =>
-            StepsDataManager([
-              UserStepsData(userId: widget.pb.authStore.model.id, entries: [])
-            ]).toJson(),
+      final challenge = switch (form.control(type).value) {
+        0 => BingoDataManager([
+            UserBingoData(
+              userId: widget.pb.authStore.model.id,
+              activities: Bingo().generateBingoActivities(
+                  DifficultyExtension.of(form.control(difficulty).value)),
+            ),
+          ]).toJson(),
+        1 => StepsDataManager([
+            UserStepsData(userId: widget.pb.authStore.model.id, entries: [])
+          ]).toJson(),
         _ => throw UnimplementedError(),
       };
 
       await widget.pb.collection("challenges").create(body: {
-        "name": form
-            .control(title)
-            .value,
-        "type": form
-            .control(type)
-            .value,
+        "name": form.control(title).value,
+        "type": form.control(type).value,
         "users": [widget.pb.authStore.model.id],
-        "endDate":
-        autoEndValue == true ? null : pbDateFormat.format(form
-            .control(date)
-            .value),
-        "difficulty": form
-            .control(difficulty)
-            .value,
+        "endDate": autoEndValue == true
+            ? null
+            : pbDateFormat.format(form.control(date).value),
+        "difficulty": form.control(difficulty).value,
         "host": widget.pb.authStore.model.id,
         "winner": null,
         "ended": false,
@@ -212,35 +200,87 @@ class _CreateDialogState extends State<CreateDialog> {
   }
 }
 
-// class CreateWidget extends StatefulWidget {
-//   const CreateWidget({super.key});
-//
-//   @override
-//   _CreateWidgetState createState() => _CreateWidgetState();
-// }
-
 const type = "type";
 const title = "title";
 const date = "dates";
 const autoEnd = "auto_end";
 const difficulty = "difficulty";
 
-class CreateWidget extends StatelessWidget {
+class CreateWidget extends StatefulWidget {
+  const CreateWidget({super.key});
+
+  @override
+  CreateWidgetState createState() => CreateWidgetState();
+}
+
+enum Pages { challengeType, challengeTitle, challengeDate }
+final pageMap = {
+  Pages.challengeType: 0,
+  Pages.challengeTitle: 1,
+  Pages.challengeDate: 2,
+};
+
+class CreateWidgetState extends State<CreateWidget> {
+  final PageController pageController = PageController();
+  int get currentPage => pageController.page?.toInt() ?? 0;
+
+  Pages get currentEnumPage => pageMap.entries
+      .firstWhere((entry) => entry.value == currentPage, orElse: () => pageMap.entries.first)
+      .key;
+
   @override
   Widget build(BuildContext context) {
     var theme = Theme.of(context);
 
-    return Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            buildChallengeSelector(theme),
-            _buildTextFields(theme),
-            _buildDatePickers(context, theme),
-            _buildDifficultyLevels(theme),
-            //FilledButton(onPressed: (){}, child: Text("Create"))
-          ],
-        ));
+    return Container(
+      padding: const EdgeInsets.only(top: 20),
+      child: AnimatedSwitcher(
+          duration: const Duration(milliseconds: 200),
+          transitionBuilder: (Widget child, Animation<double> animation) {
+            return FadeTransition(opacity: animation, child: child);
+          },
+          child: Column(
+            children: [
+              switch (currentEnumPage) { // Switch on Pages enum
+                Pages.challengeType => buildChallengeSelector(theme),
+                Pages.challengeTitle => _buildTextFields(theme),
+                Pages.challengeDate => _buildDatePickers(context, theme)
+              },
+              const SizedBox(height: 15,),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  IconButton.filled(
+                    onPressed: () {
+                      pageController.nextPage(duration: duration, curve: curve)
+                    },
+                    icon: Icon(
+                      Symbols.arrow_back_rounded,
+                      color: theme.colorScheme.onPrimary,
+                    ),
+                  ),
+                  ReactiveFormConsumer(builder: (context, form, widget) {
+                    return IconButton.filled(
+                      onPressed: form.control(title).valid
+                          ? () {
+                        setState(() {
+                          page = Pages.challengeDate;
+                        });
+                      }
+                          : null,
+                      icon: Icon(
+                        Symbols.arrow_forward_rounded,
+                        color: form.control(title).valid
+                            ? theme.colorScheme.onPrimary
+                            : theme.colorScheme.onSurface.withOpacity(.38),
+                      ),
+                    );
+                  })
+                  ]
+              )
+        ]
+          )),
+    );
   }
 
   Widget buildChallengeSelector(ThemeData theme) {
@@ -251,9 +291,16 @@ class CreateWidget extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
+              const Icon(
+                Symbols.animated_images_rounded,
+                size: 50,
+              ),
+              const SizedBox(
+                height: 10,
+              ),
               Text(
-                "Challenge Type",
-                style: theme.typography.englishLike.labelLarge,
+                "Select a challenge to play",
+                style: theme.textTheme.titleLarge,
               ),
               const SizedBox(
                 height: 10,
@@ -263,29 +310,38 @@ class CreateWidget extends StatelessWidget {
                 spacing: 10, // Space between chips horizontally
                 runSpacing: 10, // Space between chips vertically
                 children: [
-                  ...challenges
-                      .asMap()
-                      .entries
-                      .map((entry) {
+                  ...challenges.asMap().entries.map((entry) {
                     final c = entry.value;
                     final index = entry.key;
-                    return FilterChip(
-                      avatar: form
-                          .control(type)
-                          .value == index
-                          ? null
-                          : Icon(c.icon),
-                      label: Text(c.name),
-                      onSelected: index == 1 || index == 0
-                          ? (value) {
-                        form
-                            .control(type)
-                            .value = index;
-                      }
-                          : null,
-                      selected: form
-                          .control(type)
-                          .value == index,
+                    return Card(
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20),
+                        side: BorderSide(
+                          width: 1.1,
+                          color: theme.colorScheme.surfaceContainerHighest,
+                        ),
+                      ),
+                      clipBehavior: Clip.antiAlias, // Clip the ripple
+                      child: ListTile(
+                        contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 20, vertical: 5),
+                        leading: Icon(c.icon),
+                        title: Text(c.name),
+                        onTap: index == 1 || index == 0
+                            ? () {
+                                form.control(type).value = index;
+
+                                setState(() {
+                                  page = Pages.challengeTitle;
+                                });
+                              }
+                            : null,
+                        subtitle: Text(c.description),
+                        trailing: index == 1 || index == 0
+                            ? const Icon(Symbols.arrow_forward_rounded)
+                            : const Icon(Symbols.close_rounded),
+                      ),
                     );
                   }),
                 ],
@@ -322,36 +378,67 @@ class CreateWidget extends StatelessWidget {
   Widget _buildTextFields(ThemeData theme) {
     return LayoutBuilder(
         builder: (BuildContext context, BoxConstraints constraints) {
-          return ConstraintsTransformBox(
-              constraintsTransform: (constraints) =>
-                  BoxConstraints(
-                    maxWidth:
-                    constraints.maxWidth > 450 ? 400 : constraints.maxWidth,
-                  ),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 20, vertical: 10),
-                child: Column(
-                  children: [
-                    Text(
-                      "Details",
-                      style: theme.typography.englishLike.labelLarge,
-                    ),
-                    const SizedBox(
-                      height: 10,
-                    ),
-                    ReactiveTextField(
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+        child: Column(
+          children: [
+            const Icon(
+              Symbols.edit_square_rounded,
+              size: 40,
+            ),
+            const SizedBox(
+              height: 10,
+            ),
+            Text(
+              "Set a title for your challenge",
+              style: theme.textTheme.titleLarge,
+            ),
+            Text(
+              "This will be visible to everyone.",
+              style: theme.textTheme.bodyLarge?.copyWith(
+                  color: theme.colorScheme.onSurface.withOpacity(.80)),
+            ),
+            const SizedBox(
+              height: 30,
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                SizedBox(
+                    width: 300,
+                    child: ReactiveTextField(
                       formControlName: title,
                       decoration: const InputDecoration(
                         border: OutlineInputBorder(),
                         labelText: 'Title',
-                        icon: Icon(Symbols.description_rounded),
                       ),
-                    )
-                  ],
+                    )),
+                const SizedBox(
+                  width: 10,
                 ),
-              ));
-        });
+                ReactiveFormConsumer(builder: (context, form, widget) {
+                  return IconButton.filled(
+                    onPressed: form.control(title).valid
+                        ? () {
+                            setState(() {
+                              page = Pages.challengeDate;
+                            });
+                          }
+                        : null,
+                    icon: Icon(
+                      Symbols.arrow_forward_rounded,
+                      color: form.control(title).valid
+                          ? theme.colorScheme.onPrimary
+                          : theme.colorScheme.onSurface.withOpacity(.38),
+                    ),
+                  );
+                })
+              ],
+            )
+          ],
+        ),
+      );
+    });
   }
 
   Widget _buildDatePickers(BuildContext context, ThemeData theme) {
@@ -360,74 +447,106 @@ class CreateWidget extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: 10),
         child: Center(
             child: Column(
-              children: [
-                Text(
-                  "Start & End Date",
-                  style: theme.typography.englishLike.labelLarge,
+          children: [
+            Text(
+              "Start & End Date",
+              style: theme.typography.englishLike.labelLarge,
+            ),
+            const SizedBox(
+              height: 10,
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 10),
+              child: Wrap(
+                alignment: WrapAlignment.center,
+                spacing: 10, // Space between chips horizontally
+                runSpacing: 10,
+                children: [
+                Card(
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                  side: BorderSide(
+                    width: 1.1,
+                    color: theme.colorScheme.surfaceContainerHighest,
+                  ),
                 ),
-                const SizedBox(
-                  height: 10,
+                clipBehavior: Clip.antiAlias, // Clip the ripple
+                child: ListTile(
+                  contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 20, vertical: 5),
+                  leading: Icon(Symbols.calendar_clock_rounded),
+                  title: Text("Custom end date"),
+                  onTap: () {
+
+                  },
+                  subtitle: Text("Set a custom date for the challenge to end"),
+                  trailing: Radio(value: false, groupValue: "", onChanged: (v){
+
+                  }),
                 ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 10),
-                  child: Wrap(
-                    alignment: WrapAlignment.center,
-                    spacing: 10, // Space between chips horizontally
-                    runSpacing: 10,
-                    children: [
-                      FilterChip(
-                          selected: form
-                              .control(date)
-                              .isNotNull,
-                          onSelected: (v) {
-                            showDatePicker(
+              ),
+                  Card(
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                      side: BorderSide(
+                        width: 1.1,
+                        color: theme.colorScheme.surfaceContainerHighest,
+                      ),
+                    ),
+                    clipBehavior: Clip.antiAlias, // Clip the ripple
+                    child: ListTile(
+                      contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 20, vertical: 5),
+                      leading: Icon(Icons.auto_awesome_rounded),
+                      title: Text("Automatically end"),
+                      onTap: () {
+
+                      },
+                      subtitle: Text("End the challenge when there's a winner"),
+                      trailing: Radio(value: false, groupValue: "", onChanged: (v){
+
+                      }),
+                    ),
+                  ),
+                  FilterChip(
+                      selected: form.control(date).isNotNull,
+                      onSelected: (v) {
+                        showDatePicker(
                                 context: context,
                                 firstDate:
-                                DateTime.now().add(const Duration(days: 2)),
+                                    DateTime.now().add(const Duration(days: 2)),
                                 lastDate: DateTime.now()
                                     .add(const Duration(days: 365 * 2)))
-                                .then((value) {
-                              form
-                                  .control(autoEnd)
-                                  .value = false;
-                              form
-                                  .control(date)
-                                  .value = value;
-                            });
-                          },
-                          label: Text(
-                            form
-                                .control(date)
-                                .value == null
-                                ? "Set End Date"
-                                : _formatRange(form),
-                          )),
-                      FilterChip(
-                          selected: form
-                              .control(autoEnd)
-                              .value,
-                          onSelected: form
-                              .control(type)
-                              .value == 1
-                              ? null
-                              : (value) {
-                            form
-                                .control(autoEnd)
-                                .value = value;
-                            if (value) {
-                              form
-                                  .control(date)
-                                  .value = null;
-                            }
-                          },
-                          label: const Text(
-                            "End when complete",
-                          ))
-                    ],
-                  ),
-                )
-              ],
-            )),
+                            .then((value) {
+                          form.control(autoEnd).value = false;
+                          form.control(date).value = value;
+                        });
+                      },
+                      label: Text(
+                        form.control(date).value == null
+                            ? "Set End Date"
+                            : _formatRange(form),
+                      )),
+                  FilterChip(
+                      selected: form.control(autoEnd).value,
+                      onSelected: form.control(type).value == 1
+                          ? null
+                          : (value) {
+                              form.control(autoEnd).value = value;
+                              if (value) {
+                                form.control(date).value = null;
+                              }
+                            },
+                      label: const Text(
+                        "End when complete",
+                      ))
+                ],
+              ),
+            )
+          ],
+        )),
       );
     });
   }
@@ -438,50 +557,42 @@ class CreateWidget extends StatelessWidget {
           padding: const EdgeInsets.symmetric(vertical: 10),
           child: Center(
               child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    "Difficulty",
-                    style: theme.typography.englishLike.labelLarge,
-                  ),
-                  const SizedBox(
-                    height: 10,
-                  ),
-                  Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 10),
-                      child: Wrap(
-                        alignment: WrapAlignment.center,
-                        spacing: 10, // Space between chips horizontally
-                        runSpacing: 10, //
-                        children: [
-                          ...Difficulty.values.map((l) {
-                            return FilterChip(
-                              label: Text(_getDifficultyLabel(l.index)),
-                              onSelected: form
-                                  .control(type)
-                                  .value == 1
-                                  ? null
-                                  : (value) {
-                                form
-                                    .control(difficulty)
-                                    .value = l.index;
-                              },
-                              selected: form
-                                  .control(difficulty)
-                                  .value == l.index,
-                            );
-                          }),
-                        ],
-                      ))
-                ],
-              )));
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                "Difficulty",
+                style: theme.typography.englishLike.labelLarge,
+              ),
+              const SizedBox(
+                height: 10,
+              ),
+              Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 10),
+                  child: Wrap(
+                    alignment: WrapAlignment.center,
+                    spacing: 10, // Space between chips horizontally
+                    runSpacing: 10, //
+                    children: [
+                      ...Difficulty.values.map((l) {
+                        return FilterChip(
+                          label: Text(_getDifficultyLabel(l.index)),
+                          onSelected: form.control(type).value == 1
+                              ? null
+                              : (value) {
+                                  form.control(difficulty).value = l.index;
+                                },
+                          selected: form.control(difficulty).value == l.index,
+                        );
+                      }),
+                    ],
+                  ))
+            ],
+          )));
     });
   }
 
   String _formatRange(FormGroup form) {
-    var dateRange = form
-        .control(date)
-        .value;
+    var dateRange = form.control(date).value;
     if (dateRange == null) return "";
     final format = DateFormat('MMM dd');
 
