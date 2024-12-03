@@ -71,27 +71,27 @@ class _CreateDialogState extends State<CreateDialog> {
                   Navigator.of(context).pop();
                 },
               ),
-              actions: <Widget>[
-                ReactiveFormConsumer(
-                  builder: (context, form, widget) => _isCreating
-                      ? const Padding(
-                          padding: EdgeInsets.only(right: 25),
-                          child: SizedBox(
-                            width: 15,
-                            height: 15,
-                            child: CircularProgressIndicator(
-                              strokeCap: StrokeCap.round,
-                              strokeWidth: 3.2,
-                            ),
-                          ))
-                      : TextButton(
-                          onPressed: (form.valid && _isHealthAvailable)
-                              ? _handleCreate
-                              : null,
-                          child: const Text("Create"),
-                        ),
-                )
-              ],
+              // actions: <Widget>[
+              //   ReactiveFormConsumer(
+              //     builder: (context, form, widget) => _isCreating
+              //         ? const Padding(
+              //             padding: EdgeInsets.only(right: 25),
+              //             child: SizedBox(
+              //               width: 15,
+              //               height: 15,
+              //               child: CircularProgressIndicator(
+              //                 strokeCap: StrokeCap.round,
+              //                 strokeWidth: 3.2,
+              //               ),
+              //             ))
+              //         : TextButton(
+              //             onPressed: (form.valid && _isHealthAvailable)
+              //                 ? _handleCreate
+              //                 : null,
+              //             child: const Text("Create"),
+              //           ),
+              //   )
+              // ],
               title: const Text("Create Challenge"),
             ),
             body: _isDialogLoading
@@ -213,73 +213,107 @@ class CreateWidget extends StatefulWidget {
   CreateWidgetState createState() => CreateWidgetState();
 }
 
-enum Pages { challengeType, challengeTitle, challengeDate }
+enum Pages { challengeType, challengeTitle, challengeDate, challengeDifficulty, review }
+
 final pageMap = {
   Pages.challengeType: 0,
   Pages.challengeTitle: 1,
   Pages.challengeDate: 2,
+  Pages.challengeDifficulty: 3,
+  Pages.review: 4,
 };
 
-class CreateWidgetState extends State<CreateWidget> {
-  final PageController pageController = PageController();
-  int get currentPage => pageController.page?.toInt() ?? 0;
+final difficultySupportedChallenges = [
+  0
+];
 
-  Pages get currentEnumPage => pageMap.entries
-      .firstWhere((entry) => entry.value == currentPage, orElse: () => pageMap.entries.first)
-      .key;
+class CreateWidgetState extends State<CreateWidget> {
+  Pages currentPage = pageMap.keys.first; // Track the current page
+
+  // Move to the next page
+  void nextPage() {
+    setState(() {
+      currentPage = Pages.values[(Pages.values.indexOf(currentPage) + 1)
+          .clamp(0, Pages.values.length - 1)];
+    });
+  }
+
+  void jumpTo(int page) {
+    setState(() {
+      currentPage = Pages.values[page];
+    });
+  }
+
+  // Move to the previous page
+  void previousPage() {
+    setState(() {
+      currentPage = Pages.values[(Pages.values.indexOf(currentPage) - 1)
+          .clamp(0, Pages.values.length - 1)];
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     var theme = Theme.of(context);
 
-    return Container(
-      padding: const EdgeInsets.only(top: 20),
-      child: AnimatedSwitcher(
-          duration: const Duration(milliseconds: 200),
-          transitionBuilder: (Widget child, Animation<double> animation) {
-            return FadeTransition(opacity: animation, child: child);
-          },
-          child: Column(
-            children: [
-              switch (currentEnumPage) { // Switch on Pages enum
-                Pages.challengeType => buildChallengeSelector(theme),
-                Pages.challengeTitle => _buildTextFields(theme),
-                Pages.challengeDate => _buildDatePickers(context, theme)
-              },
-              const SizedBox(height: 15,),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  IconButton.filled(
-                    onPressed: () {
-                      pageController.nextPage(duration: duration, curve: curve)
-                    },
-                    icon: Icon(
-                      Symbols.arrow_back_rounded,
-                      color: theme.colorScheme.onPrimary,
-                    ),
-                  ),
-                  ReactiveFormConsumer(builder: (context, form, widget) {
-                    return IconButton.filled(
-                      onPressed: form.control(title).valid
-                          ? () {
-                        setState(() {
-                          page = Pages.challengeDate;
-                        });
-                      }
-                          : null,
-                      icon: Icon(
-                        Symbols.arrow_forward_rounded,
-                        color: form.control(title).valid
-                            ? theme.colorScheme.onPrimary
-                            : theme.colorScheme.onSurface.withOpacity(.38),
-                      ),
-                    );
-                  })
-                  ]
-              )
-        ]
-          )),
+    return Scaffold(
+      body: Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: Column(
+          children: [
+            Expanded(
+              child: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 350),
+                child: _buildPageContent(theme),
+              ),
+            ),
+            const SizedBox(height: 20),
+            _buildNavigationButtons(theme),
+            const SizedBox(height: 20),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPageContent(ThemeData theme) {
+    switch (currentPage) {
+      case Pages.challengeType:
+        return buildChallengeSelector(theme);
+      case Pages.challengeTitle:
+        return _buildTextFields(theme);
+      case Pages.challengeDate:
+        return _buildDatePickers(context, theme);
+      case Pages.challengeDifficulty:
+        return _buildDifficultyLevels(theme);
+      case Pages.review:
+        return buildReviewAndComplete(theme);
+      default:
+        return const SizedBox();
+    }
+  }
+
+  Widget _buildNavigationButtons(ThemeData theme) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        // Back Button
+        ElevatedButton.icon(
+          onPressed: currentPage == Pages.challengeType ? null : previousPage,
+          icon: const Icon(Icons.arrow_back),
+          label: const Text('Back'),
+        ),
+        // Next Button
+        // ElevatedButton.icon(
+        //   onPressed: [Pages.challengeDate, Pages.challengeType].contains(currentPage) ? null : nextPage,
+        //   icon: const Icon(Icons.arrow_forward),
+        //   label: const Text('Next'),
+        // ),
+        Text(
+          "${pageMap.values.toList().indexOf(pageMap[currentPage]!)}/${Pages.values.length -1}",
+          style: theme.textTheme.bodyLarge,
+        )
+      ],
     );
   }
 
@@ -303,12 +337,12 @@ class CreateWidgetState extends State<CreateWidget> {
                 style: theme.textTheme.titleLarge,
               ),
               const SizedBox(
-                height: 10,
+                height: 20,
               ),
               Wrap(
                 alignment: WrapAlignment.center,
                 spacing: 10, // Space between chips horizontally
-                runSpacing: 10, // Space between chips vertically
+                runSpacing: 1, // Space between chips vertically
                 children: [
                   ...challenges.asMap().entries.map((entry) {
                     final c = entry.value;
@@ -332,9 +366,7 @@ class CreateWidgetState extends State<CreateWidget> {
                             ? () {
                                 form.control(type).value = index;
 
-                                setState(() {
-                                  page = Pages.challengeTitle;
-                                });
+                                nextPage();
                               }
                             : null,
                         subtitle: Text(c.description),
@@ -374,7 +406,6 @@ class CreateWidgetState extends State<CreateWidget> {
       );
     });
   }
-
   Widget _buildTextFields(ThemeData theme) {
     return LayoutBuilder(
         builder: (BuildContext context, BoxConstraints constraints) {
@@ -401,7 +432,7 @@ class CreateWidgetState extends State<CreateWidget> {
             const SizedBox(
               height: 30,
             ),
-            Row(
+            Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 SizedBox(
@@ -414,15 +445,14 @@ class CreateWidgetState extends State<CreateWidget> {
                       ),
                     )),
                 const SizedBox(
-                  width: 10,
+                  height: 10,
                 ),
                 ReactiveFormConsumer(builder: (context, form, widget) {
-                  return IconButton.filled(
+                  return FilledButton.icon(
+                    label: const Text("Looks good"),
                     onPressed: form.control(title).valid
                         ? () {
-                            setState(() {
-                              page = Pages.challengeDate;
-                            });
+                            nextPage();
                           }
                         : null,
                     icon: Icon(
@@ -440,117 +470,213 @@ class CreateWidgetState extends State<CreateWidget> {
       );
     });
   }
+  int? dateType = 0;
+  TextStyle? asDisabled(TextStyle? textTheme, ThemeData theme){
+    return textTheme?.copyWith(
+      color: theme.colorScheme.onSurface.withOpacity(0.38),
+    );
+  }
 
+  bool isDateValid(FormGroup form){
+    if(form.control(autoEnd).value == false && form.control(date).value == null)
+      return false;
+    else return true;
+  }
   Widget _buildDatePickers(BuildContext context, ThemeData theme) {
+    final autoEndChallengeTypes = [
+      0
+    ];
+
     return ReactiveFormConsumer(builder: (context, form, widget) {
       return Padding(
         padding: const EdgeInsets.symmetric(vertical: 10),
         child: Center(
-            child: Column(
-          children: [
-            Text(
-              "Start & End Date",
-              style: theme.typography.englishLike.labelLarge,
-            ),
-            const SizedBox(
-              height: 10,
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 10),
-              child: Wrap(
-                alignment: WrapAlignment.center,
-                spacing: 10, // Space between chips horizontally
-                runSpacing: 10,
-                children: [
-                Card(
-                elevation: 0,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20),
-                  side: BorderSide(
-                    width: 1.1,
-                    color: theme.colorScheme.surfaceContainerHighest,
-                  ),
-                ),
-                clipBehavior: Clip.antiAlias, // Clip the ripple
-                child: ListTile(
-                  contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 20, vertical: 5),
-                  leading: Icon(Symbols.calendar_clock_rounded),
-                  title: Text("Custom end date"),
-                  onTap: () {
-
-                  },
-                  subtitle: Text("Set a custom date for the challenge to end"),
-                  trailing: Radio(value: false, groupValue: "", onChanged: (v){
-
-                  }),
-                ),
+          child: Column(
+            children: [
+              const Icon(
+                Symbols.edit_calendar_rounded,
+                size: 40,
               ),
-                  Card(
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20),
-                      side: BorderSide(
-                        width: 1.1,
-                        color: theme.colorScheme.surfaceContainerHighest,
-                      ),
-                    ),
-                    clipBehavior: Clip.antiAlias, // Clip the ripple
-                    child: ListTile(
-                      contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 20, vertical: 5),
-                      leading: Icon(Icons.auto_awesome_rounded),
-                      title: Text("Automatically end"),
-                      onTap: () {
-
-                      },
-                      subtitle: Text("End the challenge when there's a winner"),
-                      trailing: Radio(value: false, groupValue: "", onChanged: (v){
-
-                      }),
-                    ),
-                  ),
-                  FilterChip(
-                      selected: form.control(date).isNotNull,
-                      onSelected: (v) {
-                        showDatePicker(
-                                context: context,
-                                firstDate:
-                                    DateTime.now().add(const Duration(days: 2)),
-                                lastDate: DateTime.now()
-                                    .add(const Duration(days: 365 * 2)))
-                            .then((value) {
-                          form.control(autoEnd).value = false;
-                          form.control(date).value = value;
-                        });
-                      },
-                      label: Text(
-                        form.control(date).value == null
-                            ? "Set End Date"
-                            : _formatRange(form),
-                      )),
-                  FilterChip(
-                      selected: form.control(autoEnd).value,
-                      onSelected: form.control(type).value == 1
-                          ? null
-                          : (value) {
-                              form.control(autoEnd).value = value;
-                              if (value) {
-                                form.control(date).value = null;
-                              }
+              const SizedBox(
+                height: 10,
+              ),
+              Text(
+                "Set the end date for your challenge",
+                style: theme.textTheme.titleLarge,
+              ),
+              Text(
+                "After the challenge has ended, it will be deleted a week after.",
+                textAlign: TextAlign.center,
+                style: theme.textTheme.bodyLarge?.copyWith(
+                    color: theme.colorScheme.onSurface.withOpacity(.80)),
+              ),
+              const SizedBox(
+                height: 30,
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 10),
+                child: Column(
+                  children: [
+                    Wrap(
+                      alignment: WrapAlignment.center,
+                      spacing: 10, // Space between chips horizontally
+                      runSpacing: 0,
+                      children: [
+                        Card(
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20),
+                            side: BorderSide(
+                              width: 1.1,
+                              color: theme.colorScheme.surfaceContainerHighest,
+                            ),
+                          ),
+                          clipBehavior: Clip.antiAlias, // Clip the ripple
+                          child: ListTile(
+                            contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 20, vertical: 5),
+                            leading: Icon(Icons.auto_awesome_rounded, color: autoEndChallengeTypes.contains(form.control(type).value) ? null : theme.colorScheme.onSurface.withOpacity(0.38)),
+                            title: Text("Automatically end", style: autoEndChallengeTypes.contains(form.control(type).value) ? null : asDisabled(theme.textTheme.bodyLarge, theme)),
+                            onTap: autoEndChallengeTypes.contains(form.control(type).value) ? () {
+                              setState(() {
+                                dateType = 1;
+                                form.control(autoEnd).value = true;
+                              });
+                            } : null,
+                            subtitle: Text(
+                                autoEndChallengeTypes.contains(form.control(type).value) ? "End the challenge when there's a winner" : "Not supported for this challenge", style: autoEndChallengeTypes.contains(form.control(type).value) ? null : asDisabled(theme.textTheme.bodyMedium, theme)),
+                            trailing: Radio(
+                                value: 1,
+                                groupValue: dateType,
+                                onChanged: autoEndChallengeTypes.contains(form.control(type).value) ? (v) {} : null),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Card(
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: dateType == 0
+                                ? const BorderRadius.vertical(
+                                    top: Radius.circular(20),
+                                    bottom: Radius.circular(8))
+                                : BorderRadius.circular(20),
+                            side: BorderSide(
+                              width: 1.1,
+                              color: theme.colorScheme.surfaceContainerHighest,
+                            ),
+                          ),
+                          clipBehavior: Clip.antiAlias, // Clip the ripple
+                          child: ListTile(
+                            contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 20, vertical: 5),
+                            leading: const Icon(Symbols.calendar_clock_rounded),
+                            title: const Text("Custom end date"),
+                            onTap: () {
+                              setState(() {
+                                dateType = 0;
+                                form.control(autoEnd).value = false;
+                              });
                             },
-                      label: const Text(
-                        "End when complete",
-                      ))
-                ],
+                            subtitle: const Text(
+                                "Set a custom date for the challenge to end"),
+                            trailing: Radio(
+                                value: 0,
+                                groupValue: dateType,
+                                onChanged: (v) {}),
+                          ),
+                        ),
+                        AnimatedSwitcher(
+                          duration: const Duration(milliseconds: 150),
+                          // Animation duration
+                          transitionBuilder: (child, animation) {
+                            return FadeTransition(
+                              opacity: animation,
+                              child: SlideTransition(
+                                position: Tween<Offset>(
+                                  begin: const Offset(0, -0.05),
+                                  // Slight upward start
+                                  end: Offset.zero, // Final position
+                                ).animate(animation),
+                                child: child,
+                              ),
+                            );
+                          },
+                          child: dateType == 0
+                              ? Card(
+                                  key: const ValueKey('custom_end_card'),
+                                  elevation: 0,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: const BorderRadius.vertical(
+                                        bottom: Radius.circular(20),
+                                        top: Radius.circular(8)),
+                                    side: BorderSide(
+                                      width: 1.1,
+                                      color: theme
+                                          .colorScheme.surfaceContainerHighest,
+                                    ),
+                                  ),
+                                  clipBehavior: Clip.antiAlias,
+                                  // Clip the ripple
+                                  child: ListTile(
+                                    contentPadding: const EdgeInsets.symmetric(
+                                        horizontal: 20, vertical: 5),
+                                    title: Text(form.control(date).value == null
+                                        ? "No end date selected"
+                                        : _formatRange(form)),
+                                    onTap: () {
+                                      showDatePicker(
+                                              context: context,
+                                              firstDate: DateTime.now()
+                                                  .add(const Duration(days: 2)),
+                                              lastDate: DateTime.now().add(
+                                                  const Duration(
+                                                      days: 365 * 2)))
+                                          .then((value) {
+                                        form.control(autoEnd).value = false;
+                                        form.control(date).value = value;
+                                      });
+                                    },
+                                    subtitle: const Text(
+                                        "Date for the challenge to end, tap to change."),
+                                  ),
+                                )
+                              : const SizedBox
+                                  .shrink(), // Empty widget when not visible
+                        ),
+                      ],
+                    ),
+                    const SizedBox(
+                      height: 20,
+                    ),
+                    ReactiveFormConsumer(builder: (context, form, widget) {
+                      return FilledButton.icon(
+                        label: const Text("Looks good"),
+                        onPressed: dateType != null && isDateValid(form)
+                            ? () {
+                                if(difficultySupportedChallenges.contains(form.control(type).value)){
+                                  nextPage();
+                                } else {
+                                  jumpTo(4);
+                                }
+                              }
+                            : null,
+                        icon: Icon(
+                          Symbols.arrow_forward_rounded,
+                          color: dateType != null && isDateValid(form)
+                              ? theme.colorScheme.onPrimary
+                              : theme.colorScheme.onSurface.withOpacity(.38),
+                        ),
+                      );
+                    }),
+                  ],
+                ),
               ),
-            )
-          ],
-        )),
+            ],
+          ),
+        ),
       );
     });
   }
-
   Widget _buildDifficultyLevels(ThemeData theme) {
     return ReactiveFormConsumer(builder: (context, form, widget) {
       return Padding(
@@ -559,12 +685,25 @@ class CreateWidgetState extends State<CreateWidget> {
               child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text(
-                "Difficulty",
-                style: theme.typography.englishLike.labelLarge,
+              const Icon(
+                Symbols.elevation_rounded,
+                size: 40,
               ),
               const SizedBox(
                 height: 10,
+              ),
+              Text(
+                "Set the challenge's difficulty",
+                style: theme.textTheme.titleLarge,
+              ),
+              Text(
+                "Adjust how hard the challenge will be for everyone",
+                textAlign: TextAlign.center,
+                style: theme.textTheme.bodyLarge?.copyWith(
+                    color: theme.colorScheme.onSurface.withOpacity(.80)),
+              ),
+              const SizedBox(
+                height: 30,
               ),
               Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 10),
@@ -574,6 +713,28 @@ class CreateWidgetState extends State<CreateWidget> {
                     runSpacing: 10, //
                     children: [
                       ...Difficulty.values.map((l) {
+                        return Card(
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20),
+                            side: BorderSide(
+                              width: 1.1,
+                              color: theme.colorScheme.surfaceContainerHighest,
+                            ),
+                          ),
+                          clipBehavior: Clip.antiAlias, // Clip the ripple
+                          child: ListTile(
+                            contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 20, vertical: 5),
+                            //leading: Icon(c.icon),
+                            selected: form.control(difficulty).value == l.index,
+                            title: Text(_getDifficultyLabel(l.index)),
+                            onTap: () {
+                              form.control(difficulty).value = l.index;
+                            },
+                            trailing: Radio(value: l.index, groupValue: form.control(difficulty).value, onChanged: (v){}),
+                          ),
+                        );
                         return FilterChip(
                           label: Text(_getDifficultyLabel(l.index)),
                           onSelected: form.control(type).value == 1
@@ -584,10 +745,115 @@ class CreateWidgetState extends State<CreateWidget> {
                           selected: form.control(difficulty).value == l.index,
                         );
                       }),
+                      ReactiveFormConsumer(builder: (context, form, widget) {
+                        return FilledButton.icon(
+                          label: const Text("Looks good"),
+                          onPressed: dateType != null && isDateValid(form)
+                              ? () {
+                            nextPage();
+                          }
+                              : null,
+                          icon: Icon(
+                            Symbols.arrow_forward_rounded,
+                            color: dateType != null && isDateValid(form)
+                                ? theme.colorScheme.onPrimary
+                                : theme.colorScheme.onSurface.withOpacity(.38),
+                          ),
+                        );
+                      }),
                     ],
                   ))
             ],
           )));
+    });
+  }
+  Widget buildReviewAndComplete(ThemeData theme){
+    return ReactiveFormConsumer(builder: (context, form, widget) {
+      return Padding(
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(
+                    Symbols.data_check_rounded,
+                    size: 40,
+                  ),
+                  const SizedBox(
+                    height: 10,
+                  ),
+                  Text(
+                    "Review and create",
+                    style: theme.textTheme.titleLarge,
+                  ),
+                  Text(
+                    "Review what you entered.",
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.bodyLarge?.copyWith(
+                        color: theme.colorScheme.onSurface.withOpacity(.80)),
+                  ),
+                  const SizedBox(
+                    height: 15,
+                  ),
+                  Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 10),
+                      child: Wrap(
+                        alignment: WrapAlignment.center,
+                        spacing: 10, // Space between chips horizontally
+                        runSpacing: 10, //
+                        children: [
+                          Card(
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(20),
+                              side: BorderSide(
+                                width: 1.1,
+                                color: theme.colorScheme.surfaceContainerHighest,
+                              ),
+                            ),
+                            clipBehavior: Clip.antiAlias, // Clip the ripple
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 30),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(form.control(title).value, style: theme.textTheme.titleLarge),
+                                    const SizedBox(height: 10,),
+                                    Row(
+                                      mainAxisAlignment: MainAxisAlignment.start,
+                                      children: [
+                                        Icon(challenges.elementAt(form.control(type).value).icon, size: 15,),
+                                        const SizedBox(width: 5,),
+                                        Text(challenges.elementAt(form.control(type).value).name, style: theme.textTheme.bodyLarge)
+                                      ],
+                                    ),
+                                    const SizedBox(height: 10,),
+                                    Text(_formatRange(form), style: theme.textTheme.bodyLarge),
+                                  ]
+                              ),
+                            ),
+                          ),
+                          ReactiveFormConsumer(builder: (context, form, widget) {
+                            return FilledButton.icon(
+                              label: const Text("Create"),
+                              onPressed: dateType != null && isDateValid(form)
+                                  ? () {
+                                nextPage();
+                              }
+                                  : null,
+                              icon: Icon(
+                                Symbols.check_rounded,
+                                color: dateType != null && isDateValid(form)
+                                    ? theme.colorScheme.onPrimary
+                                    : theme.colorScheme.onSurface.withOpacity(.38),
+                              ),
+                            );
+                          }),
+                        ],
+                      ))
+                ],
+              )));
     });
   }
 

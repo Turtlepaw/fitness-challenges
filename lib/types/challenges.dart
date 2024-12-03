@@ -11,6 +11,7 @@ class Challenge {
   const Challenge(this.icon, this.name, this.description);
 }
 
+enum ChallengeType { bingo, steps }
 const List<Challenge> challenges = [
   Challenge(Symbols.casino_rounded, "Bingo", "Classic bingo, but fitness style"),
   Challenge(Symbols.steps_rounded, "Steps", "Get the most steps before the time ends"),
