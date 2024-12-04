@@ -1,5 +1,6 @@
 {
-    "IDX.aI.enableInlineCompletion": true,
-    "IDX.aI.enableCodebaseIndexing": true,
-    "IDX.corgiMode": true
+  "IDX.aI.enableInlineCompletion": true,
+  "IDX.aI.enableCodebaseIndexing": true,
+  "IDX.corgiMode": true,
+  "cmake.sourceDirectory": "E:/Fitness_Challenges/linux"
 }
