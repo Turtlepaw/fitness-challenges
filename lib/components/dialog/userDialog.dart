@@ -1,4 +1,6 @@
+import 'package:fitness_challenges/components/userPreview.dart';
 import 'package:fitness_challenges/types/collections.dart';
+import 'package:fitness_challenges/utils/common.dart';
 import 'package:fitness_challenges/utils/data_source_manager.dart';
 import 'package:flutter/material.dart';
 import 'package:pocketbase/pocketbase.dart';
@@ -58,7 +60,7 @@ class _UserDialogState extends State<UserDialog> {
                         child: Row(
                           children: [
                             Text(
-                              user.getStringValue("username") ?? "",
+                              trimString(getUsernameFromUser(user), 15),
                               style: theme.textTheme.titleLarge,
                             ),
                             SizedBox(width: 15,),

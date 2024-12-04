@@ -421,7 +421,7 @@ class _SettingsPageState extends State<SettingsPage> {
           ),
           SliverToBoxAdapter(
               child: Padding(
-            padding: const EdgeInsets.only(left: 15),
+            padding: const EdgeInsets.only(left: 15, right: 10),
             child: SizedBox(
               width: MediaQuery.of(context).size.width,
               child: const PrivacyControls(),

@@ -1,3 +1,4 @@
+import 'package:fitness_challenges/components/userPreview.dart';
 import 'package:fitness_challenges/types/challenges.dart';
 import 'package:fitness_challenges/types/collections.dart';
 import 'package:flutter/material.dart';
@@ -154,7 +155,7 @@ class _ChallengeState extends State<Challenge> {
                             return Padding(
                               padding: const EdgeInsets.symmetric(horizontal: 3),
                               child: AdvancedAvatar(
-                                name: user.getStringValue("username"),
+                                name: getUsernameFromUser(user),
                                 style: theme.textTheme.titleMedium?.copyWith(
                                     color: theme.colorScheme.onPrimary),
                                 decoration: BoxDecoration(

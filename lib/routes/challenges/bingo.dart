@@ -2,7 +2,7 @@ import 'dart:math';
 
 import 'package:confetti/confetti.dart'; // Import the confetti package
 import 'package:dynamic_color/dynamic_color.dart';
-import 'package:fitness_challenges/utils/bingo/manager.dart';
+import 'package:fitness_challenges/components/userPreview.dart';
 import 'package:fitness_challenges/utils/health.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_advanced_avatar/flutter_advanced_avatar.dart';
@@ -147,7 +147,7 @@ class _BingoCardWidgetState extends State<BingoCardWidget> {
                     const Icon(Symbols.playing_cards_rounded),
                     const SizedBox(width: 10),
                     Text(
-                      "${selectedUser.id == pb.authStore.model?.id ? "Your" : "${selectedUser.getStringValue("username")}'s"} bingo card",
+                      "${selectedUser.id == pb.authStore.model?.id ? "Your" : "${getUsernameFromUser(selectedUser)}'s"} bingo card",
                       style: theme.textTheme.headlineSmall,
                     )
                   ],
@@ -425,7 +425,7 @@ class _BingoCardWidgetState extends State<BingoCardWidget> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         AdvancedAvatar(
-                          name: user.getStringValue("username"),
+                          name: getUsernameFromUser(user),
                           style: theme.textTheme.titleMedium?.copyWith(
                             color: theme.colorScheme.onPrimary,
                           ),
@@ -442,7 +442,7 @@ class _BingoCardWidgetState extends State<BingoCardWidget> {
                         ),
                         const SizedBox(height: 10.0),
                         Text(
-                          user.getStringValue("username"),
+                          trimString(getUsernameFromUser(user), 11),
                           style: theme.textTheme.bodyLarge?.copyWith(
                             color: isSelected
                                 ? theme.colorScheme.onSurfaceVariant

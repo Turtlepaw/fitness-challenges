@@ -47,6 +47,7 @@ class _ConfirmDialogState extends State<ConfirmDialog> {
                       Text(
                         widget.title,
                         style: theme.textTheme.headlineSmall,
+                        textAlign: TextAlign.center,
                       ),
                     ],
                   ),

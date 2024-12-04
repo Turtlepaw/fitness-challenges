@@ -116,7 +116,7 @@ class _PrivacyControlsState extends State<PrivacyControls> {
       ThemeData theme,
       ) {
     return Container(
-      constraints: const BoxConstraints(maxWidth: 405),
+      //constraints: const BoxConstraints(maxWidth: 405),
         margin: const EdgeInsets.symmetric(vertical: 5),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(15),

@@ -4,6 +4,7 @@ import 'package:collection/collection.dart';
 import 'package:confetti/confetti.dart';
 import 'package:dynamic_color/dynamic_color.dart';
 import 'package:fitness_challenges/components/loader.dart';
+import 'package:fitness_challenges/components/userPreview.dart';
 import 'package:fitness_challenges/constants.dart';
 import 'package:fitness_challenges/routes/challenges/bingo.dart';
 import 'package:flutter/material.dart';
@@ -389,7 +390,7 @@ class _ChallengeDialogState extends State<ChallengeDialog> {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 8, vertical: 1),
                       child: Text(
-                          trimString(user.getStringValue("username", "Unknown"),
+                          trimString(getUsernameFromUser(user),
                               MAX_USERNAME_LENGTH),
                         // Substitute for user.getStringValue("username")
                         style: theme.textTheme.headlineSmall,
@@ -621,7 +622,7 @@ class _ChallengeDialogState extends State<ChallengeDialog> {
                         ),
                         const SizedBox(width: 20),
                         AdvancedAvatar(
-                          name: user.getStringValue("username"),
+                          name: getUsernameFromUser(user),
                           style: theme.textTheme.titleMedium
                               ?.copyWith(color: theme.colorScheme.primary),
                           decoration: BoxDecoration(
@@ -632,7 +633,7 @@ class _ChallengeDialogState extends State<ChallengeDialog> {
                         ),
                         const SizedBox(width: 15),
                         Text(
-                          trimString(user.getStringValue("username"),
+                          trimString(getUsernameFromUser(user),
                               maxUsernameLength),
                           style: theme.textTheme.titleLarge
                               ?.copyWith(color: theme.colorScheme.onPrimary),
