@@ -42,7 +42,7 @@ dependencies:
       path: packages/dynamic_color
   flutter_emoji_feedback:
     git:
-      url: https://github.com/Turtlepaw/flutter_emoji_feedback.git
+      url: https://github.com/turtlepaw/flutter_emoji_feedback.git
   bottom_sheet: ^4.0.4
   material_symbols_icons: ^4.2768.0
   pocketbase: ^0.18.1
@@ -92,6 +92,7 @@ dependencies:
   flutter_health_connect:
     git:
       url: https://github.com/quentinleguennec/flutter_health_connect.git
+  flutter_svg: ^2.0.16
   #share_plus: 10.0.0
 
 dev_dependencies:
@@ -102,6 +103,8 @@ dev_dependencies:
   integration_test:
     sdk: flutter
   flutter_lints: ^3.0.1
+  build_runner:
+  flutter_gen_runner:
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

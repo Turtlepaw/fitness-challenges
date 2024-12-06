@@ -302,6 +302,7 @@ class ProfileWidget extends StatelessWidget {
     return LayoutBuilder(
         builder: (BuildContext context, BoxConstraints constraints) {
       return ConstraintsTransformBox(
+        alignment: Alignment.centerLeft,
           constraintsTransform: (constraints) => BoxConstraints(
                 maxWidth:
                     constraints.maxWidth > 450 ? 400 : constraints.maxWidth,

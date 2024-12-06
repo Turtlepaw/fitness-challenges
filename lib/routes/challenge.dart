@@ -6,10 +6,12 @@ import 'package:dynamic_color/dynamic_color.dart';
 import 'package:fitness_challenges/components/loader.dart';
 import 'package:fitness_challenges/components/userPreview.dart';
 import 'package:fitness_challenges/constants.dart';
+import 'package:fitness_challenges/gen/assets.gen.dart';
 import 'package:fitness_challenges/routes/challenges/bingo.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_advanced_avatar/flutter_advanced_avatar.dart';
 import 'package:flutter_emoji_feedback/flutter_emoji_feedback.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:intl/intl.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:pocketbase/pocketbase.dart';
@@ -478,7 +480,7 @@ class _ChallengeDialogState extends State<ChallengeDialog> {
                             horizontal: 25, vertical: 15),
                         child: Column(children: [
                           AnimatedSwitcher(
-                              duration: const Duration(milliseconds: 500),
+                              duration: const Duration(milliseconds: 400),
                               switchInCurve: Curves.easeOut,
                               child: _hasSubmittedFeedback
                                   ? Padding(
@@ -486,6 +488,8 @@ class _ChallengeDialogState extends State<ChallengeDialog> {
                                           vertical: 15),
                                       child: Column(
                                         children: [
+                                          SvgPicture.asset(Assets.images.notoAwesome, width: 50,),
+                                          const SizedBox(height: 15),
                                           Text(
                                             "Thanks for submitting feedback!",
                                             style: theme.textTheme.titleLarge,
@@ -509,44 +513,49 @@ class _ChallengeDialogState extends State<ChallengeDialog> {
                                         Padding(
                                           padding: const EdgeInsets.symmetric(
                                               horizontal: 15, vertical: 10),
-                                          child: EmojiFeedback(
-                                            enableFeedback: true,
-                                            animDuration: const Duration(
-                                                milliseconds: 300),
-                                            //initialRating: 0,
-                                            customLabels: const [
-                                              "Terrible",
-                                              "Bad",
-                                              "Okay",
-                                              "Good",
-                                              "Great"
-                                            ],
-                                            curve: Curves.easeOutBack,
-                                            inactiveElementScale: .7,
-                                            onChanged: (value) async {
-                                              await pb
-                                                  .collection("feedback")
-                                                  .create(body: {
-                                                "rating": switch (value) {
-                                                  1 => "Terrible",
-                                                  2 => "Bad",
-                                                  3 => "Okay",
-                                                  4 => "Good",
-                                                  5 => "Great",
-                                                  _ => "Unknown"
-                                                },
-                                                "user": pb.authStore.model.id,
-                                                "challenge": _challenge!.id,
-                                                "ratingId": value
-                                              });
+                                          child: SizedBox(
+                                            //height: 100,
+                                            child: EmojiFeedback(
+                                              enableFeedback: true,
+                                              animDuration: const Duration(
+                                                  milliseconds: 300),
+                                              onChangeWaitForAnimation: true,
+                                              //initialRating: 0,
+                                              customLabels: const [
+                                                "Terrible",
+                                                "Bad",
+                                                "Okay",
+                                                "Good",
+                                                "Great"
+                                              ],
+                                              curve: Curves.easeOutBack,
+                                              emojiPreset: notoAnimatedEmojis,
+                                              inactiveElementScale: .9,
+                                              onChanged: (value) async {
+                                                await pb
+                                                    .collection("feedback")
+                                                    .create(body: {
+                                                  "rating": switch (value) {
+                                                    1 => "Terrible",
+                                                    2 => "Bad",
+                                                    3 => "Okay",
+                                                    4 => "Good",
+                                                    5 => "Great",
+                                                    _ => "Unknown"
+                                                  },
+                                                  "user": pb.authStore.model.id,
+                                                  "challenge": _challenge!.id,
+                                                  "ratingId": value
+                                                });
 
-                                              await Future.delayed(
-                                                  const Duration(
-                                                      milliseconds: 300));
-                                              setState(() {
-                                                _hasSubmittedFeedback = true;
-                                              });
-                                            },
+                                                await Future.delayed(
+                                                    const Duration(
+                                                        milliseconds: 300));
+                                                setState(() {
+                                                  _hasSubmittedFeedback = true;
+                                                });
+                                              },
+                                            ),
                                           ),
                                         ),
                                       ],
