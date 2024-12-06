@@ -51,3 +51,5 @@ We can now obtain app logs, making it easier for us to troubleshoot issues. Down
 ### Internal
 
 We've really cleaned up a lot of code, and added the [`SharedLogger`](/lib/utils/sharedLogger.dart) which allows logs to be exported. As always, we've also fixed a bunch of bugs, and you'll notice several improvements throughout the app.
+
+Animated emojis have also been added to [Turtlepaw/flutter_emoji_feedback](https://github.com/Turtlepaw/flutter_emoji_feedback), the code for our feedback widget.
