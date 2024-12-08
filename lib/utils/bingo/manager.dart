@@ -119,6 +119,8 @@ class Bingo {
         return [500, 1000];
     }
   }
+
+
 }
 
 extension on num {

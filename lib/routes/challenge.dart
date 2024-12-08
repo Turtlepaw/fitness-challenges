@@ -738,7 +738,7 @@ class _ChallengeDialogState extends State<ChallengeDialog> {
                       splashColor: theme.colorScheme.onPrimary.withAlpha(30),
                       onTap: (activity.type != BingoDataType.filled && pb.authStore.model?.id == selectedUser.id)
                           ? () async {
-                        final data = manager.updateUserBingoActivity(
+                        final data = await manager.updateUserBingoActivity(
                           pb.authStore.model?.id,
                           index,
                           BingoDataType.filled,

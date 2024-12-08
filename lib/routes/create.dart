@@ -72,10 +72,18 @@ class _CreateDialogState extends State<CreateDialog> {
                 child: IconButton(
                   icon: const Icon(Symbols.close_rounded),
                   onPressed: () {
-                    showDialog(context: context, builder: (context) => ConfirmDialog(icon: Symbols.delete_rounded, title: "Discard challenge?", description: "Are you sure you want to discard what you've entered.", isDestructive: true, onConfirm: (){
-                      Navigator.of(context).pop();
-                      Navigator.of(context).pop();
-                    }));
+                    showDialog(
+                        context: context,
+                        builder: (context) => ConfirmDialog(
+                            icon: Symbols.delete_rounded,
+                            title: "Discard challenge?",
+                            description:
+                                "Are you sure you want to discard what you've entered.",
+                            isDestructive: true,
+                            onConfirm: () {
+                              Navigator.of(context).pop();
+                              Navigator.of(context).pop();
+                            }));
                   },
                 ),
               ),
@@ -109,9 +117,7 @@ class _CreateDialogState extends State<CreateDialog> {
                   )
                 : (_isHealthAvailable
                     ? CreateWidget(
-                        onCreate: (_isHealthAvailable)
-                            ? _handleCreate
-                            : null,
+                        onCreate: (_isHealthAvailable) ? _handleCreate : null,
                         isCreating: _isCreating,
                       )
                     : _buildHealthUnavailable(context)),
@@ -221,7 +227,8 @@ const autoEnd = "auto_end";
 const difficulty = "difficulty";
 
 class CreateWidget extends StatefulWidget {
-  const CreateWidget({super.key, required this.onCreate, required this.isCreating});
+  const CreateWidget(
+      {super.key, required this.onCreate, required this.isCreating});
 
   final void Function()? onCreate;
   final bool isCreating;
@@ -409,7 +416,29 @@ class CreateWidgetState extends State<CreateWidget> {
                         contentPadding: const EdgeInsets.symmetric(
                             horizontal: 20, vertical: 5),
                         leading: Icon(c.icon),
-                        title: Text(c.name),
+                        title: Row(
+                          children: [
+                            Text(c.name),
+                            if (index == 0)
+                              Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 4, vertical: 1),
+                                  margin: const EdgeInsets.only(left: 5),
+                                  decoration: BoxDecoration(
+                                      color: theme.colorScheme.primary,
+                                      borderRadius: BorderRadius.circular(8)),
+                                  child: Row(children: [
+                                    Icon(Icons.auto_awesome_rounded, color: theme.colorScheme.onPrimary, size: 15),
+                                    const SizedBox(width: 4),
+                                    Text("NEW",
+                                        style: theme.textTheme.bodyMedium
+                                            ?.copyWith(
+                                                color:
+                                                    theme.colorScheme.onPrimary,
+                                                fontWeight: FontWeight.bold))
+                                  ]))
+                          ],
+                        ),
                         onTap: index == 1 || index == 0
                             ? () {
                                 form.control(type).value = index;
@@ -1005,27 +1034,34 @@ class CreateWidgetState extends State<CreateWidget> {
                       // ),
                       ReactiveFormConsumer(builder: (context, form, _) {
                         return FilledButton.icon(
-                          label: widget.isCreating ? SizedBox(
-                                width: 15,
-                                height: 15,
-                                child: CircularProgressIndicator(
-                                  strokeCap: StrokeCap.round,
-                                  strokeWidth: 2.5,
-                                  color: theme.colorScheme.onPrimary,
-                                ),
-                              ) : const Text("Create"),
-                          onPressed: dateType != null && isDateValid(form) && form.valid
+                          label: widget.isCreating
+                              ? SizedBox(
+                                  width: 15,
+                                  height: 15,
+                                  child: CircularProgressIndicator(
+                                    strokeCap: StrokeCap.round,
+                                    strokeWidth: 2.5,
+                                    color: theme.colorScheme.onPrimary,
+                                  ),
+                                )
+                              : const Text("Create"),
+                          onPressed: dateType != null &&
+                                  isDateValid(form) &&
+                                  form.valid
                               ? widget.onCreate
                               : null,
-                          icon: widget.isCreating ? null : Icon(
-                            Symbols.check_rounded,
-                            color: dateType != null && isDateValid(form)
-                                ? theme.colorScheme.onPrimary
-                                : theme.colorScheme.onSurface.withOpacity(.38),
-                          ),
+                          icon: widget.isCreating
+                              ? null
+                              : Icon(
+                                  Symbols.check_rounded,
+                                  color: dateType != null && isDateValid(form)
+                                      ? theme.colorScheme.onPrimary
+                                      : theme.colorScheme.onSurface
+                                          .withOpacity(.38),
+                                ),
                         );
                       }),
-                      if(form.errors.isNotEmpty) Text(form.errors.toString())
+                      if (form.errors.isNotEmpty) Text(form.errors.toString())
                     ],
                   ))
             ],
