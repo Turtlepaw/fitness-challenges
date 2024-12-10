@@ -1,5 +1,6 @@
 import 'package:collection/collection.dart';
 import 'package:fitness_challenges/components/communityJoin.dart';
+import 'package:fitness_challenges/components/userPreview.dart';
 import 'package:fitness_challenges/types/challenges.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_advanced_avatar/flutter_advanced_avatar.dart';
@@ -186,7 +187,7 @@ class _CommunityChallengeState extends State<CommunityChallenge> {
 List<String> userListFromChallenge(RecordModel challenge,
     {bool debugMode = false, int limit = 5}) {
   var items = challenge.expand["users"]!
-      .map((user) => user.getStringValue("username"))
+      .map((user) => getUsernameFromUser(user))
       .toList(growable: true);
   if (debugMode) {
     items = List.filled(10, "User", growable: true);

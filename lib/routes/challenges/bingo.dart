@@ -1,6 +1,7 @@
 import 'package:confetti/confetti.dart'; // Import the confetti package
 import 'package:dynamic_color/dynamic_color.dart';
 import 'package:fitness_challenges/components/userPreview.dart';
+import 'package:fitness_challenges/constants.dart';
 import 'package:fitness_challenges/utils/health.dart';
 import 'package:fitness_challenges/utils/sharedLogger.dart';
 import 'package:flutter/material.dart';
@@ -9,6 +10,8 @@ import 'package:material_symbols_icons/symbols.dart';
 import 'package:pocketbase/pocketbase.dart';
 import 'package:provider/provider.dart';
 
+import '../../components/dialog/userDialog.dart';
+import '../../types/collections.dart';
 import '../../utils/bingo/data.dart';
 import '../../utils/common.dart';
 
@@ -223,7 +226,8 @@ class _BingoCardWidgetState extends State<BingoCardWidget> {
         itemCount: _selectedBingoData!.activities.length,
         shrinkWrap: true,
         itemBuilder: (context, index) {
-          final isWinningTile = (_selectedBingoData?.winningTiles ?? []).contains(index);
+          final isWinningTile =
+              (_selectedBingoData?.winningTiles ?? []).contains(index);
 
           return _buildBingoTile(index, theme, isWinningTile: isWinningTile);
         },
@@ -282,6 +286,10 @@ class _BingoCardWidgetState extends State<BingoCardWidget> {
                 clipBehavior: Clip.hardEdge,
                 child: InkWell(
                   splashColor: theme.colorScheme.primary.withAlpha(30),
+                  onLongPress: () => _openDialog(UserDialog(
+                    pb: pb,
+                    user: user,
+                  )),
                   onTap: () {
                     setState(() {
                       _selectedBingoData = userBingoData;
@@ -342,84 +350,158 @@ class _BingoCardWidgetState extends State<BingoCardWidget> {
     );
   }
 
-  Widget _buildBingoTile(int index, ThemeData theme, {bool isWinningTile = false}) {
+  Widget _buildBingoTile(int index, ThemeData theme,
+      {bool isWinningTile = false}) {
     final activity = _selectedBingoData!.activities[index];
     final isCompleted = _completedCards[index];
-    final isAllowed = activity.type != BingoDataType.filled &&
-        selectedUser.id == pb.authStore.model?.id;
+    final isAllowed = (activity.type != BingoDataType.filled &&
+        selectedUser.id == pb.authStore.model?.id) && isPurchasable(Provider.of<HealthManager>(context), activity);
 
     return Stack(
       alignment: Alignment.center,
       children: [
-        // Glow effect for winning tiles
-        if (isWinningTile)
-          Positioned.fill(
-            child: Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(8),
-                boxShadow: [
-                  BoxShadow(
-                    color: theme.colorScheme.secondary.withOpacity(0.2),//theme.colorScheme.secondary.withAlpha(100),
-                    blurRadius: 10,
-                    spreadRadius: 2,
-                  ),
-                ],
-              ),
-            ),
-          ),
+        // Animated border effect for winning tiles
+        // if (isWinningTile)
+        //   Positioned.fill(
+        //     child: AnimatedContainer(
+        //       duration: const Duration(milliseconds: 400),
+        //       curve: Curves.easeInOut,
+        //       decoration: BoxDecoration(
+        //         borderRadius: BorderRadius.circular(12),
+        //         gradient: LinearGradient(
+        //           colors: [
+        //             theme.colorScheme.secondary.withOpacity(0.3),
+        //             theme.colorScheme.secondary.withOpacity(0.1),
+        //           ],
+        //           begin: Alignment.topLeft,
+        //           end: Alignment.bottomRight,
+        //         ),
+        //         border: Border.all(
+        //           color: theme.colorScheme.primaryContainer,
+        //           width: 20,
+        //         ),
+        //       ),
+        //     ),
+        //   ),
 
         // Tile content
         AnimatedScale(
-          scale: _isAnimating[index] || isWinningTile ? 1.05 : 1.0,
-          duration: const Duration(milliseconds: 300),
-          child: AnimatedRotation(
-            turns: _isAnimating[index] ? 0.02 : 0,
-            duration: const Duration(milliseconds: 350),
-            child: Card(
-              color: (
-                  isAllowed
+            scale: _isAnimating[index] ?  1.3 : (isWinningTile ? 1.05 : 1.0),
+            duration: const Duration(milliseconds: 300),
+            child: AnimatedRotation(
+              turns: _isAnimating[index] ? 0.02 : 0,
+              duration: const Duration(milliseconds: 350),
+              child: Container(
+                margin: const EdgeInsets.all(3.5),
+                // color: isWinningTile
+                //     ? theme.colorScheme.primary.withOpacity(0.9)
+                //     : (isAllowed
+                //     ? theme.colorScheme.primary
+                //     : theme.colorScheme.primary.withOpacity(0.9)),
+                //elevation: 4,
+                decoration: BoxDecoration(
+                  border: isWinningTile
+                      ? Border.all(
+                          color: theme.colorScheme.primaryContainer,
+                          style: BorderStyle.solid,
+                          width: 4.5,
+                        )
+                      : null,
+                  color: isWinningTile
                       ? theme.colorScheme.primary
-                      : theme.colorScheme.primary.withAlpha(210)
-              ),
-              child: InkWell(
-                onTap: isAllowed ? () => _handleTileTap(index) : null,
-                child: Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        activity.type.asIcon(),
-                        size: 40,
-                        color: theme.colorScheme.onPrimary,
-                      ),
-                      const SizedBox(height: 10),
-                      Text(
-                        formatNumber(activity.amount),
-                        textAlign: TextAlign.center,
-                        style: theme.textTheme.labelLarge?.copyWith(
-                          color: theme.colorScheme.onPrimary,
+                      : (isAllowed
+                          ? theme.colorScheme.primary
+                          : theme.colorScheme.primary.withOpacity(0.9)),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: InkWell(
+                  onTap: isAllowed ? () => _handleTileTap(index) : null,
+                  child: Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          isWinningTile
+                              ? Symbols.star_rounded
+                              : activity.type.asIcon(),
+                          size: 40,
+                          color: isWinningTile
+                              ? theme.colorScheme.onPrimary
+                              : theme.colorScheme.onPrimary,
                         ),
-                      ),
+                        if (!isWinningTile) const SizedBox(height: 10),
+                        if (!isWinningTile)
+                          Text(
+                            formatNumber(activity.amount),
+                            textAlign: TextAlign.center,
+                            style: theme.textTheme.labelLarge?.copyWith(
+                              color: isWinningTile
+                                  ? theme.colorScheme.onPrimary
+                                  : theme.colorScheme.onPrimary,
+                              fontWeight: isWinningTile
+                                  ? FontWeight.bold
+                                  : FontWeight.normal,
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            )),
+
+        // Pulse animation for winning tiles
+        if (isWinningTile)
+          Positioned.fill(
+            child: AnimatedOpacity(
+              opacity: 0.3,
+              duration: const Duration(milliseconds: 700),
+              curve: Curves.easeInOut,
+              child: Container(
+                decoration: BoxDecoration(
+                  shape: BoxShape.rectangle,
+                  borderRadius: BorderRadius.circular(8),
+                  gradient: RadialGradient(
+                    colors: [
+                      theme.colorScheme.secondary.withOpacity(0.3),
+                      Colors.transparent,
                     ],
+                    center: Alignment.center,
+                    radius: 1.0,
                   ),
                 ),
               ),
             ),
           ),
-        ),
-
-        // // Confetti effect for completed activity
-        // if (isCompleted)
-        //   Positioned.fill(
-        //     child: ConfettiWidget(
-        //       confettiController: _confettiController,
-        //       blastDirectionality: BlastDirectionality.explosive,
-        //       numberOfParticles: 5,
-        //       gravity: 0.7,
-        //     ),
-        //   ),
       ],
     );
+  }
+
+  void _openDialog(Widget dialog) {
+    showDialog(
+      context: context,
+      builder: (context) => dialog,
+    ).then((_) async {
+      if(widget.challenge == null) return;
+      //TODO: move to a provider based update system
+      final data = await pb
+          .collection(Collection.challenges)
+          .getOne(widget.challenge!.id, expand: "users");
+      setState(() {
+        _challenge = data;
+      });
+    });
+  }
+
+  bool isPurchasable(HealthManager health, BingoDataActivity activity) {
+    return switch(activity.type){
+      BingoDataType.steps => (health.steps ?? 0) >= activity.amount,
+      BingoDataType.calories => (health.calories ?? 0) >= activity.amount,
+      BingoDataType.distance => (health.distance ?? 0) >= activity.amount,
+      BingoDataType.water => (health.water ?? 0) >= activity.amount,
+      BingoDataType.filled => false,
+      BingoDataType.azm => false //throw UnimplementedError(),
+    };
   }
 
   Future<void> _handleTileTap(int index) async {
@@ -427,7 +509,7 @@ class _BingoCardWidgetState extends State<BingoCardWidget> {
       _isAnimating[index] = true;
     });
 
-    //try {
+    try {
       await Future.delayed(const Duration(milliseconds: 200));
 
       var data = await manager.updateUserBingoActivity(
@@ -436,20 +518,31 @@ class _BingoCardWidgetState extends State<BingoCardWidget> {
         BingoDataType.filled,
       );
 
-// Debugging the updated user data
-      print("Updated Activities: ${data?.getUser(pb.authStore.model?.id).activities}");
+      // Debugging the updated user data
+      print(
+          "Updated Activities: ${data?.getUser(pb.authStore.model?.id).activities}");
 
       if (data != null) {
+        Map<String, dynamic> body = {};
         // Check if user won
-        final winningTiles = data.checkIfUserHasWon(5, data.getUser(pb.authStore.model?.id).activities);
+        final winningTiles = data.checkIfUserHasWon(5, pb.authStore.model?.id);
+        final oldWinner = _challenge.getStringValue("winner", null) as String?;
         if (winningTiles.isNotEmpty) {
           data = data.setWinningTilesOf(pb.authStore.model.id, winningTiles);
+          if(oldWinner == null || oldWinner.isEmpty) body['winner'] = pb.authStore.model.id;
+          if(_challenge.getBoolValue("autoEnd") == true) {
+            body['ended'] = true;
+            final date = DateTime.now().copyWith(hour: 0, minute: 0, second: 0, millisecond: 0).add(const Duration(days: 14));
+            body['deleteDate'] = pbDateFormat.format(date);
+          };
           logger.debug("User ${pb.authStore.model.id} won!");
         }
 
+        body['data'] = data.toJson();
+
         final updatedChallenge = await pb.collection("challenges").update(
               _challenge.id,
-              body: {"data": data.toJson()},
+              body: body,
               expand: "users",
             );
 
@@ -457,15 +550,14 @@ class _BingoCardWidgetState extends State<BingoCardWidget> {
           _challenge = updatedChallenge;
           _completedCards[index] = true;
           _isAnimating[index] = false;
-          selectedUser =
-              _getSelectedUser(); // Update selected user
+          selectedUser = _getSelectedUser(); // Update selected user
         });
       }
-    // } catch (e) {
-    //   logger.error("Error: $e");
-    //   setState(() {
-    //     _isAnimating[index] = false;
-    //   });
-    // }
+    } catch (e) {
+      logger.error("Error: $e");
+      setState(() {
+        _isAnimating[index] = false;
+      });
+    }
   }
 }

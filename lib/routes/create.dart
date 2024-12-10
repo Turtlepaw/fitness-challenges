@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:fitness_challenges/components/dialog/confirmDialog.dart';
+import 'package:fitness_challenges/components/error.dart';
 import 'package:fitness_challenges/types/challenges.dart';
 import 'package:fitness_challenges/utils/bingo/data.dart';
 import 'package:fitness_challenges/utils/bingo/manager.dart';
@@ -8,6 +9,7 @@ import 'package:fitness_challenges/utils/challengeManager.dart';
 import 'package:fitness_challenges/utils/steps/data.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
 import 'package:pair/pair.dart';
@@ -120,35 +122,22 @@ class _CreateDialogState extends State<CreateDialog> {
                         onCreate: (_isHealthAvailable) ? _handleCreate : null,
                         isCreating: _isCreating,
                       )
-                    : _buildHealthUnavailable(context)),
+                    : ErrorMessage(
+                        title: errorMessages[ErrorMessages.noHealthConnected]!,
+                        action: (theme) => FilledButton(
+                          style: FilledButton.styleFrom(
+                            backgroundColor: theme.colorScheme.error,
+                            foregroundColor: theme.colorScheme.onError,
+                          ),
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                            context.go("/settings");
+                          },
+                          child: Text("Go to settings"),
+                        ),
+                      )),
           ),
         ));
-  }
-
-  Widget _buildHealthUnavailable(BuildContext context) {
-    var theme = Theme.of(context);
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 15),
-      child: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Icon(
-              Symbols.error_circle_rounded,
-              color: theme.colorScheme.error,
-              size: 45,
-            ),
-            const SizedBox(height: 10),
-            Text(
-              "You must connect a health service before creating a challenge",
-              style: theme.textTheme.titleLarge,
-              textAlign: TextAlign.center,
-            )
-          ],
-        ),
-      ),
-    );
   }
 
   void _handleCreate() async {
@@ -423,7 +412,7 @@ class CreateWidgetState extends State<CreateWidget> {
                               Container(
                                   padding: const EdgeInsets.symmetric(
                                       horizontal: 4, vertical: 1),
-                                  margin: const EdgeInsets.only(left: 5),
+                                  margin: const EdgeInsets.only(left: 7),
                                   decoration: BoxDecoration(
                                       color: theme.colorScheme.primary,
                                       borderRadius: BorderRadius.circular(8)),
@@ -435,7 +424,8 @@ class CreateWidgetState extends State<CreateWidget> {
                                             ?.copyWith(
                                                 color:
                                                     theme.colorScheme.onPrimary,
-                                                fontWeight: FontWeight.bold))
+                                                fontWeight: FontWeight.bold)),
+                                    const SizedBox(width: 2),
                                   ]))
                           ],
                         ),

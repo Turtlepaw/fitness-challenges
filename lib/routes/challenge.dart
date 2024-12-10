@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:collection/collection.dart';
 import 'package:confetti/confetti.dart';
 import 'package:dynamic_color/dynamic_color.dart';
+import 'package:fitness_challenges/components/dialog/userDialog.dart';
 import 'package:fitness_challenges/components/loader.dart';
 import 'package:fitness_challenges/components/userPreview.dart';
 import 'package:fitness_challenges/constants.dart';
@@ -20,7 +21,7 @@ import 'package:relative_time/relative_time.dart';
 
 import '../components/dialog/codeDialog.dart';
 import '../components/dialog/confirmDialog.dart';
-import '../components/dialog/userDialog.dart';
+import '../components/dialog/userListDialog.dart';
 import '../types/collections.dart';
 import '../utils/bingo/data.dart';
 import '../utils/challengeManager.dart';
@@ -173,7 +174,7 @@ class _ChallengeDialogState extends State<ChallengeDialog> {
                       leadingIcon: const Icon(Icons.group),
                       child: Text("Manage Users",
                           style: theme.textTheme.bodyLarge),
-                      onPressed: () => _openDialog(UserDialog(
+                      onPressed: () => _openDialog(UserListDialog(
                         pb: pb,
                         challenge: challenge,
                       )),
@@ -385,17 +386,23 @@ class _ChallengeDialogState extends State<ChallengeDialog> {
                       size: 26,
                     ),
                     const SizedBox(width: 15),
-                    Container(
-                      decoration: BoxDecoration(
+                    InkWell(
+                      onTap: () => _openDialog(UserDialog(
+                        pb: pb,
+                        user: user,
+                      )),
+                      borderRadius: BorderRadius.circular(6), // Ensures the ripple respects the borderRadius
+                      splashColor: theme.colorScheme.primary.withOpacity(0.1), // Optional: Customize splash color
+                      child: Ink(
+                        decoration: BoxDecoration(
                           color: theme.colorScheme.surfaceContainerHigh,
-                          borderRadius: BorderRadius.circular(6)),
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 1),
-                      child: Text(
-                          trimString(getUsernameFromUser(user),
-                              MAX_USERNAME_LENGTH),
-                        // Substitute for user.getStringValue("username")
-                        style: theme.textTheme.headlineSmall,
+                          borderRadius: BorderRadius.circular(6), // Applies the border radius
+                        ),
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 1),
+                        child: Text(
+                          trimString(getUsernameFromUser(user), maxUsernameLengthShort),
+                          style: theme.textTheme.headlineSmall,
+                        ),
                       ),
                     ),
                     const SizedBox(width: 8),
@@ -531,6 +538,7 @@ class _ChallengeDialogState extends State<ChallengeDialog> {
                                               curve: Curves.easeOutBack,
                                               emojiPreset: notoAnimatedEmojis,
                                               inactiveElementScale: .9,
+                                              tapScale: .8,
                                               onChanged: (value) async {
                                                 await pb
                                                     .collection("feedback")
@@ -674,211 +682,4 @@ class _ChallengeDialogState extends State<ChallengeDialog> {
       },
     );
   }
-
-  UserBingoData? _selectedBingoData;
-
-  Widget _buildBingoCard(BuildContext context) {
-    var theme = Theme.of(context);
-    final challenge = _challenge;
-    Map<String, dynamic> jsonMap = challenge!.getDataValue("data");
-    final manager = BingoDataManager.fromJson(jsonMap);
-
-    // If no card is selected, default to the current user's bingo data
-    _selectedBingoData ??= manager.data.firstWhere(
-          (value) => value.userId == pb.authStore.model?.id,
-      orElse: () => UserBingoData(userId: "", activities: []),
-    );
-
-    final selectedUser = _challenge?.expand["users"]?.firstWhere(
-          (u) => u.id == _selectedBingoData?.userId,
-      orElse: () => pb.authStore.model!,
-    ) ??
-        pb.authStore.model;
-
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final crossAxisCount = (constraints.maxWidth / 100).floor();
-
-        return Container(
-          padding: const EdgeInsets.all(10.0),
-          child: ListView(
-            shrinkWrap: true,
-            physics: const ClampingScrollPhysics(),
-            children: [
-              _buildTopDetails(context, null),
-
-              // Display who owns the current bingo card
-              Padding(
-                padding: const EdgeInsets.only(left: 8),
-                child: Text(
-                  "${selectedUser.id == pb.authStore.model?.id ? "Your" : "${selectedUser.getStringValue("username")}'s"} bingo card",
-                  style: theme.textTheme.titleLarge,
-                ),
-              ),
-              const SizedBox(height: 10),
-
-              // Main bingo card display based on the selected user's data
-              GridView.builder(
-                physics: const NeverScrollableScrollPhysics(),
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 5,
-                  crossAxisSpacing: 5.0,
-                  mainAxisSpacing: 5.0,
-                  childAspectRatio: 0.68,
-                ),
-                itemCount: _selectedBingoData!.activities.length,
-                shrinkWrap: true,
-                itemBuilder: (context, index) {
-                  final activity = _selectedBingoData!.activities[index];
-
-                  return Card(
-                    clipBehavior: Clip.hardEdge,
-                    color: theme.colorScheme.primary,
-                    child: InkWell(
-                      splashColor: theme.colorScheme.onPrimary.withAlpha(30),
-                      onTap: (activity.type != BingoDataType.filled && pb.authStore.model?.id == selectedUser.id)
-                          ? () async {
-                        final data = await manager.updateUserBingoActivity(
-                          pb.authStore.model?.id,
-                          index,
-                          BingoDataType.filled,
-                        );
-                        if (data != null) {
-                          final updatedChallenge = await pb.collection("challenges").update(
-                            _challenge!.id,
-                            body: {"data": data.toJson()},
-                            expand: "users",
-                          );
-                          setState(() {
-                            _challenge = updatedChallenge;
-                            _selectedBingoData = data.data.firstWhere((value) => value.userId == pb.authStore.model?.id);
-                          });
-                        } else {
-                          debugPrint("Manager#updateUserBingoActivity returned null");
-                        }
-                      }
-                          : null,
-                      child: Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              activity.type.asIcon(),
-                              size: 40,
-                              color: theme.colorScheme.onPrimary,
-                            ),
-                            const SizedBox(height: 10),
-                            Text(
-                              activity.amount.toString(),
-                              textAlign: TextAlign.center,
-                              style: theme.textTheme.labelLarge?.copyWith(
-                                color: theme.colorScheme.onPrimary,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  );
-                },
-              ),
-
-              // Horizontal scroll of other users' bingo cards
-              _buildOtherUsersCards(manager),
-
-              _buildBottomDetails(context),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildOtherUsersCards(BingoDataManager manager) {
-    var theme = Theme.of(context);
-
-    // Get the currently selected user's data (if any)
-    final selectedUser = _challenge?.expand["users"]?.
-        firstWhere((u) => u.id == _selectedBingoData?.userId) ?? pb.authStore.model;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Text indicating that this is the section for other users
-        Padding(
-          padding: const EdgeInsets.only(left: 5, top: 15, bottom: 5),
-          child: Text(
-            "Other users",
-            style: theme.textTheme.titleLarge,
-          ),
-        ),
-
-        // Horizontal list of other users' bingo cards
-        Container(
-          margin: const EdgeInsets.only(top: 5.0),
-          height: 120.0, // Height for the horizontal card list
-          child: ListView.builder(
-            scrollDirection: Axis.horizontal,
-            itemCount: manager.data.length,
-            itemBuilder: (context, index) {
-              final userBingoData = manager.data[index];
-              final isSelected = userBingoData.userId == _selectedBingoData?.userId;
-              final user = _challenge!.expand["users"]!
-                  .firstWhere((u) => u.id == userBingoData.userId);
-
-              return Card.outlined(
-                clipBehavior: Clip.hardEdge,
-                child: InkWell(
-                  splashColor: theme.colorScheme.primary.withAlpha(30),
-                  onTap: () {
-                    setState(() {
-                      _selectedBingoData = userBingoData;
-                    });
-                  },
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 15),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        AdvancedAvatar(
-                          name: user.getStringValue("username"),
-                          style: theme.textTheme.titleMedium?.copyWith(
-                            color: theme.colorScheme.onPrimary,
-                          ),
-                          decoration: BoxDecoration(
-                            color: theme.colorScheme.primary,
-                            borderRadius: BorderRadius.circular(50),
-                          ),
-                          child: selectedUser.id == user.id ? Icon(Symbols.check_rounded, color: theme.colorScheme.onPrimary,) : null,
-                        ),
-                        const SizedBox(height: 10.0),
-                        Text(
-                          user.getStringValue("username"),
-                          style: theme.textTheme.bodyLarge?.copyWith(
-                            color: isSelected
-                                ? theme.colorScheme.onSurfaceVariant.harmonizeWith(theme.colorScheme.primary)
-                                : theme.colorScheme.onSurface,
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        if(user.id == pb.authStore.model?.id) Text(
-                          "You",
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: theme.colorScheme.onSurfaceVariant
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              );
-            },
-          ),
-        ),
-      ],
-    );
-  }
-
-
 }

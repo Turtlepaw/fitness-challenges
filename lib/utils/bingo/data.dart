@@ -91,7 +91,8 @@ class UserBingoData {
   }
 
   UserBingoData setWinningTiles(List<int> winningTiles) {
-    this.winningTiles = List.from(winningTiles); // Create a new list with the provided tiles
+    this.winningTiles =
+        List.from(winningTiles); // Create a new list with the provided tiles
     return this;
   }
 }
@@ -153,23 +154,21 @@ class BingoDataManager extends Manager<UserBingoData> {
   }
 
   BingoDataManager setWinningTilesOf(String userId, List<int> winningTiles) {
-    getUser(userId).setWinningTiles(winningTiles);  // Set the new winningTiles for the user
+    getUser(userId)
+        .setWinningTiles(winningTiles); // Set the new winningTiles for the user
     return this;
   }
 
-  List<int> checkIfUserHasWon(int gridSize, List<BingoDataActivity> activities) {
-    // Debug: Print the activities to ensure they are updated
-    print("Activities: ${activities.map((a) => a.type)}");
+  List<int> checkIfUserHasWon(int gridSize, String userId) {
+    // Extract activities for simplicity
+    List<BingoDataActivity> activities = getUser(userId).activities;
 
     // Helper to check if all activities in a given list are filled
     bool _isLineFilled(List<int> indices) {
-      final result = indices.every((index) =>
+      return indices.every((index) =>
           index >= 0 &&
           index < activities.length &&
           activities[index].type == BingoDataType.filled);
-      print(
-          "Indices: $indices -> $result"); // Debug: Show indices being checked
-      return result;
     }
 
     // Check rows
@@ -177,8 +176,7 @@ class BingoDataManager extends Manager<UserBingoData> {
       List<int> rowIndices =
           List.generate(gridSize, (col) => row * gridSize + col);
       if (_isLineFilled(rowIndices)) {
-        print("Winning Row: $rowIndices");
-        return rowIndices;
+        return rowIndices; // Return winning row indices
       }
     }
 
@@ -187,71 +185,25 @@ class BingoDataManager extends Manager<UserBingoData> {
       List<int> colIndices =
           List.generate(gridSize, (row) => row * gridSize + col);
       if (_isLineFilled(colIndices)) {
-        print("Winning Column: $colIndices");
-        return colIndices;
+        return colIndices; // Return winning column indices
       }
     }
 
-    // Check diagonals
-    List<int> diagonal1 = List.generate(gridSize, (i) => i * gridSize + i);
-    if (_isLineFilled(diagonal1)) {
-      print("Winning Diagonal (\\): $diagonal1");
-      return diagonal1;
+    // Check top-left to bottom-right diagonal
+    List<int> diagonal1Indices =
+        List.generate(gridSize, (i) => i * gridSize + i);
+    if (_isLineFilled(diagonal1Indices)) {
+      return diagonal1Indices; // Return winning diagonal indices
     }
 
-    List<int> diagonal2 =
+    // Check top-right to bottom-left diagonal
+    List<int> diagonal2Indices =
         List.generate(gridSize, (i) => (i + 1) * gridSize - (i + 1));
-    if (_isLineFilled(diagonal2)) {
-      print("Winning Diagonal (/): $diagonal2");
-      return diagonal2;
+    if (_isLineFilled(diagonal2Indices)) {
+      return diagonal2Indices; // Return winning diagonal indices
     }
 
-    // No winning tiles
-    return [];
+    // No win detected
+    return []; // Empty list for no winners
   }
-
-// List<int> checkIfUserHasWon(int gridSize, String userId) {
-//   // Extract activities for simplicity
-//   List<BingoDataActivity> activities = getUser(userId).activities;
-//
-//   // Helper to check if all activities in a given list are filled
-//   bool _isLineFilled(List<int> indices) {
-//     return indices.every((index) =>
-//     index >= 0 &&
-//         index < activities.length &&
-//         activities[index].type == BingoDataType.filled);
-//   }
-//
-//   // Check rows
-//   for (int row = 0; row < gridSize; row++) {
-//     List<int> rowIndices = List.generate(gridSize, (col) => row * gridSize + col);
-//     if (_isLineFilled(rowIndices)) {
-//       return rowIndices; // Return winning row indices
-//     }
-//   }
-//
-//   // Check columns
-//   for (int col = 0; col < gridSize; col++) {
-//     List<int> colIndices = List.generate(gridSize, (row) => row * gridSize + col);
-//     if (_isLineFilled(colIndices)) {
-//       return colIndices; // Return winning column indices
-//     }
-//   }
-//
-//   // Check top-left to bottom-right diagonal
-//   List<int> diagonal1Indices = List.generate(gridSize, (i) => i * gridSize + i);
-//   if (_isLineFilled(diagonal1Indices)) {
-//     return diagonal1Indices; // Return winning diagonal indices
-//   }
-//
-//   // Check top-right to bottom-left diagonal
-//   List<int> diagonal2Indices =
-//   List.generate(gridSize, (i) => (i + 1) * gridSize - (i + 1));
-//   if (_isLineFilled(diagonal2Indices)) {
-//     return diagonal2Indices; // Return winning diagonal indices
-//   }
-//
-//   // No win detected
-//   return []; // Empty list for no winners
-// }
 }

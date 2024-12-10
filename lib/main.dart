@@ -1,3 +1,4 @@
+import 'package:app_links/app_links.dart';
 import 'package:bottom_sheet/bottom_sheet.dart';
 import 'package:dynamic_color/dynamic_color.dart';
 import 'package:fitness_challenges/components/bottomSheet.dart';
@@ -67,7 +68,7 @@ Page<dynamic> Function(BuildContext, GoRouterState) defaultPageBuilder<T>(
     };
 
 final _router =
-    GoRouter(initialLocation: '/', navigatorKey: _rootNavigatorKey, routes: [
+    GoRouter(debugLogDiagnostics: true, initialLocation: '/', navigatorKey: _rootNavigatorKey, routes: [
   GoRoute(
       path: '/',
       builder: (context, state) => SplashScreen(asyncFunction: () async {
@@ -123,6 +124,13 @@ final _router =
                 ChallengeDialog(challenge: state.pathParameters['id']!))(
             context, state);
       }),
+      GoRoute(
+          path: '/invite/:id',
+          pageBuilder: (context, state) {
+            return defaultPageBuilder(
+                JoinDialog(pb: Provider.of<PocketBase>(context, listen: false), inviteCode: state.pathParameters['id']!,))(
+                context, state);
+          }),
   ShellRoute(
     navigatorKey: _shellNavigatorKey,
     pageBuilder: (context, state, child) {
@@ -409,6 +417,21 @@ class _AppState extends State<App> {
     pb = Provider.of<PocketBase>(context, listen: false);
     isLoggedIn = pb.authStore.isValid; // Initialize with current status
 
+    final appLinks = AppLinks(); // AppLinks is singleton
+
+    final sub = appLinks.uriLinkStream.listen((uri) {
+      if (uri != null && uri.path == '/dialog') {
+        if (uri != null && uri.pathSegments.isNotEmpty) {
+          if (uri.pathSegments[0] == 'invite' && uri.pathSegments.length > 1) {
+            showDialog(
+              context: context,
+              builder: (context) => JoinDialog(pb: pb, inviteCode: uri.pathSegments[1]),
+            );
+          }
+        }
+      }
+    });
+
     if (isLoggedIn) {
       subscribeUserData();
       pb.collection("users").authRefresh();
@@ -660,10 +683,12 @@ class _HomePageState extends State<HomePage> {
           padding: const EdgeInsets.symmetric(horizontal: 10),
           child: Column(
             children: [
-              buildSheetAction(Symbols.draw_rounded, "Create a challenge", theme, (){
+              buildSheetAction(
+                  Symbols.draw_rounded, "Create a challenge", theme, () {
                 _showCreateModal(context);
               }),
-              buildSheetAction(Symbols.group_add_rounded, "Join a challenge", theme, (){
+              buildSheetAction(
+                  Symbols.group_add_rounded, "Join a challenge", theme, () {
                 _showJoinModal(context);
               }),
               const SizedBox(height: 10),
@@ -692,7 +717,8 @@ class _HomePageState extends State<HomePage> {
     ]);
   }
 
-  Widget buildSheetAction(IconData icon, String title, ThemeData theme, void Function() onPressed) {
+  Widget buildSheetAction(
+      IconData icon, String title, ThemeData theme, void Function() onPressed) {
     final mediaQuery = MediaQuery.of(context);
 
     return Container(

@@ -4,17 +4,20 @@ import 'package:fitness_challenges/utils/challengeManager.dart';
 import 'package:fitness_challenges/utils/manager.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
 import 'package:pocketbase/pocketbase.dart';
 import 'package:provider/provider.dart';
 import 'package:reactive_forms/reactive_forms.dart';
 
+import '../components/error.dart';
 import '../utils/health.dart';
 
 class JoinDialog extends StatefulWidget {
   final PocketBase pb;
+  final String? inviteCode;
 
-  const JoinDialog({super.key, required this.pb});
+  const JoinDialog({super.key, required this.pb, this.inviteCode});
 
   @override
   _JoinDialogState createState() => _JoinDialogState();
@@ -27,13 +30,27 @@ class _JoinDialogState extends State<JoinDialog> {
 
   // Form definition
   final form = FormGroup({
-    joinCode: FormControl<String>(validators: [Validators.required, Validators.minLength(6), Validators.maxLength(6)]),
+    joinCode: FormControl<String>(validators: [
+      Validators.required,
+      Validators.minLength(6),
+      Validators.maxLength(6)
+    ]),
   });
 
   @override
   void initState() {
     super.initState();
     _checkHealthPlugin();
+  }
+
+  @override
+  void didChangeDependencies() {
+    if(widget.inviteCode != null) {
+      setState(() {
+        form.control(joinCode).value = widget.inviteCode;
+      });
+    }
+    super.didChangeDependencies();
   }
 
   Future<void> _checkHealthPlugin() async {
@@ -60,7 +77,7 @@ class _JoinDialogState extends State<JoinDialog> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Padding(
+              if(_isHealthAvailable) Padding(
                 padding: const EdgeInsets.only(top: 5, left: 10, bottom: 10),
                 child: Align(
                   alignment: Alignment.topLeft,
@@ -70,15 +87,14 @@ class _JoinDialogState extends State<JoinDialog> {
                   ),
                 ),
               ),
-              Padding(
+              if(_isHealthAvailable) Padding(
                 padding: const EdgeInsets.only(top: 5, left: 10, bottom: 10),
                 child: Align(
-                  alignment: Alignment.topLeft,
-                  child: Text(
-                        "Join a challenge using a code.",
-                        style: theme.textTheme.bodyLarge,
-                      )
-                ),
+                    alignment: Alignment.topLeft,
+                    child: Text(
+                      "Join a challenge using a code.",
+                      style: theme.textTheme.bodyLarge,
+                    )),
               ),
               // Align(
               //   alignment: Alignment.topLeft,
@@ -96,9 +112,25 @@ class _JoinDialogState extends State<JoinDialog> {
               else
                 _isHealthAvailable
                     ? const JoinWidget()
-                    : _buildHealthUnavailable(context),
-              const SizedBox(height: 15),
-              Row(
+                    : Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 15),
+                  child: ErrorMessage(
+                    title: errorMessages[ErrorMessages.noHealthConnected]!,
+                    action: (theme) => FilledButton(
+                      style: FilledButton.styleFrom(
+                        backgroundColor: theme.colorScheme.error,
+                        foregroundColor: theme.colorScheme.onError,
+                      ),
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                        context.go("/settings");
+                      },
+                      child: Text("Go to settings"),
+                    ),
+                  ),
+                ),
+              if(_isHealthAvailable) const SizedBox(height: 15),
+              if(_isHealthAvailable) Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   FilledButton.tonal(
@@ -134,32 +166,6 @@ class _JoinDialogState extends State<JoinDialog> {
     );
   }
 
-  Widget _buildHealthUnavailable(BuildContext context) {
-    var theme = Theme.of(context);
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 15),
-      child: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Icon(
-              Symbols.error_circle_rounded,
-              color: theme.colorScheme.error,
-              size: 45,
-            ),
-            const SizedBox(height: 10),
-            Text(
-              "You must connect a health service before joining a challenge",
-              style: theme.textTheme.titleLarge,
-              textAlign: TextAlign.center,
-            )
-          ],
-        ),
-      ),
-    );
-  }
-
   void _handleJoin() async {
     setState(() {
       _isJoining = true;
@@ -171,7 +177,8 @@ class _JoinDialogState extends State<JoinDialog> {
   }
 }
 
-Future<bool> handleJoin(String joinCodeValue, PocketBase pb, BuildContext context) async {
+Future<bool> handleJoin(
+    String joinCodeValue, PocketBase pb, BuildContext context) async {
   try {
     final joinData = await pb.send("/api/hooks/join",
         method: "POST",
@@ -183,13 +190,12 @@ Future<bool> handleJoin(String joinCodeValue, PocketBase pb, BuildContext contex
     final dataManager = Manager.fromData(joinData['data'], type);
     if (!dataManager.data.any((value) => value.userId == userId)) {
       if (type == Types.steps || type == Types.bingo) {
-        final data =
-        Manager.fromData(joinData['data'], type).addUser(userId);
+        final data = Manager.fromData(joinData['data'], type).addUser(userId);
 
         await pb
             .collection(Collection.challenges)
             .update(joinData['id'], body: {'data': data.toJson()});
-      }else {
+      } else {
         debugPrint("Failed to add user to data");
       }
     } else {

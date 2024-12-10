@@ -154,15 +154,7 @@ class _ChallengeState extends State<Challenge> {
                           children: _challenge.expand["users"]!.map((user) {
                             return Padding(
                               padding: const EdgeInsets.symmetric(horizontal: 3),
-                              child: AdvancedAvatar(
-                                name: getUsernameFromUser(user),
-                                style: theme.textTheme.titleMedium?.copyWith(
-                                    color: theme.colorScheme.onPrimary),
-                                decoration: BoxDecoration(
-                                  color: theme.colorScheme.primary,
-                                  borderRadius: BorderRadius.circular(50),
-                                ),
-                              ),
+                              child: Avatar(user: user),
                             );
                           }).toList(),
                         ),
@@ -178,4 +170,27 @@ class _ChallengeState extends State<Challenge> {
     );
   }
 
+}
+
+class Avatar extends StatelessWidget {
+  final RecordModel user;
+  final double size;
+  const Avatar({super.key, required this.user, this.size = 40});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return AdvancedAvatar(
+      size: size,
+      name: getUsernameFromUser(user),
+      autoTextSize: true,
+      style: theme.textTheme.titleMedium?.copyWith(
+          color: theme.colorScheme.onPrimary),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.primary,
+        borderRadius: BorderRadius.circular(50),
+      ),
+    );
+  }
 }

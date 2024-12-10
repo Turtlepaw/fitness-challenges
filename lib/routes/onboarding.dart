@@ -94,6 +94,7 @@ class _OnboardingState extends State<Onboarding> {
                           ),
                           items: [
                             const Pair(Symbols.steps_rounded, "Play step challenges. Together."),
+                            const Pair(Symbols.playing_cards_rounded, "Play bingo with a fitness twist."),
                             const Pair(Symbols.deployed_code_history_rounded, "Support a developing [open-source](https://github.com/Turtlepaw/fitness-challenges) app."),
                             const Pair(Symbols.lock_rounded, "Private, secure, and transparent."),
                           ].map((i) {
