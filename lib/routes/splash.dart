@@ -16,7 +16,12 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
+  }
+
+  @override
+  void didChangeDependencies() {
     _startAnimation();
+    super.didChangeDependencies();
   }
 
   Future<void> _startAnimation() async {

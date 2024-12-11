@@ -24,6 +24,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:health/health.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
 import 'package:material_symbols_icons/symbols.dart';
@@ -67,24 +68,27 @@ Page<dynamic> Function(BuildContext, GoRouterState) defaultPageBuilder<T>(
       );
     };
 
-final _router =
-    GoRouter(debugLogDiagnostics: true, initialLocation: '/', navigatorKey: _rootNavigatorKey, routes: [
-  GoRoute(
-      path: '/',
-      builder: (context, state) => SplashScreen(asyncFunction: () async {
-            if (context.mounted) {
-              var pb = Provider.of<PocketBase>(context, listen: false);
+final _router = GoRouter(
+    debugLogDiagnostics: true,
+    initialLocation: '/',
+    navigatorKey: _rootNavigatorKey,
+    routes: [
+      GoRoute(
+          path: '/',
+          builder: (context, state) => SplashScreen(asyncFunction: () async {
+                if (context.mounted) {
+                  var pb = Provider.of<PocketBase>(context, listen: false);
 
-              if (pb.authStore.isValid) {
-                // User is logged in, navigate to home
-                context.go('/home');
-              } else {
-                // User is not logged in, navigate to login
-                context.go('/introduction');
-              }
-            }
-          })
-      /*FlutterSplashScreen.fadeIn(
+                  if (pb.authStore.isValid) {
+                    // User is logged in, navigate to home
+                    context.go('/home');
+                  } else {
+                    // User is not logged in, navigate to login
+                    context.go('/introduction');
+                  }
+                }
+              })
+          /*FlutterSplashScreen.fadeIn(
             backgroundColor: Theme.of(context).colorScheme.surface,
             childWidget: SizedBox(
               height: 250,
@@ -108,53 +112,69 @@ final _router =
                 }
               }
             }),*/
-      ),
-  GoRoute(
-    path: '/login',
-    pageBuilder: defaultPageBuilder(const LoginPage()),
-  ),
-  GoRoute(
-    path: '/introduction',
-    pageBuilder: defaultPageBuilder(const Onboarding()),
-  ),
-  GoRoute(
-      path: '/challenge/:id',
-      pageBuilder: (context, state) {
-        return defaultPageBuilder(
-                ChallengeDialog(challenge: state.pathParameters['id']!))(
-            context, state);
-      }),
+          ),
       GoRoute(
-          path: '/invite/:id',
+        path: '/login',
+        pageBuilder: defaultPageBuilder(const LoginPage()),
+      ),
+      GoRoute(
+        path: '/introduction',
+        pageBuilder: defaultPageBuilder(const Onboarding()),
+      ),
+      GoRoute(
+          path: '/challenge/:id',
           pageBuilder: (context, state) {
             return defaultPageBuilder(
-                JoinDialog(pb: Provider.of<PocketBase>(context, listen: false), inviteCode: state.pathParameters['id']!,))(
+                    ChallengeDialog(challenge: state.pathParameters['id']!))(
                 context, state);
           }),
-  ShellRoute(
-    navigatorKey: _shellNavigatorKey,
-    pageBuilder: (context, state, child) {
-      return NoTransitionPage(
-          child: Scaffold(
-        bottomNavigationBar: CustomNavigationBar(state: state),
-        body: child,
-      ));
-    },
-    routes: [
       GoRoute(
-          pageBuilder: defaultPageBuilder(const HomePage(title: "Home")),
-          path: '/home'),
-      GoRoute(
-        path: '/settings',
-        pageBuilder: defaultPageBuilder(const SettingsPage()),
+        path: '/invite',
+        pageBuilder: (context, state) {
+          return defaultPageBuilder(
+              JoinDialog(pb: Provider.of<PocketBase>(context, listen: false)))(
+              context, state);
+        },
       ),
       GoRoute(
-        path: '/community',
-        pageBuilder: defaultPageBuilder(const CommunityPage()),
+        path: '/invite/:id',
+        onExit: (context, state){
+          context.go('/home');
+          return true;
+        },
+        pageBuilder: (context, state) {
+          return defaultPageBuilder(
+              JoinDialog(
+                pb: Provider.of<PocketBase>(context, listen: false),
+                inviteCode: state.pathParameters['id'],
+              ))(context, state);
+        },
       ),
-    ],
-  )
-]);
+
+      ShellRoute(
+        navigatorKey: _shellNavigatorKey,
+        pageBuilder: (context, state, child) {
+          return NoTransitionPage(
+              child: Scaffold(
+            bottomNavigationBar: CustomNavigationBar(state: state),
+            body: child,
+          ));
+        },
+        routes: [
+          GoRoute(
+              pageBuilder: defaultPageBuilder(const HomePage(title: "Home")),
+              path: '/home'),
+          GoRoute(
+            path: '/settings',
+            pageBuilder: defaultPageBuilder(const SettingsPage()),
+          ),
+          GoRoute(
+            path: '/community',
+            pageBuilder: defaultPageBuilder(const CommunityPage()),
+          ),
+        ],
+      )
+    ]);
 
 @pragma('vm:entry-point')
 void notificationTapBackground(NotificationResponse notificationResponse) {
@@ -425,7 +445,8 @@ class _AppState extends State<App> {
           if (uri.pathSegments[0] == 'invite' && uri.pathSegments.length > 1) {
             showDialog(
               context: context,
-              builder: (context) => JoinDialog(pb: pb, inviteCode: uri.pathSegments[1]),
+              builder: (context) =>
+                  JoinDialog(pb: pb, inviteCode: uri.pathSegments[1]),
             );
           }
         }
@@ -495,12 +516,25 @@ class _AppState extends State<App> {
           useMaterial3: true,
           iconTheme: const IconThemeData(
               color: Colors.black, fill: 1, weight: 400, opticalSize: 24),
+          textTheme: GoogleFonts.robotoMonoTextTheme(
+            Theme.of(context).textTheme,
+          ),
         ),
         darkTheme: ThemeData(
           colorScheme: darkColorScheme ?? _defaultDarkColorScheme,
           useMaterial3: true,
           iconTheme: const IconThemeData(
-              color: Colors.white, fill: 1, weight: 400, opticalSize: 24),
+            color: Colors.white,
+            fill: 1,
+            weight: 400,
+            opticalSize: 24,
+          ),
+          textTheme: GoogleFonts.interTextTheme(
+            Theme.of(context).textTheme,
+          ).apply(
+            bodyColor: (darkColorScheme ?? _defaultDarkColorScheme).onSurface,
+            displayColor: (darkColorScheme ?? _defaultDarkColorScheme).onSurface,
+          ),
         ),
         themeMode: ThemeMode.system,
       );
@@ -566,10 +600,11 @@ class _HomePageState extends State<HomePage> {
   void _showJoinModal(BuildContext context) {
     var nav = Navigator.of(context);
     nav.pop();
-    showDialog(
-      context: context,
-      builder: (context) => JoinDialog(pb: pb),
-    );
+    context.push('/invite');
+    // showDialog(
+    //   context: context,
+    //   builder: (context) => JoinDialog(pb: pb),
+    // );
   }
 
   int currentPageIndex = 0;

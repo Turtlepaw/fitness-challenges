@@ -1,3 +1,4 @@
+import 'package:fitness_challenges/components/common.dart';
 import 'package:fitness_challenges/components/loader.dart';
 import 'package:fitness_challenges/components/privacy.dart';
 import 'package:fitness_challenges/constants.dart';
@@ -414,7 +415,8 @@ class _SettingsPageState extends State<SettingsPage> {
                     color: theme.colorScheme.onSurface,
                   ),
                   const SizedBox(width: 10),
-                  Text("Privacy", style: theme.textTheme.titleLarge)
+                  Text("Privacy", style: theme.textTheme.titleLarge),
+                  const NewTag()
                 ],
               ),
             ),

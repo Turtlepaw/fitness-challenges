@@ -17,6 +17,7 @@ import 'package:pocketbase/pocketbase.dart';
 import 'package:provider/provider.dart';
 import 'package:reactive_forms/reactive_forms.dart';
 
+import '../components/common.dart';
 import '../constants.dart';
 import '../utils/health.dart';
 
@@ -409,24 +410,7 @@ class CreateWidgetState extends State<CreateWidget> {
                           children: [
                             Text(c.name),
                             if (index == 0)
-                              Container(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 4, vertical: 1),
-                                  margin: const EdgeInsets.only(left: 7),
-                                  decoration: BoxDecoration(
-                                      color: theme.colorScheme.primary,
-                                      borderRadius: BorderRadius.circular(8)),
-                                  child: Row(children: [
-                                    Icon(Icons.auto_awesome_rounded, color: theme.colorScheme.onPrimary, size: 15),
-                                    const SizedBox(width: 4),
-                                    Text("NEW",
-                                        style: theme.textTheme.bodyMedium
-                                            ?.copyWith(
-                                                color:
-                                                    theme.colorScheme.onPrimary,
-                                                fontWeight: FontWeight.bold)),
-                                    const SizedBox(width: 2),
-                                  ]))
+                              const NewTag()
                           ],
                         ),
                         onTap: index == 1 || index == 0

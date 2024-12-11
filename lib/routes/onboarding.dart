@@ -35,11 +35,13 @@ class _OnboardingState extends State<Onboarding> {
                           size: 70,
                         ),
                         const SizedBox(height: 20),
-                        Padding(
+                      Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 15),
                           child: Text(
                             "Your fitness journey starts here.",
-                            style: theme.textTheme.headlineLarge,
+                            style: theme.textTheme.headlineLarge?.copyWith(
+                              fontWeight: FontWeight.w600,
+                            ),
                             textAlign: TextAlign.center,
                           ),
                         ),
@@ -57,7 +59,7 @@ class _OnboardingState extends State<Onboarding> {
                             shadowColor: Colors.transparent,
                             margin: const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
                             child: Container(
-                              height: 115,
+                              //height: 115,
                               padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 20),
                               child: Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
@@ -164,7 +166,7 @@ class _OnboardingState extends State<Onboarding> {
                 child: Align(
                   alignment: Alignment.centerRight,
                   child: SizedBox(
-                    width: 125, // Desired width for the button
+                    //width: 125, // Desired width for the button
                     child: FilledButton(
                       onPressed: () {
                         context.push("/login");

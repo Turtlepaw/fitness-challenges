@@ -94,6 +94,7 @@ dependencies:
       url: https://github.com/quentinleguennec/flutter_health_connect.git
   flutter_svg: ^2.0.16
   app_links: ^6.3.2
+  google_fonts: ^6.2.1
   #share_plus: 10.0.0
 
 dev_dependencies:
