@@ -1,4 +1,5 @@
 import 'package:fitness_challenges/components/loader.dart';
+import 'package:fitness_challenges/constants.dart';
 import 'package:fitness_challenges/types/collections.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -34,6 +35,13 @@ class _CodeDialogState extends State<CodeDialog> {
   Widget build(BuildContext context) {
     var theme = Theme.of(context);
     var dialogWidth = MediaQuery.of(context).size.width * 0.8; // 80% of screen width
+    final highlighted = theme.textTheme.headlineSmall?.copyWith(
+        color: theme.colorScheme.onSurface.withOpacity(0.9),
+        //color: theme.colorScheme.primary,
+        fontWeight: FontWeight.w500);
+    final defaultText = theme.textTheme.headlineSmall
+        ?.copyWith(color: theme.colorScheme.onSurface.withOpacity(0.75));
+
     return Dialog(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
@@ -97,15 +105,22 @@ class _CodeDialogState extends State<CodeDialog> {
                       width: dialogWidth - 32, // Subtract padding
                       height: 70
                   )
-                      : Text(
-                    _code.isEmpty ? "No code" : _code,
-                    style: theme.textTheme.headlineSmall,
+                      : Flexible(child: RichText(textAlign: TextAlign.center, text: TextSpan(
+                      children: _code.isEmpty ? ([
+                        TextSpan(text: "No code",
+                          style: highlighted,
+                        )
+                      ]) : ([
+                        TextSpan(text: "${inviteUri}/", style: defaultText,),
+                        TextSpan(text: _code, style: highlighted,)
+                      ]))
+    ),
                   ),
                   if (!_isLoading && _code.trim().isNotEmpty) IconButton(
                     onPressed: () async {
-                      await Clipboard.setData(ClipboardData(text: _code));
+                      await Clipboard.setData(ClipboardData(text: "$inviteUri/$_code"));
                     },
-                    icon: const Icon(Symbols.content_copy_rounded),
+                    icon: Icon(Symbols.content_copy_rounded, color: theme.colorScheme.onSurfaceVariant),
                   )
                 ],
               ),
@@ -115,7 +130,7 @@ class _CodeDialogState extends State<CodeDialog> {
                 children: [
                   IconButton.filled(
                     onPressed: (!_isLoading && _code.trim().isNotEmpty) ? () async {
-                      await Share.share(_code.toString());
+                      await Share.share("$inviteUri/$_code");
                     } : null,
                     icon: Icon(Symbols.share_rounded, color: (!_isLoading && _code.trim().isNotEmpty) ? theme.colorScheme.onPrimary : theme.colorScheme.onSurface.withOpacity(0.38)),
                   ),

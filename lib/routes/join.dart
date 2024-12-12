@@ -2,6 +2,7 @@ import 'package:fitness_challenges/types/challenges.dart';
 import 'package:fitness_challenges/types/collections.dart';
 import 'package:fitness_challenges/utils/challengeManager.dart';
 import 'package:fitness_challenges/utils/manager.dart';
+import 'package:fitness_challenges/utils/sharedLogger.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -93,8 +94,8 @@ class _JoinDialogState extends State<JoinDialog> {
                     children: [
                       if (_isHealthAvailable)
                         Padding(
-                          padding:
-                          const EdgeInsets.only(top: 5, left: 10, bottom: 10),
+                          padding: const EdgeInsets.only(
+                              top: 5, left: 10, bottom: 10),
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             crossAxisAlignment: CrossAxisAlignment.center,
@@ -130,7 +131,7 @@ class _JoinDialogState extends State<JoinDialog> {
                           padding: const EdgeInsets.symmetric(vertical: 15),
                           child: ErrorMessage(
                             title:
-                            errorMessages[ErrorMessages.noHealthConnected]!,
+                                errorMessages[ErrorMessages.noHealthConnected]!,
                             action: (theme) => FilledButton(
                               style: FilledButton.styleFrom(
                                 backgroundColor: theme.colorScheme.error,
@@ -149,38 +150,42 @@ class _JoinDialogState extends State<JoinDialog> {
                 ),
                 if (_isHealthAvailable) const SizedBox(height: 15),
                 if (_isHealthAvailable)
-                  SafeArea(bottom: true, top: false, left: false, right: false, child: Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      FilledButton.tonal(
-                        onPressed: () {
-                          Navigator.of(context).pop();
-                        },
-                        child: const Text("Cancel"),
-                      ),
-                      const SizedBox(width: 10),
-                      ReactiveFormConsumer(
-                        builder: (context, form, widget) => FilledButton(
-                          onPressed: form.valid
-                              ? () {
-                            _handleJoin();
-                          }
-                              : null,
-                          child: _isJoining
-                              ? const SizedBox(
-                            width: 15,
-                            height: 15,
-                            child: CircularProgressIndicator(
-                              strokeCap: StrokeCap.round,
-                              strokeWidth: 3,
+                  SafeArea(
+                      bottom: true,
+                      top: false,
+                      left: false,
+                      right: false,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          FilledButton.tonal(
+                            onPressed: () {
+                              Navigator.of(context).pop();
+                            },
+                            child: const Text("Cancel"),
+                          ),
+                          const SizedBox(width: 10),
+                          ReactiveFormConsumer(
+                            builder: (context, form, widget) => FilledButton(
+                              onPressed: form.valid
+                                  ? () {
+                                      _handleJoin();
+                                    }
+                                  : null,
+                              child: _isJoining
+                                  ? const SizedBox(
+                                      width: 15,
+                                      height: 15,
+                                      child: CircularProgressIndicator(
+                                        strokeCap: StrokeCap.round,
+                                        strokeWidth: 3,
+                                      ),
+                                    )
+                                  : const Text("Join"),
                             ),
-                          )
-                              : const Text("Join"),
-                        ),
-                      ),
-                      const SizedBox(width: 15),
-                    ],
-                  )),
+                          ),
+                        ],
+                      )),
               ],
             ),
           ),
@@ -188,7 +193,6 @@ class _JoinDialogState extends State<JoinDialog> {
       ),
     );
   }
-
 
   void _handleJoin() async {
     setState(() {
@@ -203,6 +207,7 @@ class _JoinDialogState extends State<JoinDialog> {
 
 Future<bool> handleJoin(
     String joinCodeValue, PocketBase pb, BuildContext context) async {
+  final sharedLogger = Provider.of<SharedLogger>(context, listen: false);
   try {
     final joinData = await pb.send("/api/hooks/join",
         method: "POST",
@@ -220,12 +225,12 @@ Future<bool> handleJoin(
             .collection(Collection.challenges)
             .update(joinData['id'], body: {'data': data.toJson()});
       } else {
-        debugPrint("Failed to add user to data");
+        sharedLogger.error("Failed to add user to data");
       }
     } else {
       // the user data already exists
       // we don't need to create a entry
-      debugPrint("User data already exists, skipping Manager#addUser");
+      sharedLogger.debug("User data already exists, skipping Manager#addUser");
     }
 
     if (context.mounted) {
@@ -246,7 +251,7 @@ Future<bool> handleJoin(
     return true;
   } catch (error, stackTrace) {
     if (kDebugMode) {
-      debugPrint('Error: $error');
+      sharedLogger.error('Error: $error, ($stackTrace)');
       debugPrintStack(stackTrace: stackTrace);
     }
 
@@ -268,6 +273,8 @@ Future<bool> handleJoin(
 
 const joinCode = "join_code";
 
+final errors = {"join_code": "Join code"};
+
 class JoinWidget extends StatelessWidget {
   const JoinWidget({super.key});
 
@@ -276,42 +283,110 @@ class JoinWidget extends StatelessWidget {
     var theme = Theme.of(context);
     final highlighted = theme.textTheme.bodyLarge?.copyWith(
         color: theme.colorScheme.onSurface.withOpacity(0.9),
-      //color: theme.colorScheme.primary,
+        //color: theme.colorScheme.primary,
         fontWeight: FontWeight.w500);
-    final defaultText = theme.textTheme.bodyLarge?.copyWith(
-      color: theme.colorScheme.onSurface.withOpacity(0.75)
-    );
+    final defaultText = theme.textTheme.bodyLarge
+        ?.copyWith(color: theme.colorScheme.onSurface.withOpacity(0.75));
 
     return Column(
-        children: [
-          _buildTextFields(theme),
-          const SizedBox(height: 15),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Row(
-              children: [
-                const Icon(Symbols.info_rounded),
-                const SizedBox(width: 20),
-                Flexible(
-                  child: RichText(
-                    text: TextSpan(children: [
-                      TextSpan(text: "Invite codes should look like ", style: defaultText),
-                      TextSpan(
-                          text: 'https://fitnesschallenges.vercel.app/invite/THDRD5',
-                          style: highlighted),
-                      TextSpan(text: " or ", style: defaultText),
-                      TextSpan(
-                          text: 'THDRD5',
-                          style: highlighted
-                      )
-                    ]),
+      children: [
+        _buildTextFields(theme),
+        const SizedBox(height: 15),
+
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Row(
+            children: [
+              Icon(Symbols.info_rounded,
+                  color: theme.colorScheme.onSurfaceVariant),
+              const SizedBox(width: 20),
+              Flexible(
+                child: RichText(
+                  text: TextSpan(children: [
+                    TextSpan(
+                        text: "Invite codes should look like ",
+                        style: defaultText),
+                    TextSpan(
+                        text:
+                            'https://fitnesschallenges.vercel.app/invite/THDRD5',
+                        style: highlighted),
+                    TextSpan(text: " or ", style: defaultText),
+                    TextSpan(text: 'THDRD5', style: highlighted)
+                  ]),
+                ),
+              )
+            ],
+          ),
+        ),
+        ReactiveFormConsumer(
+          builder: (context, form, w) => AnimatedSwitcher(
+              duration: const Duration(milliseconds: 150),
+              // Animation duration
+              transitionBuilder: (child, animation) {
+                return FadeTransition(
+                  opacity: animation,
+                  child: SlideTransition(
+                    position: Tween<Offset>(
+                      begin: const Offset(0, -0.05),
+                      // Slight upward start
+                      end: Offset.zero, // Final position
+                    ).animate(animation),
+                    child: child,
                   ),
-                )
-              ],
-            ),
-          )
-          //FilledButton(onPressed: (){}, child: Text("Create"))
-        ],
+                );
+              },
+              child: form.errors.isNotEmpty
+                  ? Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20)
+                    .add(const EdgeInsets.only(top: 15)),
+                child: Row(
+                  children: [
+                    Icon(Symbols.warning_rounded,
+                        color: theme.colorScheme.error),
+                    const SizedBox(width: 20),
+                    Flexible(
+                      child: RichText(
+                        text: TextSpan(
+                          children: [
+                            TextSpan(
+                              text:
+                              "${form.errors.length} error${form.errors.length > 1 ? "s" : ""}: ",
+                              style: defaultText?.copyWith(
+                                  color: theme.colorScheme.error),
+                            ),
+                            ...form.errors.keys
+                                .toList()
+                                .asMap()
+                                .entries
+                                .map((entry) {
+                              print(form.errors);
+                              int index = entry.key;
+                              String error = entry.value;
+                              return TextSpan(
+                                children: [
+                                  TextSpan(
+                                    text: error.replaceAll("_", " "),
+                                    style: highlighted,
+                                  ),
+                                  if (index < form.errors.keys.length - 1)
+                                    TextSpan(
+                                      text: ", ",
+                                      style: defaultText,
+                                    ),
+                                ],
+                              );
+                            }).expand((span) => span.children ?? []),
+                          ],
+                        ),
+                      ),
+                    )
+                  ],
+                ),
+              )
+                  : const SizedBox()),
+        ),
+        //FilledButton(onPressed: (){}, child: Text("Create"))
+      ],
     );
   }
 
