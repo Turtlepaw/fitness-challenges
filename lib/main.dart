@@ -521,7 +521,7 @@ class _AppState extends State<App> {
           useMaterial3: true,
           iconTheme: const IconThemeData(
               color: Colors.black, fill: 1, weight: 400, opticalSize: 24),
-          textTheme: GoogleFonts.robotoMonoTextTheme(
+          textTheme: GoogleFonts.interTextTheme(
             Theme.of(context).textTheme,
           ),
         ),
