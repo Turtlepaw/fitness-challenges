@@ -2,7 +2,6 @@ import 'dart:math';
 
 import 'package:collection/collection.dart';
 import 'package:confetti/confetti.dart';
-import 'package:dynamic_color/dynamic_color.dart';
 import 'package:fitness_challenges/components/dialog/userDialog.dart';
 import 'package:fitness_challenges/components/loader.dart';
 import 'package:fitness_challenges/components/userPreview.dart';
@@ -23,7 +22,6 @@ import '../components/dialog/codeDialog.dart';
 import '../components/dialog/confirmDialog.dart';
 import '../components/dialog/userListDialog.dart';
 import '../types/collections.dart';
-import '../utils/bingo/data.dart';
 import '../utils/challengeManager.dart';
 import '../utils/common.dart';
 import '../utils/manager.dart';
@@ -540,6 +538,7 @@ class _ChallengeDialogState extends State<ChallengeDialog> {
                                               inactiveElementScale: .9,
                                               tapScale: .8,
                                               onChanged: (value) async {
+                                                if(value == null) return;
                                                 await pb
                                                     .collection("feedback")
                                                     .create(body: {

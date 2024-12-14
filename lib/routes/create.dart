@@ -392,6 +392,7 @@ class CreateWidgetState extends State<CreateWidget> {
                   ...challenges.asMap().entries.map((entry) {
                     final c = entry.value;
                     final index = entry.key;
+                    if(index == 0) return const SizedBox();
                     return Card(
                       elevation: 0,
                       shape: RoundedRectangleBorder(

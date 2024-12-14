@@ -152,6 +152,7 @@ class _SettingsPageState extends State<SettingsPage> {
         actions: const [DebugPanel()],
       ),
       body: CustomScrollView(
+        key: GlobalKey(debugLabel: "Settings Page"),
         slivers: [
           SliverToBoxAdapter(
             child: Padding(
