@@ -72,7 +72,7 @@ dependencies:
     sdk: flutter
   flutter_wear_os_connectivity:
     git:
-      url: https://github.com/Turtlepaw/flutter_wear_os_connectivity.git
+      url: https://github.com/WearOSCommunity/flutter_wear_os_connectivity.git
   # temporary fix
   device_info_plus: ^10.1.2
   share_plus: ^10.0.2
