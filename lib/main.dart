@@ -339,7 +339,7 @@ void checkLaunchIntent() async {
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  GoogleFonts.config.allowRuntimeFetching = false;
+  //GoogleFonts.config.allowRuntimeFetching = false;
   final logger = SharedLogger();
   final pb = await initializePocketbase();
   final manager = ChallengeProvider(pb: pb);

@@ -417,33 +417,36 @@ class _BingoCardWidgetState extends State<BingoCardWidget> {
                 child: InkWell(
                   onTap: isAllowed ? () => _handleTileTap(index) : null,
                   child: Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          isWinningTile
-                              ? Symbols.star_rounded
-                              : activity.type.asIcon(),
-                          size: 40,
-                          color: isWinningTile
-                              ? theme.colorScheme.onPrimary
-                              : theme.colorScheme.onPrimary,
-                        ),
-                        if (!isWinningTile) const SizedBox(height: 10),
-                        if (!isWinningTile)
-                          Text(
-                            formatNumber(activity.amount),
-                            textAlign: TextAlign.center,
-                            style: theme.textTheme.labelLarge?.copyWith(
-                              color: isWinningTile
-                                  ? theme.colorScheme.onPrimary
-                                  : theme.colorScheme.onPrimary,
-                              fontWeight: isWinningTile
-                                  ? FontWeight.bold
-                                  : FontWeight.normal,
-                            ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(10.0),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            isWinningTile
+                                ? Symbols.star_rounded
+                                : activity.type.asIcon(),
+                            size: 30,
+                            color: isWinningTile
+                                ? theme.colorScheme.onPrimary
+                                : theme.colorScheme.onPrimary,
                           ),
-                      ],
+                          if (!isWinningTile) const SizedBox(height: 10),
+                          if (!isWinningTile)
+                            Text(
+                              formatNumber(activity.amount),
+                              textAlign: TextAlign.center,
+                              style: theme.textTheme.labelLarge?.copyWith(
+                                color: isWinningTile
+                                    ? theme.colorScheme.onPrimary
+                                    : theme.colorScheme.onPrimary,
+                                fontWeight: isWinningTile
+                                    ? FontWeight.bold
+                                    : FontWeight.normal,
+                              ),
+                            ),
+                        ],
+                      ),
                     ),
                   ),
                 ),

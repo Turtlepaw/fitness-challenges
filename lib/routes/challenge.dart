@@ -601,7 +601,7 @@ class _ChallengeDialogState extends State<ChallengeDialog> {
           padding: const EdgeInsets.all(10.0),
           child: ListView(
             shrinkWrap: true, // This will make the ListView take the height of its content
-            physics: ClampingScrollPhysics(), // You can adjust the scroll behavior if needed
+            physics: const ClampingScrollPhysics(), // You can adjust the scroll behavior if needed
             children: [
               _buildTopDetails(context, userTotals.first['userId'] as String),
               ...userTotals.mapIndexed((index, data) {
@@ -609,67 +609,75 @@ class _ChallengeDialogState extends State<ChallengeDialog> {
                     .firstWhere((u) => u.id == data['userId']);
 
                 return Card(
-                  elevation: 4.0, // Add elevation for better visual depth
-                  color: theme.colorScheme.primary,
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                        vertical: 15, horizontal: 15),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        if (_challenge!.getBoolValue("ended") && index == 0)
-                          Row(
-                            children: [
-                              const SizedBox(width: 5),
-                              Icon(
-                                Symbols.trophy_rounded,
+                    clipBehavior: Clip.hardEdge,
+                    elevation: 4.0, // Add elevation for better visual depth
+                    color: theme.colorScheme.primary,
+                    child: InkWell(
+                      highlightColor: theme.colorScheme.primary,
+                      onTap: () => _openDialog(UserDialog(
+                        pb: pb,
+                        user: user,
+                      )),
+                      child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                          vertical: 15, horizontal: 15),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          if (_challenge!.getBoolValue("ended") && index == 0)
+                            Row(
+                              children: [
+                                const SizedBox(width: 5),
+                                Icon(
+                                  Symbols.trophy_rounded,
+                                  color: theme.colorScheme.onPrimary,
+                                  size: 26,
+                                ),
+                                const SizedBox(width: 10),
+                              ],
+                            ),
+                          // Position Indicator
+                          Text(
+                            "${index + 1}.",
+                            style: theme.textTheme.titleLarge?.copyWith(
                                 color: theme.colorScheme.onPrimary,
-                                size: 26,
-                              ),
-                              const SizedBox(width: 10),
-                            ],
+                                fontWeight: FontWeight.bold),
                           ),
-                        // Position Indicator
-                        Text(
-                          "${index + 1}.",
-                          style: theme.textTheme.titleLarge?.copyWith(
+                          const SizedBox(width: 20),
+                          AdvancedAvatar(
+                            name: getUsernameFromUser(user),
+                            style: theme.textTheme.titleMedium
+                                ?.copyWith(color: theme.colorScheme.primary),
+                            decoration: BoxDecoration(
                               color: theme.colorScheme.onPrimary,
-                              fontWeight: FontWeight.bold),
-                        ),
-                        const SizedBox(width: 20),
-                        AdvancedAvatar(
-                          name: getUsernameFromUser(user),
-                          style: theme.textTheme.titleMedium
-                              ?.copyWith(color: theme.colorScheme.primary),
-                          decoration: BoxDecoration(
-                            color: theme.colorScheme.onPrimary,
-                            borderRadius: BorderRadius.circular(50),
+                              borderRadius: BorderRadius.circular(50),
+                            ),
+                            size: 35,
                           ),
-                          size: 35,
-                        ),
-                        const SizedBox(width: 15),
-                        Text(
-                          trimString(getUsernameFromUser(user),
-                              maxUsernameLength),
-                          style: theme.textTheme.titleLarge
-                              ?.copyWith(color: theme.colorScheme.onPrimary),
-                        ),
-                        // Center
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.end,
-                            children: [
-                              Text(
-                                "${formatInt(data['totalValue'] as int)} steps",
-                                style: theme.textTheme.titleLarge?.copyWith(
-                                    color: theme.colorScheme.onPrimary),
-                              ),
-                            ],
+                          const SizedBox(width: 15),
+                          Text(
+                            trimString(getUsernameFromUser(user),
+                                maxUsernameLength),
+                            style: theme.textTheme.titleLarge
+                                ?.copyWith(color: theme.colorScheme.onPrimary),
                           ),
-                        ),
-                        // User Avatar
-                        const SizedBox(width: 10),
-                      ],
+                          // Center
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                Text(
+                                  "${formatInt(data['totalValue'] as int)} steps",
+                                  style: theme.textTheme.titleLarge?.copyWith(
+                                      color: theme.colorScheme.onPrimary),
+                                ),
+                              ],
+                            ),
+                          ),
+                          // User Avatar
+                          const SizedBox(width: 10),
+                        ],
+                      ),
                     ),
                   ),
                 );
