@@ -270,7 +270,7 @@ class _SettingsPageState extends State<SettingsPage> {
                       })
                     : buildCard([
                         SizedBox(
-                          width: MediaQuery.of(context).size.width - 75,
+                          width: MediaQuery.of(context).size.width - 45,
                           child: Column(children: [
                             Padding(
                               padding:

@@ -380,6 +380,7 @@ class CreateWidgetState extends State<CreateWidget> {
               Text(
                 "Select a challenge to play",
                 style: theme.textTheme.titleLarge,
+                textAlign: TextAlign.center,
               ),
               const SizedBox(
                 height: 20,
@@ -476,6 +477,7 @@ class CreateWidgetState extends State<CreateWidget> {
             Text(
               "Set a title for your challenge",
               style: theme.textTheme.titleLarge,
+              textAlign: TextAlign.center,
             ),
             Text(
               "This will be visible to everyone.",
@@ -559,6 +561,7 @@ class CreateWidgetState extends State<CreateWidget> {
               Text(
                 "Set the end date for your challenge",
                 style: theme.textTheme.titleLarge,
+                textAlign: TextAlign.center,
               ),
               Text(
                 "After the challenge has ended, it will be deleted a week after.",
@@ -777,6 +780,7 @@ class CreateWidgetState extends State<CreateWidget> {
               Text(
                 "Set the challenge's difficulty",
                 style: theme.textTheme.titleLarge,
+                textAlign: TextAlign.center,
               ),
               Text(
                 "Adjust how hard the challenge will be for everyone",
@@ -871,6 +875,7 @@ class CreateWidgetState extends State<CreateWidget> {
               Text(
                 "Review and create",
                 style: theme.textTheme.titleLarge,
+                textAlign: TextAlign.center,
               ),
               Text(
                 "Quickly check what you've entered is correct.",

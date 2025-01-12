@@ -215,21 +215,33 @@ class _BingoCardWidgetState extends State<BingoCardWidget> {
           width: 1.1,
         ),
       ),
-      child: GridView.builder(
-        physics: const NeverScrollableScrollPhysics(),
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 5,
-          crossAxisSpacing: 5.0,
-          mainAxisSpacing: 5.0,
-          childAspectRatio: 0.73,
-        ),
-        itemCount: _selectedBingoData!.activities.length,
-        shrinkWrap: true,
-        itemBuilder: (context, index) {
-          final isWinningTile =
-              (_selectedBingoData?.winningTiles ?? []).contains(index);
+      // First get the screen width to calculate tile sizes
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final availableWidth = constraints.maxWidth - 20.0; // Account for padding
+          final tileWidth = (availableWidth - (4 * 5.0)) / 5;
+          final tileHeight = tileWidth / 0.73;
 
-          return _buildBingoTile(index, theme, isWinningTile: isWinningTile);
+          // Then use SingleChildScrollView for vertical scrolling
+          return SingleChildScrollView(
+            child: GridView.builder(
+              physics: const NeverScrollableScrollPhysics(),
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 5,
+                crossAxisSpacing: 5.0,
+                mainAxisSpacing: 5.0,
+                childAspectRatio: tileWidth / tileHeight,
+              ),
+              itemCount: _selectedBingoData!.activities.length,
+              shrinkWrap: true,
+              itemBuilder: (context, index) {
+                final isWinningTile =
+                (_selectedBingoData?.winningTiles ?? []).contains(index);
+
+                return _buildBingoTile(index, theme, isWinningTile: isWinningTile);
+              },
+            ),
+          );
         },
       ),
     );
@@ -350,8 +362,7 @@ class _BingoCardWidgetState extends State<BingoCardWidget> {
     );
   }
 
-  Widget _buildBingoTile(int index, ThemeData theme,
-      {bool isWinningTile = false}) {
+  Widget _buildBingoTile(int index, ThemeData theme, {bool isWinningTile = false}) {
     final activity = _selectedBingoData!.activities[index];
     final isCompleted = _completedCards[index];
     final isAllowed = (activity.type != BingoDataType.filled &&
@@ -360,83 +371,55 @@ class _BingoCardWidgetState extends State<BingoCardWidget> {
     return Stack(
       alignment: Alignment.center,
       children: [
-        // Animated border effect for winning tiles
-        // if (isWinningTile)
-        //   Positioned.fill(
-        //     child: AnimatedContainer(
-        //       duration: const Duration(milliseconds: 400),
-        //       curve: Curves.easeInOut,
-        //       decoration: BoxDecoration(
-        //         borderRadius: BorderRadius.circular(12),
-        //         gradient: LinearGradient(
-        //           colors: [
-        //             theme.colorScheme.secondary.withOpacity(0.3),
-        //             theme.colorScheme.secondary.withOpacity(0.1),
-        //           ],
-        //           begin: Alignment.topLeft,
-        //           end: Alignment.bottomRight,
-        //         ),
-        //         border: Border.all(
-        //           color: theme.colorScheme.primaryContainer,
-        //           width: 20,
-        //         ),
-        //       ),
-        //     ),
-        //   ),
-
-        // Tile content
         AnimatedScale(
-            scale: _isAnimating[index] ?  1.3 : (isWinningTile ? 1.05 : 1.0),
-            duration: const Duration(milliseconds: 300),
-            child: AnimatedRotation(
-              turns: _isAnimating[index] ? 0.02 : 0,
-              duration: const Duration(milliseconds: 350),
-              child: Container(
-                margin: const EdgeInsets.all(3.5),
-                // color: isWinningTile
-                //     ? theme.colorScheme.primary.withOpacity(0.9)
-                //     : (isAllowed
-                //     ? theme.colorScheme.primary
-                //     : theme.colorScheme.primary.withOpacity(0.9)),
-                //elevation: 4,
-                decoration: BoxDecoration(
-                  border: isWinningTile
-                      ? Border.all(
-                          color: theme.colorScheme.primaryContainer,
-                          style: BorderStyle.solid,
-                          width: 4.5,
-                        )
-                      : null,
-                  color: isWinningTile
-                      ? theme.colorScheme.primary
-                      : (isAllowed
-                          ? theme.colorScheme.primary
-                          : theme.colorScheme.primary.withOpacity(0.9)),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: InkWell(
-                  onTap: isAllowed ? () => _handleTileTap(index) : null,
-                  child: Center(
-                    child: Padding(
-                      padding: const EdgeInsets.all(10.0),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            isWinningTile
-                                ? Symbols.star_rounded
-                                : activity.type.asIcon(),
-                            size: 30,
-                            color: isWinningTile
-                                ? theme.colorScheme.onPrimary
-                                : theme.colorScheme.onPrimary,
-                          ),
-                          if (!isWinningTile) const SizedBox(height: 10),
-                          if (!isWinningTile)
-                            Text(
+          scale: _isAnimating[index] ? 1.3 : (isWinningTile ? 1.05 : 1.0),
+          duration: const Duration(milliseconds: 300),
+          child: AnimatedRotation(
+            turns: _isAnimating[index] ? 0.02 : 0,
+            duration: const Duration(milliseconds: 350),
+            child: Container(
+              margin: const EdgeInsets.all(3), // Slightly increased
+              decoration: BoxDecoration(
+                border: isWinningTile
+                    ? Border.all(
+                  color: theme.colorScheme.primaryContainer,
+                  style: BorderStyle.solid,
+                  width: 3.5, // Slightly increased
+                )
+                    : null,
+                color: isWinningTile
+                    ? theme.colorScheme.primary
+                    : (isAllowed
+                    ? theme.colorScheme.primary
+                    : theme.colorScheme.primary.withOpacity(0.9)),
+                borderRadius: BorderRadius.circular(10), // Increased
+              ),
+              child: InkWell(
+                onTap: isAllowed ? () => _handleTileTap(index) : null,
+                child: Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(6.0), // Increased
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          isWinningTile
+                              ? Symbols.star_rounded
+                              : activity.type.asIcon(),
+                          size: 28, // Increased
+                          color: isWinningTile
+                              ? theme.colorScheme.onPrimary
+                              : theme.colorScheme.onPrimary,
+                        ),
+                        if (!isWinningTile) const SizedBox(height: 6), // Increased
+                        if (!isWinningTile)
+                          FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Text(
                               formatNumber(activity.amount),
                               textAlign: TextAlign.center,
-                              style: theme.textTheme.labelLarge?.copyWith(
+                              style: theme.textTheme.labelMedium?.copyWith( // Changed to labelMedium
                                 color: isWinningTile
                                     ? theme.colorScheme.onPrimary
                                     : theme.colorScheme.onPrimary,
@@ -445,15 +428,16 @@ class _BingoCardWidgetState extends State<BingoCardWidget> {
                                     : FontWeight.normal,
                               ),
                             ),
-                        ],
-                      ),
+                          ),
+                      ],
                     ),
                   ),
                 ),
               ),
-            )),
+            ),
+          ),
+        ),
 
-        // Pulse animation for winning tiles
         if (isWinningTile)
           Positioned.fill(
             child: AnimatedOpacity(
@@ -463,7 +447,7 @@ class _BingoCardWidgetState extends State<BingoCardWidget> {
               child: Container(
                 decoration: BoxDecoration(
                   shape: BoxShape.rectangle,
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(10), // Increased to match
                   gradient: RadialGradient(
                     colors: [
                       theme.colorScheme.secondary.withOpacity(0.3),

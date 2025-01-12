@@ -40,9 +40,14 @@ class DebugPanel extends StatelessWidget {
 
               final logger = Provider.of<SharedLogger>(context, listen: false);
               final file = await logger.exportLogsToFile("debug_logs");
-              Future.delayed(Duration.zero, () {
-                Navigator.of(context).pop();
+              await Future.delayed(Duration.zero, () {
+                // close dialog
+                if(context.mounted){
+                  print("Closing dialog");
+                  //return Navigator.of(context).pop();
+                }
               });
+              print("Dialog closed");
               if(file == null) {
                 ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
                   content: Text("Failed to export logs"),
@@ -58,7 +63,10 @@ class DebugPanel extends StatelessWidget {
                       title: "Logs Saved",
                       description: "File saved in **Downloads** folder",
                     ),
-                    useSafeArea: false);
+                    useSafeArea: false).then((_){
+                      if(context.mounted && Navigator.canPop(context))
+                      Navigator.of(context).pop();
+                });
                 ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
                   content: Text("Logs saved in Downloads"),
                 ));

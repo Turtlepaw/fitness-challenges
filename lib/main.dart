@@ -575,24 +575,6 @@ class _HomePageState extends State<HomePage> {
     pb = Provider.of<PocketBase>(context, listen: false);
   }
 
-  void _showBottomSheet(BuildContext context) {
-    final theme = Theme.of(context);
-    showFlexibleBottomSheet(
-        minHeight: 0,
-        initHeight: 0.23,
-        maxHeight: 0.4,
-        useRootScaffold: true,
-        useRootNavigator: true,
-        context: context,
-        builder: _buildBottomSheet,
-        anchors: [0, 0.2],
-        isSafeArea: false,
-        bottomSheetColor: theme.colorScheme.surfaceContainer,
-        bottomSheetBorderRadius: const BorderRadius.vertical(
-          top: Radius.circular(20),
-        ));
-  }
-
   void _showCreateModal(BuildContext context) {
     var nav = Navigator.of(context);
     nav.pop();
@@ -696,51 +678,97 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  void _showBottomSheet(BuildContext context) {
+    final theme = Theme.of(context);
+    final screenHeight = MediaQuery.of(context).size.height;
+
+    // Increase the base content height estimation
+    final contentHeight = 230.0; // Increased from 180 to account for all content + safe margins
+
+    // Calculate the initial height ratio based on content, with a higher minimum
+    final initHeight = (contentHeight / screenHeight).clamp(0.25, 0.4);
+
+    showFlexibleBottomSheet(
+      minHeight: 0,
+      initHeight: initHeight,
+      maxHeight: 0.5,
+      useRootScaffold: true,
+      useRootNavigator: true,
+      context: context,
+      builder: _buildBottomSheet,
+      anchors: [0, initHeight],
+      isSafeArea: false,
+      bottomSheetColor: theme.colorScheme.surfaceContainer,
+      bottomSheetBorderRadius: const BorderRadius.vertical(
+        top: Radius.circular(20),
+      ),
+    );
+  }
+
   Widget _buildBottomSheet(
-    BuildContext context,
-    ScrollController scrollController,
-    double bottomSheetOffset,
-  ) {
-    final challengeProvider =
-        Provider.of<ChallengeProvider>(context, listen: true);
+      BuildContext context,
+      ScrollController scrollController,
+      double bottomSheetOffset,
+      ) {
+    final challengeProvider = Provider.of<ChallengeProvider>(context, listen: true);
     var theme = Theme.of(context);
-    return BottomSheetBuilder(scrollController: scrollController, children: [
-      Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 10),
-          child: Column(
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return BottomSheetBuilder(
+            scrollController: scrollController,
             children: [
-              buildSheetAction(
-                  Symbols.draw_rounded, "Create a challenge", theme, () {
-                _showCreateModal(context);
-              }),
-              buildSheetAction(
-                  Symbols.group_add_rounded, "Join a challenge", theme, () {
-                _showJoinModal(context);
-              }),
-              const SizedBox(height: 10),
-              TextButton(
-                onPressed: () async {
-                  await challengeProvider.reloadChallenges(context);
-                },
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 16),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min, // Add this
                   children: [
-                    const Icon(
-                      Symbols.refresh_rounded,
-                      size: 25,
+                    buildSheetAction(
+                        Symbols.draw_rounded,
+                        "Create a challenge",
+                        theme,
+                            () {
+                          _showCreateModal(context);
+                        }
                     ),
-                    const SizedBox(width: 10),
-                    Text(
-                      "Force refresh challenges",
-                      style: theme.textTheme.bodyLarge
-                          ?.copyWith(color: theme.colorScheme.primary),
+                    const SizedBox(height: 8), // Add consistent spacing
+                    buildSheetAction(
+                        Symbols.group_add_rounded,
+                        "Join a challenge",
+                        theme,
+                            () {
+                          _showJoinModal(context);
+                        }
+                    ),
+                    const SizedBox(height: 16), // Slightly larger spacing before button
+                    TextButton(
+                      onPressed: () async {
+                        await challengeProvider.reloadChallenges(context);
+                      },
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(
+                            Symbols.refresh_rounded,
+                            size: 25,
+                          ),
+                          const SizedBox(width: 10),
+                          Text(
+                            "Force refresh challenges",
+                            style: theme.textTheme.bodyLarge?.copyWith(
+                                color: theme.colorScheme.primary
+                            ),
+                          )
+                        ],
+                      ),
                     )
                   ],
                 ),
               )
-            ],
-          ))
-    ]);
+            ]
+        );
+      },
+    );
   }
 
   Widget buildSheetAction(

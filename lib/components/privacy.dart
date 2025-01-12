@@ -126,13 +126,12 @@ class _PrivacyControlsState extends State<PrivacyControls> {
       debugPrint("Error updating control: $error");
     }
   }
-
   Widget buildPrivacyControl(
       String name,
       String description,
       IconData icon,
       bool value,
-      void Function(bool) onPressed,
+      void Function(bool) onChanged,
       ThemeData theme,
       ) {
     return Container(
@@ -142,30 +141,33 @@ class _PrivacyControlsState extends State<PrivacyControls> {
         border: Border.all(
           color: theme.colorScheme.surfaceContainerHighest,
           width: 1.1,
-          style: BorderStyle.solid,
         ),
       ),
       child: Material(
         color: theme.colorScheme.surfaceContainer,
         borderRadius: BorderRadius.circular(15),
-        clipBehavior: Clip.antiAlias,
-        child: ListTile(
-          contentPadding:
-          const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
-          leading: Icon(icon),
-          title: Text(name),
+        child: SwitchListTile(
+          contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
+          value: value,
+          onChanged: onChanged,
+          title: Row(
+            children: [
+              Icon(icon),
+              const SizedBox(width: 16), // Add spacing between icon and text
+              Expanded(child: Text(name)),
+            ],
+          ),
           subtitle: Text(description),
-          onTap: () {
-            onPressed(!value);
-          },
-          trailing: Switch(
-            value: value,
-            onChanged: (value) {
-              onPressed(value);
-            },
+          activeColor: theme.colorScheme.onPrimary,
+          activeTrackColor: theme.colorScheme.primary,
+          tileColor: theme.colorScheme.surfaceContainer,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(15),
           ),
         ),
       ),
     );
   }
+
+
 }

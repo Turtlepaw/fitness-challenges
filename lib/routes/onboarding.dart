@@ -46,23 +46,24 @@ class _OnboardingState extends State<Onboarding> {
                           ),
                         ),
                         const SizedBox(height: 20),
-                        Flexible(
-                          child: Card(
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(20),
-                              side: BorderSide(
-                                width: 1.1,
-                                color: theme.colorScheme.surfaceContainerHighest,
-                              ),
+                      Flexible(
+                        child: Card(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20),
+                            side: BorderSide(
+                              width: 1.1,
+                              color: theme.colorScheme.surfaceContainerHighest,
                             ),
-                            color: theme.colorScheme.surfaceContainer,
-                            shadowColor: Colors.transparent,
-                            margin: const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
-                            child: Container(
-                              //height: 115,
-                              padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 20),
+                          ),
+                          color: theme.colorScheme.surfaceContainer,
+                          shadowColor: Colors.transparent,
+                          margin: const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 20),
+                            child: IntrinsicHeight( // Add this to make the Card fit its content
                               child: Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
+                                crossAxisAlignment: CrossAxisAlignment.center, // Respect vertical constraints
                                 children: [
                                   const Icon(Symbols.heart_check_rounded, size: 50),
                                   const SizedBox(width: 15),
@@ -73,11 +74,11 @@ class _OnboardingState extends State<Onboarding> {
                                       children: [
                                         Text(
                                           "Works with Health Connect",
-                                          style: theme.textTheme.headlineSmall,
+                                          style: theme.textTheme.titleMedium,
                                         ),
                                         Text(
                                           "Play challenges with any fitness tracker.",
-                                          style: theme.textTheme.bodyLarge,
+                                          style: theme.textTheme.bodyMedium,
                                         ),
                                       ],
                                     ),
@@ -87,10 +88,12 @@ class _OnboardingState extends State<Onboarding> {
                             ),
                           ),
                         ),
+                      ),
+
                         const SizedBox(height: 30),
                         CarouselSlider(
                           options: CarouselOptions(
-                            height: 310.0,
+                            height: 320.0,
                             autoPlay: true,
                             autoPlayInterval: const Duration(seconds: 3),
                           ),
@@ -121,12 +124,12 @@ class _OnboardingState extends State<Onboarding> {
                                     children: [
                                       Icon(
                                         i.key,
-                                        size: 80,
+                                        size: 70,
                                       ),
                                       const SizedBox(height: 15),
                                       MarkdownBody(
                                         data: i.value,
-                                        styleSheet: MarkdownStyleSheet(p: theme.textTheme.headlineMedium),
+                                        styleSheet: MarkdownStyleSheet(p: theme.textTheme.headlineSmall),
                                         onTapLink: (a, b, c) {
                                           if (b != null) launchUrl(Uri.parse(b));
                                         },

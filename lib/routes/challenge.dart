@@ -13,7 +13,6 @@ import 'package:flutter_advanced_avatar/flutter_advanced_avatar.dart';
 import 'package:flutter_emoji_feedback/flutter_emoji_feedback.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:intl/intl.dart';
-import 'package:material_symbols_icons/symbols.dart';
 import 'package:pocketbase/pocketbase.dart';
 import 'package:provider/provider.dart';
 import 'package:relative_time/relative_time.dart';
@@ -373,7 +372,7 @@ class _ChallengeDialogState extends State<ChallengeDialog> {
             alignment: Alignment.center,
             child: Stack(
               children: [
-                Row(
+                Flexible(child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
@@ -399,17 +398,17 @@ class _ChallengeDialogState extends State<ChallengeDialog> {
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 1),
                         child: Text(
                           trimString(getUsernameFromUser(user), maxUsernameLengthShort),
-                          style: theme.textTheme.headlineSmall,
+                          style: theme.textTheme.titleMedium,
                         ),
                       ),
                     ),
                     const SizedBox(width: 8),
-                    Text(
+                    Flexible(child: Text(
                       "is the winner",
-                      style: Theme.of(context).textTheme.headlineSmall,
-                    )
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ) )
                   ],
-                ),
+                )),
                 Positioned.fill(
                   child: Align(
                     alignment: Alignment.center,
@@ -568,7 +567,8 @@ class _ChallengeDialogState extends State<ChallengeDialog> {
                                       ],
                                     )),
                         ])),
-                  ))
+                  )),
+            const SizedBox(height: 20,)
           ],
         )
       ],
@@ -624,22 +624,22 @@ class _ChallengeDialogState extends State<ChallengeDialog> {
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
-                          if (_challenge!.getBoolValue("ended") && index == 0)
-                            Row(
-                              children: [
-                                const SizedBox(width: 5),
-                                Icon(
-                                  Symbols.trophy_rounded,
-                                  color: theme.colorScheme.onPrimary,
-                                  size: 26,
-                                ),
-                                const SizedBox(width: 10),
-                              ],
-                            ),
+                          // if (_challenge!.getBoolValue("ended") && index == 0)
+                          //   Row(
+                          //     children: [
+                          //       const SizedBox(width: 5),
+                          //       Icon(
+                          //         Symbols.trophy_rounded,
+                          //         color: theme.colorScheme.onPrimary,
+                          //         size: 26,
+                          //       ),
+                          //       const SizedBox(width: 10),
+                          //     ],
+                          //   ),
                           // Position Indicator
                           Text(
                             "${index + 1}.",
-                            style: theme.textTheme.titleLarge?.copyWith(
+                            style: theme.textTheme.titleMedium?.copyWith(
                                 color: theme.colorScheme.onPrimary,
                                 fontWeight: FontWeight.bold),
                           ),
@@ -658,7 +658,7 @@ class _ChallengeDialogState extends State<ChallengeDialog> {
                           Text(
                             trimString(getUsernameFromUser(user),
                                 maxUsernameLength),
-                            style: theme.textTheme.titleLarge
+                            style: theme.textTheme.titleMedium
                                 ?.copyWith(color: theme.colorScheme.onPrimary),
                           ),
                           // Center
@@ -667,8 +667,8 @@ class _ChallengeDialogState extends State<ChallengeDialog> {
                               crossAxisAlignment: CrossAxisAlignment.end,
                               children: [
                                 Text(
-                                  "${formatInt(data['totalValue'] as int)} steps",
-                                  style: theme.textTheme.titleLarge?.copyWith(
+                                  "${formatInt(data['totalValue'] as int)}",
+                                  style: theme.textTheme.titleMedium?.copyWith(
                                       color: theme.colorScheme.onPrimary),
                                 ),
                               ],
