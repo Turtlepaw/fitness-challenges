@@ -393,7 +393,7 @@ class CreateWidgetState extends State<CreateWidget> {
                   ...challenges.asMap().entries.map((entry) {
                     final c = entry.value;
                     final index = entry.key;
-                    if(index == 0) return const SizedBox();
+                    if (index == 0) return const SizedBox();
                     return Card(
                       elevation: 0,
                       shape: RoundedRectangleBorder(
@@ -411,8 +411,7 @@ class CreateWidgetState extends State<CreateWidget> {
                         title: Row(
                           children: [
                             Text(c.name),
-                            if (index == 0)
-                              const NewTag()
+                            if (index == 0) const NewTag()
                           ],
                         ),
                         onTap: index == 1 || index == 0

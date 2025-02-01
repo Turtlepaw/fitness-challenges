@@ -32,9 +32,11 @@ class _UserDialogState extends State<UserDialog> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    IconButton(onPressed: (){
-                      Navigator.of(context).pop();
-                    }, icon: const Icon(Icons.close))
+                    IconButton(
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                        },
+                        icon: const Icon(Icons.close))
                   ],
                 ),
               ),
@@ -44,7 +46,10 @@ class _UserDialogState extends State<UserDialog> {
                   shrinkWrap: true,
                   // Ensures the ListView takes only the necessary space
                   children: [
-                    Avatar(user: user, size: 55,),
+                    Avatar(
+                      user: user,
+                      size: 55,
+                    ),
                     const SizedBox(height: 15),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -53,7 +58,8 @@ class _UserDialogState extends State<UserDialog> {
                           child: Text(
                             getUsernameFromUser(user),
                             style: theme.textTheme.headlineMedium,
-                            textAlign: TextAlign.center, // Aligns text in the center horizontally
+                            textAlign: TextAlign
+                                .center, // Aligns text in the center horizontally
                             softWrap: true, // Ensures text wraps
                             overflow: TextOverflow.clip, // Prevents overflowing
                           ),
@@ -64,9 +70,14 @@ class _UserDialogState extends State<UserDialog> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Symbols.award_star_rounded, color: theme.colorScheme.onSurfaceVariant, size: 20),
+                        Icon(Symbols.award_star_rounded,
+                            color: theme.colorScheme.onSurfaceVariant,
+                            size: 20),
                         const SizedBox(width: 5),
-                        Text("${badges > 0 ? "${badges} badge${badges > 1 ? "s" : ""}" : "No badges yet"}", textAlign: TextAlign.center, style: theme.textTheme.bodyLarge)
+                        Text(
+                            "${badges > 0 ? "${badges} badge${badges > 1 ? "s" : ""}" : "No badges yet"}",
+                            textAlign: TextAlign.center,
+                            style: theme.textTheme.bodyLarge)
                       ],
                     )
                   ],

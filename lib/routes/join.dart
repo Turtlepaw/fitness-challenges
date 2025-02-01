@@ -337,52 +337,52 @@ class JoinWidget extends StatelessWidget {
               },
               child: form.errors.isNotEmpty
                   ? Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20)
-                    .add(const EdgeInsets.only(top: 15)),
-                child: Row(
-                  children: [
-                    Icon(Symbols.warning_rounded,
-                        color: theme.colorScheme.error),
-                    const SizedBox(width: 20),
-                    Flexible(
-                      child: RichText(
-                        text: TextSpan(
-                          children: [
-                            TextSpan(
-                              text:
-                              "${form.errors.length} error${form.errors.length > 1 ? "s" : ""}: ",
-                              style: defaultText?.copyWith(
-                                  color: theme.colorScheme.error),
-                            ),
-                            ...form.errors.keys
-                                .toList()
-                                .asMap()
-                                .entries
-                                .map((entry) {
-                              print(form.errors);
-                              int index = entry.key;
-                              String error = entry.value;
-                              return TextSpan(
+                      padding: const EdgeInsets.symmetric(horizontal: 20)
+                          .add(const EdgeInsets.only(top: 15)),
+                      child: Row(
+                        children: [
+                          Icon(Symbols.warning_rounded,
+                              color: theme.colorScheme.error),
+                          const SizedBox(width: 20),
+                          Flexible(
+                            child: RichText(
+                              text: TextSpan(
                                 children: [
                                   TextSpan(
-                                    text: error.replaceAll("_", " "),
-                                    style: highlighted,
+                                    text:
+                                        "${form.errors.length} error${form.errors.length > 1 ? "s" : ""}: ",
+                                    style: defaultText?.copyWith(
+                                        color: theme.colorScheme.error),
                                   ),
-                                  if (index < form.errors.keys.length - 1)
-                                    TextSpan(
-                                      text: ", ",
-                                      style: defaultText,
-                                    ),
+                                  ...form.errors.keys
+                                      .toList()
+                                      .asMap()
+                                      .entries
+                                      .map((entry) {
+                                    print(form.errors);
+                                    int index = entry.key;
+                                    String error = entry.value;
+                                    return TextSpan(
+                                      children: [
+                                        TextSpan(
+                                          text: error.replaceAll("_", " "),
+                                          style: highlighted,
+                                        ),
+                                        if (index < form.errors.keys.length - 1)
+                                          TextSpan(
+                                            text: ", ",
+                                            style: defaultText,
+                                          ),
+                                      ],
+                                    );
+                                  }).expand((span) => span.children ?? []),
                                 ],
-                              );
-                            }).expand((span) => span.children ?? []),
-                          ],
-                        ),
+                              ),
+                            ),
+                          )
+                        ],
                       ),
                     )
-                  ],
-                ),
-              )
                   : const SizedBox()),
         ),
         //FilledButton(onPressed: (){}, child: Text("Create"))

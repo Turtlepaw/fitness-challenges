@@ -7,7 +7,8 @@ void main() {
       userId: 'user123',
       activities: List.generate(25, (index) {
         // Simulating a filled diagonal for testing
-        if (index % 6 == 0) { // Top-left to bottom-right diagonal
+        if (index % 6 == 0) {
+          // Top-left to bottom-right diagonal
           return BingoDataActivity(type: BingoDataType.filled, amount: 1);
         }
         return BingoDataActivity(type: BingoDataType.steps, amount: 1);
@@ -24,7 +25,8 @@ void main() {
       userId: 'user456',
       activities: List.generate(25, (index) {
         // Simulating a filled second row
-        if (index >= 5 && index < 10) { // Second row (indices 5-9)
+        if (index >= 5 && index < 10) {
+          // Second row (indices 5-9)
           return BingoDataActivity(type: BingoDataType.filled, amount: 1);
         }
         return BingoDataActivity(type: BingoDataType.steps, amount: 1);
@@ -41,7 +43,8 @@ void main() {
       userId: 'user789',
       activities: List.generate(25, (index) {
         // Simulating a filled third column
-        if (index % 5 == 2) { // Third column (indices 2, 7, 12, 17, 22)
+        if (index % 5 == 2) {
+          // Third column (indices 2, 7, 12, 17, 22)
           return BingoDataActivity(type: BingoDataType.filled, amount: 1);
         }
         return BingoDataActivity(type: BingoDataType.steps, amount: 1);

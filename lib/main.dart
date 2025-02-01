@@ -131,26 +131,24 @@ final _router = GoRouter(
       GoRoute(
         path: '/invite',
         pageBuilder: (context, state) {
-          return defaultPageBuilder(
-              JoinDialog(pb: Provider.of<PocketBase>(context, listen: false)))(
+          return defaultPageBuilder(JoinDialog(
+                  pb: Provider.of<PocketBase>(context, listen: false)))(
               context, state);
         },
       ),
       GoRoute(
         path: '/invite/:id',
-        onExit: (context, state){
+        onExit: (context, state) {
           context.go('/home');
           return true;
         },
         pageBuilder: (context, state) {
-          return defaultPageBuilder(
-              JoinDialog(
-                pb: Provider.of<PocketBase>(context, listen: false),
-                inviteCode: state.pathParameters['id'],
-              ))(context, state);
+          return defaultPageBuilder(JoinDialog(
+            pb: Provider.of<PocketBase>(context, listen: false),
+            inviteCode: state.pathParameters['id'],
+          ))(context, state);
         },
       ),
-
       ShellRoute(
         navigatorKey: _shellNavigatorKey,
         pageBuilder: (context, state, child) {
@@ -538,7 +536,8 @@ class _AppState extends State<App> {
             Theme.of(context).textTheme,
           ).apply(
             bodyColor: (darkColorScheme ?? _defaultDarkColorScheme).onSurface,
-            displayColor: (darkColorScheme ?? _defaultDarkColorScheme).onSurface,
+            displayColor:
+                (darkColorScheme ?? _defaultDarkColorScheme).onSurface,
           ),
         ),
         themeMode: ThemeMode.system,
@@ -683,7 +682,8 @@ class _HomePageState extends State<HomePage> {
     final screenHeight = MediaQuery.of(context).size.height;
 
     // Increase the base content height estimation
-    final contentHeight = 230.0; // Increased from 180 to account for all content + safe margins
+    final contentHeight =
+        230.0; // Increased from 180 to account for all content + safe margins
 
     // Calculate the initial height ratio based on content, with a higher minimum
     final initHeight = (contentHeight / screenHeight).clamp(0.25, 0.4);
@@ -706,11 +706,12 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildBottomSheet(
-      BuildContext context,
-      ScrollController scrollController,
-      double bottomSheetOffset,
-      ) {
-    final challengeProvider = Provider.of<ChallengeProvider>(context, listen: true);
+    BuildContext context,
+    ScrollController scrollController,
+    double bottomSheetOffset,
+  ) {
+    final challengeProvider =
+        Provider.of<ChallengeProvider>(context, listen: true);
     var theme = Theme.of(context);
 
     return LayoutBuilder(
@@ -719,28 +720,23 @@ class _HomePageState extends State<HomePage> {
             scrollController: scrollController,
             children: [
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 16),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 16),
                 child: Column(
                   mainAxisSize: MainAxisSize.min, // Add this
                   children: [
                     buildSheetAction(
-                        Symbols.draw_rounded,
-                        "Create a challenge",
-                        theme,
-                            () {
-                          _showCreateModal(context);
-                        }
-                    ),
+                        Symbols.draw_rounded, "Create a challenge", theme, () {
+                      _showCreateModal(context);
+                    }),
                     const SizedBox(height: 8), // Add consistent spacing
                     buildSheetAction(
-                        Symbols.group_add_rounded,
-                        "Join a challenge",
-                        theme,
-                            () {
-                          _showJoinModal(context);
-                        }
-                    ),
-                    const SizedBox(height: 16), // Slightly larger spacing before button
+                        Symbols.group_add_rounded, "Join a challenge", theme,
+                        () {
+                      _showJoinModal(context);
+                    }),
+                    const SizedBox(
+                        height: 16), // Slightly larger spacing before button
                     TextButton(
                       onPressed: () async {
                         await challengeProvider.reloadChallenges(context);
@@ -755,9 +751,8 @@ class _HomePageState extends State<HomePage> {
                           const SizedBox(width: 10),
                           Text(
                             "Force refresh challenges",
-                            style: theme.textTheme.bodyLarge?.copyWith(
-                                color: theme.colorScheme.primary
-                            ),
+                            style: theme.textTheme.bodyLarge
+                                ?.copyWith(color: theme.colorScheme.primary),
                           )
                         ],
                       ),
@@ -765,8 +760,7 @@ class _HomePageState extends State<HomePage> {
                   ],
                 ),
               )
-            ]
-        );
+            ]);
       },
     );
   }

@@ -218,7 +218,8 @@ class _BingoCardWidgetState extends State<BingoCardWidget> {
       // First get the screen width to calculate tile sizes
       child: LayoutBuilder(
         builder: (context, constraints) {
-          final availableWidth = constraints.maxWidth - 20.0; // Account for padding
+          final availableWidth =
+              constraints.maxWidth - 20.0; // Account for padding
           final tileWidth = (availableWidth - (4 * 5.0)) / 5;
           final tileHeight = tileWidth / 0.73;
 
@@ -236,9 +237,10 @@ class _BingoCardWidgetState extends State<BingoCardWidget> {
               shrinkWrap: true,
               itemBuilder: (context, index) {
                 final isWinningTile =
-                (_selectedBingoData?.winningTiles ?? []).contains(index);
+                    (_selectedBingoData?.winningTiles ?? []).contains(index);
 
-                return _buildBingoTile(index, theme, isWinningTile: isWinningTile);
+                return _buildBingoTile(index, theme,
+                    isWinningTile: isWinningTile);
               },
             ),
           );
@@ -362,11 +364,13 @@ class _BingoCardWidgetState extends State<BingoCardWidget> {
     );
   }
 
-  Widget _buildBingoTile(int index, ThemeData theme, {bool isWinningTile = false}) {
+  Widget _buildBingoTile(int index, ThemeData theme,
+      {bool isWinningTile = false}) {
     final activity = _selectedBingoData!.activities[index];
     final isCompleted = _completedCards[index];
     final isAllowed = (activity.type != BingoDataType.filled &&
-        selectedUser.id == pb.authStore.model?.id) && isPurchasable(Provider.of<HealthManager>(context), activity);
+            selectedUser.id == pb.authStore.model?.id) &&
+        isPurchasable(Provider.of<HealthManager>(context), activity);
 
     return Stack(
       alignment: Alignment.center,
@@ -382,16 +386,16 @@ class _BingoCardWidgetState extends State<BingoCardWidget> {
               decoration: BoxDecoration(
                 border: isWinningTile
                     ? Border.all(
-                  color: theme.colorScheme.primaryContainer,
-                  style: BorderStyle.solid,
-                  width: 3.5, // Slightly increased
-                )
+                        color: theme.colorScheme.primaryContainer,
+                        style: BorderStyle.solid,
+                        width: 3.5, // Slightly increased
+                      )
                     : null,
                 color: isWinningTile
                     ? theme.colorScheme.primary
                     : (isAllowed
-                    ? theme.colorScheme.primary
-                    : theme.colorScheme.primary.withOpacity(0.9)),
+                        ? theme.colorScheme.primary
+                        : theme.colorScheme.primary.withOpacity(0.9)),
                 borderRadius: BorderRadius.circular(10), // Increased
               ),
               child: InkWell(
@@ -412,14 +416,16 @@ class _BingoCardWidgetState extends State<BingoCardWidget> {
                               ? theme.colorScheme.onPrimary
                               : theme.colorScheme.onPrimary,
                         ),
-                        if (!isWinningTile) const SizedBox(height: 6), // Increased
+                        if (!isWinningTile)
+                          const SizedBox(height: 6), // Increased
                         if (!isWinningTile)
                           FittedBox(
                             fit: BoxFit.scaleDown,
                             child: Text(
                               formatNumber(activity.amount),
                               textAlign: TextAlign.center,
-                              style: theme.textTheme.labelMedium?.copyWith( // Changed to labelMedium
+                              style: theme.textTheme.labelMedium?.copyWith(
+                                // Changed to labelMedium
                                 color: isWinningTile
                                     ? theme.colorScheme.onPrimary
                                     : theme.colorScheme.onPrimary,
@@ -437,7 +443,6 @@ class _BingoCardWidgetState extends State<BingoCardWidget> {
             ),
           ),
         ),
-
         if (isWinningTile)
           Positioned.fill(
             child: AnimatedOpacity(
@@ -469,7 +474,7 @@ class _BingoCardWidgetState extends State<BingoCardWidget> {
       context: context,
       builder: (context) => dialog,
     ).then((_) async {
-      if(widget.challenge == null) return;
+      if (widget.challenge == null) return;
       //TODO: move to a provider based update system
       final data = await pb
           .collection(Collection.challenges)
@@ -481,7 +486,7 @@ class _BingoCardWidgetState extends State<BingoCardWidget> {
   }
 
   bool isPurchasable(HealthManager health, BingoDataActivity activity) {
-    return switch(activity.type){
+    return switch (activity.type) {
       BingoDataType.steps => (health.steps ?? 0) >= activity.amount,
       BingoDataType.calories => (health.calories ?? 0) >= activity.amount,
       BingoDataType.distance => (health.distance ?? 0) >= activity.amount,
@@ -516,12 +521,16 @@ class _BingoCardWidgetState extends State<BingoCardWidget> {
         final oldWinner = _challenge.getStringValue("winner", null) as String?;
         if (winningTiles.isNotEmpty) {
           data = data.setWinningTilesOf(pb.authStore.model.id, winningTiles);
-          if(oldWinner == null || oldWinner.isEmpty) body['winner'] = pb.authStore.model.id;
-          if(_challenge.getBoolValue("autoEnd") == true) {
+          if (oldWinner == null || oldWinner.isEmpty)
+            body['winner'] = pb.authStore.model.id;
+          if (_challenge.getBoolValue("autoEnd") == true) {
             body['ended'] = true;
-            final date = DateTime.now().copyWith(hour: 0, minute: 0, second: 0, millisecond: 0).add(const Duration(days: 14));
+            final date = DateTime.now()
+                .copyWith(hour: 0, minute: 0, second: 0, millisecond: 0)
+                .add(const Duration(days: 14));
             body['deleteDate'] = pbDateFormat.format(date);
-          };
+          }
+          ;
           logger.debug("User ${pb.authStore.model.id} won!");
         }
 

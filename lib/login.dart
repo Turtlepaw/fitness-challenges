@@ -62,7 +62,9 @@ class _LoginPageState extends State<LoginPage> {
         },
         scopes: [
           'email',
-          provider == "google" ? 'https://www.googleapis.com/auth/userinfo.profile' : "identify",
+          provider == "google"
+              ? 'https://www.googleapis.com/auth/userinfo.profile'
+              : "identify",
         ],
       );
 
@@ -177,9 +179,7 @@ class _LoginPageState extends State<LoginPage> {
             Navigator.of(context).pop();
           },
         ),
-        actions: const [
-          DebugPanel()
-        ],
+        actions: const [DebugPanel()],
       ),
       body: ReactiveForm(
         formGroup: form,
@@ -390,64 +390,68 @@ class _LoginPageState extends State<LoginPage> {
           ),
           const SizedBox(height: 15),
           Column(
-            children: isLoading ? [
-              SizedBox(
-                width: 20,
-                height: 20,
-                child: CircularProgressIndicator(
-                  color: Theme.of(context).colorScheme.primary,
-                  strokeCap: StrokeCap.round,
-                ),
-              )
-            ] : [
-              AdaptiveBox(
-                width: width,
-                height: 50,
-                child: FilledButton(
-                  onPressed: () => _signInWith("google"),
-                  child: isLoading
-                      ? SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(
-                      color: Theme.of(context).colorScheme.onPrimary,
-                      strokeCap: StrokeCap.round,
+            children: isLoading
+                ? [
+                    SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        color: Theme.of(context).colorScheme.primary,
+                        strokeCap: StrokeCap.round,
+                      ),
+                    )
+                  ]
+                : [
+                    AdaptiveBox(
+                      width: width,
+                      height: 50,
+                      child: FilledButton(
+                        onPressed: () => _signInWith("google"),
+                        child: isLoading
+                            ? SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  color:
+                                      Theme.of(context).colorScheme.onPrimary,
+                                  strokeCap: StrokeCap.round,
+                                ),
+                              )
+                            : Text(
+                                'Continue with Google',
+                                style: theme.textTheme.titleMedium?.copyWith(
+                                  color: theme.colorScheme.onPrimary,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                      ),
                     ),
-                  )
-                      : Text(
-                    'Continue with Google',
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      color: theme.colorScheme.onPrimary,
-                      fontWeight: FontWeight.w500,
+                    const SizedBox(height: 10),
+                    AdaptiveBox(
+                      width: width,
+                      height: 50,
+                      child: FilledButton(
+                        onPressed: () => _signInWith("discord"),
+                        child: isLoading
+                            ? SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  color:
+                                      Theme.of(context).colorScheme.onPrimary,
+                                  strokeCap: StrokeCap.round,
+                                ),
+                              )
+                            : Text(
+                                'Continue with Discord',
+                                style: theme.textTheme.titleMedium?.copyWith(
+                                  color: theme.colorScheme.onPrimary,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                      ),
                     ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 10),
-              AdaptiveBox(
-                width: width,
-                height: 50,
-                child: FilledButton(
-                  onPressed: () => _signInWith("discord"),
-                  child: isLoading
-                      ? SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(
-                      color: Theme.of(context).colorScheme.onPrimary,
-                      strokeCap: StrokeCap.round,
-                    ),
-                  )
-                      : Text(
-                    'Continue with Discord',
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      color: theme.colorScheme.onPrimary,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ),
-              ),
-            ],
+                  ],
           ),
           const SizedBox(height: 15),
           Text(

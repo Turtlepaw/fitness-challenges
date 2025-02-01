@@ -24,9 +24,7 @@ class _UserListDialogState extends State<UserListDialog> {
   Widget build(BuildContext context) {
     final challenge = widget.challenge;
     var theme = Theme.of(context);
-    var dataSourceManager = DataSourceManager.fromChallenge(
-      challenge
-    );
+    var dataSourceManager = DataSourceManager.fromChallenge(challenge);
     print(dataSourceManager.users);
 
     return Dialog(
@@ -50,56 +48,74 @@ class _UserListDialogState extends State<UserListDialog> {
             const SizedBox(height: 5),
             Flexible(
               child: ListView(
-                shrinkWrap: true, // Ensures the ListView takes only the necessary space
+                shrinkWrap:
+                    true, // Ensures the ListView takes only the necessary space
                 children: [
                   ...challenge.expand["users"]!.map((user) => Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.only(left: 15),
-                        child: Row(
-                          children: [
-                            Text(
-                              trimString(getUsernameFromUser(user), 15),
-                              style: theme.textTheme.titleLarge,
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.only(left: 15),
+                            child: Row(
+                              children: [
+                                Text(
+                                  trimString(getUsernameFromUser(user), 15),
+                                  style: theme.textTheme.titleLarge,
+                                ),
+                                SizedBox(
+                                  width: 15,
+                                ),
+                                if (dataSourceManager.getUser(user.id) != null)
+                                  Container(
+                                    decoration: BoxDecoration(
+                                        borderRadius:
+                                            BorderRadius.circular(1000),
+                                        color: Colors.white),
+                                    padding: EdgeInsets.all(5),
+                                    child: Image.asset(
+                                      getSourceAsset(
+                                          dataSourceManager.getUser(user.id)!),
+                                      //scale: 8.5,
+                                      width: 25,
+                                      height: 25,
+                                    ),
+                                  )
+                              ],
                             ),
-                            SizedBox(width: 15,),
-                            if(dataSourceManager.getUser(user.id) != null) Container(
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(1000),
-                                color: Colors.white
-                              ),
-                              padding: EdgeInsets.all(5),
-                              child: Image.asset(
-                                  getSourceAsset(dataSourceManager.getUser(user.id)!),
-                                //scale: 8.5,
-                                width: 25,
-                                height: 25,
-                              ),
-                            )
-                          ],
-                        ),
-                      ),
-                      TextButton(onPressed: user.id == challenge.getDataValue("host") ? null : () async {
-                        final id = user.id;
-                        final data = Manager.fromChallenge(challenge)
-                            .removeUser(id)
-                            .toJson();
-                        await widget.pb
-                            .collection(Collection.challenges)
-                            .update(challenge.id,
-                            body: {"users-": id, "data": data});
+                          ),
+                          TextButton(
+                              onPressed:
+                                  user.id == challenge.getDataValue("host")
+                                      ? null
+                                      : () async {
+                                          final id = user.id;
+                                          final data =
+                                              Manager.fromChallenge(challenge)
+                                                  .removeUser(id)
+                                                  .toJson();
+                                          await widget.pb
+                                              .collection(Collection.challenges)
+                                              .update(challenge.id, body: {
+                                            "users-": id,
+                                            "data": data
+                                          });
 
-                        if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text('Kicked ${getUsernameFromUser(user)}'),
-                            ),
-                          );
-                        }
-                      }, child: Text(user.id == challenge.getDataValue("host") ? "Host" :"Kick"))
-                    ],
-                  ))
+                                          if (context.mounted) {
+                                            ScaffoldMessenger.of(context)
+                                                .showSnackBar(
+                                              SnackBar(
+                                                content: Text(
+                                                    'Kicked ${getUsernameFromUser(user)}'),
+                                              ),
+                                            );
+                                          }
+                                        },
+                              child: Text(
+                                  user.id == challenge.getDataValue("host")
+                                      ? "Host"
+                                      : "Kick"))
+                        ],
+                      ))
                 ],
               ),
             ),
@@ -119,8 +135,8 @@ class _UserListDialogState extends State<UserListDialog> {
     );
   }
 
-  String getSourceAsset(DataSourceEntry entry){
-    if(entry.source == DataSource.healthConnect){
+  String getSourceAsset(DataSourceEntry entry) {
+    if (entry.source == DataSource.healthConnect) {
       return "images/health_connect.png";
     } else {
       return "images/wear_os.png";

@@ -16,32 +16,41 @@ class Bingo {
     final List<BingoDataActivity> activities = List.generate(25, (index) {
       switch (index % 5) {
         case 0:
-          final steps = (random.nextInt(stepsRange[1] - stepsRange[0] + 1) + stepsRange[0])
+          final steps = (random.nextInt(stepsRange[1] - stepsRange[0] + 1) +
+                  stepsRange[0])
               .roundToNearest(50)
               .clamp(stepsRange[0], stepsRange[1]);
           return BingoDataType.steps.toActivity(steps);
 
         case 1:
-          final distance = ((random.nextDouble() * (distanceRange[1] - distanceRange[0]) + distanceRange[0])
-              .roundToNearestNum(0.5))  // Use as double to keep precision
+          final distance = ((random.nextDouble() *
+                          (distanceRange[1] - distanceRange[0]) +
+                      distanceRange[0])
+                  .roundToNearestNum(0.5)) // Use as double to keep precision
               .clamp(distanceRange[0], distanceRange[1]);
-          return BingoDataType.distance.toActivity(distance); // Convert to int for compatibility
+          return BingoDataType.distance
+              .toActivity(distance); // Convert to int for compatibility
 
         case 2:
-          final activeMinutes = (random.nextInt(activeMinutesRange[1] - activeMinutesRange[0] + 1) + activeMinutesRange[0])
+          final activeMinutes = (random.nextInt(
+                      activeMinutesRange[1] - activeMinutesRange[0] + 1) +
+                  activeMinutesRange[0])
               .roundToNearest(5)
               .clamp(activeMinutesRange[0], activeMinutesRange[1]);
           return BingoDataType.azm.toActivity(activeMinutes);
 
         case 3:
-          final calories = (random.nextInt(caloriesRange[1] - caloriesRange[0] + 1) + caloriesRange[0])
-              .roundToNearest(10)
-              .clamp(caloriesRange[0], caloriesRange[1]);
+          final calories =
+              (random.nextInt(caloriesRange[1] - caloriesRange[0] + 1) +
+                      caloriesRange[0])
+                  .roundToNearest(10)
+                  .clamp(caloriesRange[0], caloriesRange[1]);
           return BingoDataType.calories.toActivity(calories);
 
         case 4:
-        // Only include water intake if the user is comfortable with it
-          final water = (random.nextInt(waterRange[1] - waterRange[0] + 1) + waterRange[0])
+          // Only include water intake if the user is comfortable with it
+          final water = (random.nextInt(waterRange[1] - waterRange[0] + 1) +
+                  waterRange[0])
               .roundToNearest(250)
               .clamp(waterRange[0], waterRange[1]);
           return BingoDataType.water.toActivity(water);
@@ -119,8 +128,6 @@ class Bingo {
         return [500, 1000];
     }
   }
-
-
 }
 
 extension on num {
@@ -128,7 +135,9 @@ extension on num {
     return (this / n).round() * n;
   }
 
-  double roundToNearestNum(num n) { // Return a double to preserve precision
-    return (this / n).roundToDouble() * n; // Use roundToDouble() to avoid potential errors
+  double roundToNearestNum(num n) {
+    // Return a double to preserve precision
+    return (this / n).roundToDouble() *
+        n; // Use roundToDouble() to avoid potential errors
   }
 }

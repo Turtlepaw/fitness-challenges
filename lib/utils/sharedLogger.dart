@@ -17,13 +17,13 @@ class SharedLogger {
     _logs.add('[$timestamp] $message'); // Add log to memory
   }
 
-  void debug(String message){
+  void debug(String message) {
     _logger.d(message);
     String timestamp = DateTime.now().toIso8601String();
     _logs.add('Debug [$timestamp]: $message'); // Add log to memory
   }
 
-  SharedLogger error(String message){
+  SharedLogger error(String message) {
     _logger.e(message);
     String timestamp = DateTime.now().toIso8601String();
     _logs.add('ERROR [$timestamp]: $message'); // Add log to memory

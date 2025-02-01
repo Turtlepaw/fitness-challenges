@@ -57,10 +57,12 @@ class _CommunityChallengeState extends State<CommunityChallenge> {
   }
 
   void openDialog(BuildContext context) {
-    final joinedChallenges = Provider.of<ChallengeProvider>(context, listen: false).challenges;
-    final hasJoined = joinedChallenges.firstWhereOrNull((e) => e.id == _challenge.id) != null;
+    final joinedChallenges =
+        Provider.of<ChallengeProvider>(context, listen: false).challenges;
+    final hasJoined =
+        joinedChallenges.firstWhereOrNull((e) => e.id == _challenge.id) != null;
 
-    if(hasJoined){
+    if (hasJoined) {
       context.push("/challenge/${_challenge.id}");
       return;
     }
@@ -78,7 +80,8 @@ class _CommunityChallengeState extends State<CommunityChallenge> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final joinedChallenges = Provider.of<ChallengeProvider>(context).challenges;
-    final hasJoined = joinedChallenges.firstWhereOrNull((e) => e.id == _challenge.id) != null;
+    final hasJoined =
+        joinedChallenges.firstWhereOrNull((e) => e.id == _challenge.id) != null;
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -164,13 +167,15 @@ class _CommunityChallengeState extends State<CommunityChallenge> {
                             onPressed: () {
                               openDialog(context);
                             },
-                            child: hasJoined ? const Row(
-                              children: [
-                                Icon(Symbols.check_rounded),
-                                SizedBox(width: 5),
-                                Text("Joined")
-                              ],
-                            ) : const Text("Join"))
+                            child: hasJoined
+                                ? const Row(
+                                    children: [
+                                      Icon(Symbols.check_rounded),
+                                      SizedBox(width: 5),
+                                      Text("Joined")
+                                    ],
+                                  )
+                                : const Text("Join"))
                       ],
                     )
                   ],

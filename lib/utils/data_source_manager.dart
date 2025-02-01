@@ -1,11 +1,7 @@
 import 'package:flutter/widgets.dart';
 import 'package:pocketbase/pocketbase.dart';
 
-enum DataSource {
-  wearOS,
-  healthConnect,
-  unknown
-}
+enum DataSource { wearOS, healthConnect, unknown }
 
 class DataSourceEntry {
   final String userId;
@@ -15,9 +11,9 @@ class DataSourceEntry {
 
   // Convert a JSON map to a DateTimeIntPair
   factory DataSourceEntry.fromJson(Map<String, dynamic> json) {
-    var source = json['source'] != null ? (
-        DataSource.values[json['source'] as int]
-    ) : DataSource.unknown;
+    var source = json['source'] != null
+        ? (DataSource.values[json['source'] as int])
+        : DataSource.unknown;
 
     return DataSourceEntry(
       json['userId'] as String,
@@ -27,10 +23,7 @@ class DataSourceEntry {
 
   // Convert a DateTimeIntPair to a JSON map
   Map<String, dynamic> toJson() {
-    return {
-      'userId': userId,
-      'source': source.index
-    };
+    return {'userId': userId, 'source': source.index};
   }
 }
 
@@ -39,19 +32,17 @@ class DataSourceManager {
 
   DataSourceManager(this.users);
 
-  DataSourceManager setDataSource(String userId, DataSource dataSource){
+  DataSourceManager setDataSource(String userId, DataSource dataSource) {
     users.removeWhere((entry) => entry.userId == userId);
-    users.add(
-      DataSourceEntry(userId, dataSource)
-    );
+    users.add(DataSourceEntry(userId, dataSource));
 
     return this;
   }
 
-  DataSourceEntry? getUser(String userId){
+  DataSourceEntry? getUser(String userId) {
     try {
       return users.firstWhere((entry) => entry.userId == userId);
-    } catch(e) {
+    } catch (e) {
       return null;
     }
   }
@@ -64,15 +55,16 @@ class DataSourceManager {
 
   factory DataSourceManager.fromChallenge(RecordModel challenge) {
     try {
-      var json = challenge.getDataValue<Map<String, dynamic>>("dataSources", null);
-      if(json == null) return DataSourceManager(List.empty(growable: true));
+      var json =
+          challenge.getDataValue<Map<String, dynamic>>("dataSources", null);
+      if (json == null) return DataSourceManager(List.empty(growable: true));
 
       return DataSourceManager(
         (json['users'] as List<dynamic>)
             .map((activityJson) => DataSourceEntry.fromJson(activityJson))
             .toList(),
       );
-    } catch(e, stackTrace){
+    } catch (e, stackTrace) {
       debugPrint("Failed to get data normally: $e");
       debugPrint("Stack trace: $stackTrace");
       return DataSourceManager(List.empty(growable: true));

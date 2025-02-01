@@ -11,7 +11,7 @@ abstract class Manager<T> {
 
   Map<String, dynamic> toJson();
 
-  Manager<T> addUser(String userId, { Difficulty difficulty = Difficulty.easy });
+  Manager<T> addUser(String userId, {Difficulty difficulty = Difficulty.easy});
 
   Manager<T> removeUser(String userId);
 
@@ -20,10 +20,10 @@ abstract class Manager<T> {
       case Types.steps:
         return StepsDataManager.fromJson(data);
       case Types.bingo:
-      // Implement and return BingoDataManager here
+        // Implement and return BingoDataManager here
         return BingoDataManager.fromJson(data);
       case Types.sleep:
-      // Implement and return SleepDataManager here
+        // Implement and return SleepDataManager here
         throw UnimplementedError();
       default:
         throw UnsupportedError("Unsupported type");
@@ -39,10 +39,10 @@ abstract class Manager<T> {
       case Types.steps:
         return StepsDataManager.fromJson(data);
       case Types.bingo:
-      // Implement and return BingoDataManager here
+        // Implement and return BingoDataManager here
         return BingoDataManager.fromJson(data);
       case Types.sleep:
-      // Implement and return SleepDataManager here
+        // Implement and return SleepDataManager here
         throw UnimplementedError();
       default:
         throw UnsupportedError("Unsupported type");

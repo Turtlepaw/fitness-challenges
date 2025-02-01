@@ -32,7 +32,8 @@ class _ChallengeState extends State<Challenge> {
   }
 
   void subscribe() {
-    widget.pb.collection("challenges").subscribe(widget.challenge.id, (newValue) {
+    widget.pb.collection("challenges").subscribe(widget.challenge.id,
+        (newValue) {
       if (mounted) {
         print("Got update (${newValue.action})");
         Provider.of<ChallengeProvider>(context, listen: false)
@@ -46,7 +47,9 @@ class _ChallengeState extends State<Challenge> {
 
   @override
   void dispose() {
-    widget.pb.collection(Collection.challenges).unsubscribe(widget.challenge.id);
+    widget.pb
+        .collection(Collection.challenges)
+        .unsubscribe(widget.challenge.id);
     super.dispose();
   }
 
@@ -86,7 +89,8 @@ class _ChallengeState extends State<Challenge> {
       builder: (context, constraints) {
         double width;
         if (constraints.maxWidth < 400) {
-          width = constraints.maxWidth - 30; // Fill the width on phones with margin
+          width =
+              constraints.maxWidth - 30; // Fill the width on phones with margin
         } else {
           width = 300; // Limit to ~300 on larger devices
         }
@@ -115,8 +119,8 @@ class _ChallengeState extends State<Challenge> {
                 child: SizedBox(
                   width: width,
                   child: Padding(
-                    padding:
-                    const EdgeInsets.symmetric(vertical: 15, horizontal: 25),
+                    padding: const EdgeInsets.symmetric(
+                        vertical: 15, horizontal: 25),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisAlignment: MainAxisAlignment.start,
@@ -153,7 +157,8 @@ class _ChallengeState extends State<Challenge> {
                           itemLimit: 5,
                           children: _challenge.expand["users"]!.map((user) {
                             return Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 3),
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 3),
                               child: Avatar(user: user),
                             );
                           }).toList(),
@@ -169,7 +174,6 @@ class _ChallengeState extends State<Challenge> {
       },
     );
   }
-
 }
 
 class Avatar extends StatelessWidget {
@@ -185,8 +189,8 @@ class Avatar extends StatelessWidget {
       size: size,
       name: getUsernameFromUser(user),
       autoTextSize: true,
-      style: theme.textTheme.titleMedium?.copyWith(
-          color: theme.colorScheme.onPrimary),
+      style: theme.textTheme.titleMedium
+          ?.copyWith(color: theme.colorScheme.onPrimary),
       decoration: BoxDecoration(
         color: theme.colorScheme.primary,
         borderRadius: BorderRadius.circular(50),

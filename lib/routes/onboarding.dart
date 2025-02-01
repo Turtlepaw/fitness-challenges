@@ -35,7 +35,7 @@ class _OnboardingState extends State<Onboarding> {
                           size: 70,
                         ),
                         const SizedBox(height: 20),
-                      Padding(
+                        Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 15),
                           child: Text(
                             "Your fitness journey starts here.",
@@ -46,49 +46,57 @@ class _OnboardingState extends State<Onboarding> {
                           ),
                         ),
                         const SizedBox(height: 20),
-                      Flexible(
-                        child: Card(
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(20),
-                            side: BorderSide(
-                              width: 1.1,
-                              color: theme.colorScheme.surfaceContainerHighest,
+                        Flexible(
+                          child: Card(
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(20),
+                              side: BorderSide(
+                                width: 1.1,
+                                color:
+                                    theme.colorScheme.surfaceContainerHighest,
+                              ),
                             ),
-                          ),
-                          color: theme.colorScheme.surfaceContainer,
-                          shadowColor: Colors.transparent,
-                          margin: const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 20),
-                            child: IntrinsicHeight( // Add this to make the Card fit its content
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                crossAxisAlignment: CrossAxisAlignment.center, // Respect vertical constraints
-                                children: [
-                                  const Icon(Symbols.heart_check_rounded, size: 50),
-                                  const SizedBox(width: 15),
-                                  Expanded(
-                                    child: Column(
-                                      mainAxisAlignment: MainAxisAlignment.center,
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          "Works with Health Connect",
-                                          style: theme.textTheme.titleMedium,
-                                        ),
-                                        Text(
-                                          "Play challenges with any fitness tracker.",
-                                          style: theme.textTheme.bodyMedium,
-                                        ),
-                                      ],
+                            color: theme.colorScheme.surfaceContainer,
+                            shadowColor: Colors.transparent,
+                            margin: const EdgeInsets.symmetric(
+                                horizontal: 15, vertical: 5),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                  vertical: 15, horizontal: 20),
+                              child: IntrinsicHeight(
+                                // Add this to make the Card fit its content
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  crossAxisAlignment: CrossAxisAlignment
+                                      .center, // Respect vertical constraints
+                                  children: [
+                                    const Icon(Symbols.heart_check_rounded,
+                                        size: 50),
+                                    const SizedBox(width: 15),
+                                    Expanded(
+                                      child: Column(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            "Works with Health Connect",
+                                            style: theme.textTheme.titleMedium,
+                                          ),
+                                          Text(
+                                            "Play challenges with any fitness tracker.",
+                                            style: theme.textTheme.bodyMedium,
+                                          ),
+                                        ],
+                                      ),
                                     ),
-                                  ),
-                                ],
+                                  ],
+                                ),
                               ),
                             ),
                           ),
                         ),
-                      ),
 
                         const SizedBox(height: 30),
                         CarouselSlider(
@@ -98,29 +106,37 @@ class _OnboardingState extends State<Onboarding> {
                             autoPlayInterval: const Duration(seconds: 3),
                           ),
                           items: [
-                            const Pair(Symbols.steps_rounded, "Play step challenges. Together."),
-                            const Pair(Symbols.playing_cards_rounded, "Play bingo with a fitness twist."),
-                            const Pair(Symbols.deployed_code_history_rounded, "Support a developing [open-source](https://github.com/Turtlepaw/fitness-challenges) app."),
-                            const Pair(Symbols.lock_rounded, "Private, secure, and transparent."),
+                            const Pair(Symbols.steps_rounded,
+                                "Play step challenges. Together."),
+                            const Pair(Symbols.playing_cards_rounded,
+                                "Play bingo with a fitness twist."),
+                            const Pair(Symbols.deployed_code_history_rounded,
+                                "Support a developing [open-source](https://github.com/Turtlepaw/fitness-challenges) app."),
+                            const Pair(Symbols.lock_rounded,
+                                "Private, secure, and transparent."),
                           ].map((i) {
                             return Builder(
                               builder: (BuildContext context) {
                                 return Container(
                                   alignment: Alignment.centerLeft,
                                   width: MediaQuery.of(context).size.width,
-                                  margin: const EdgeInsets.symmetric(horizontal: 8.0),
-                                  padding: const EdgeInsets.symmetric(horizontal: 35, vertical: 30),
+                                  margin: const EdgeInsets.symmetric(
+                                      horizontal: 8.0),
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 35, vertical: 30),
                                   decoration: BoxDecoration(
                                     color: theme.colorScheme.surfaceContainer,
                                     borderRadius: BorderRadius.circular(30),
                                     border: Border.all(
                                       width: 1.1,
-                                      color: theme.colorScheme.surfaceContainerHighest,
+                                      color: theme
+                                          .colorScheme.surfaceContainerHighest,
                                     ),
                                   ),
                                   child: Column(
                                     mainAxisAlignment: MainAxisAlignment.center,
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Icon(
                                         i.key,
@@ -129,9 +145,11 @@ class _OnboardingState extends State<Onboarding> {
                                       const SizedBox(height: 15),
                                       MarkdownBody(
                                         data: i.value,
-                                        styleSheet: MarkdownStyleSheet(p: theme.textTheme.headlineSmall),
+                                        styleSheet: MarkdownStyleSheet(
+                                            p: theme.textTheme.headlineSmall),
                                         onTapLink: (a, b, c) {
-                                          if (b != null) launchUrl(Uri.parse(b));
+                                          if (b != null)
+                                            launchUrl(Uri.parse(b));
                                         },
                                       ),
                                     ],
@@ -158,11 +176,9 @@ class _OnboardingState extends State<Onboarding> {
               decoration: BoxDecoration(
                 color: theme.colorScheme.surface,
                 border: BorderDirectional(
-                  top: BorderSide(
-                    color: theme.colorScheme.surfaceContainerHighest,
-                    width: 1.1
-                  )
-                ),
+                    top: BorderSide(
+                        color: theme.colorScheme.surfaceContainerHighest,
+                        width: 1.1)),
               ),
               child: Padding(
                 padding: const EdgeInsets.only(right: 10),
@@ -186,4 +202,3 @@ class _OnboardingState extends State<Onboarding> {
     );
   }
 }
-

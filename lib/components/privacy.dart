@@ -11,7 +11,11 @@ class PrivacyControls extends StatefulWidget {
   final List<PrivacyControl> showOnly;
   final CrossAxisAlignment alignment;
 
-  const PrivacyControls({this.onChanged, this.showOnly = PrivacyControl.values, this.alignment = CrossAxisAlignment.start, super.key});
+  const PrivacyControls(
+      {this.onChanged,
+      this.showOnly = PrivacyControl.values,
+      this.alignment = CrossAxisAlignment.start,
+      super.key});
 
   @override
   _PrivacyControlsState createState() => _PrivacyControlsState();
@@ -22,9 +26,9 @@ enum PrivacyControl { hideUsernameInCommunity, hideUsernameInPrivateChallenges }
 class _PrivacyControlsState extends State<PrivacyControls> {
   final form = FormGroup({
     PrivacyControl.hideUsernameInCommunity.name:
-    FormControl<bool>(validators: [Validators.required], value: false),
+        FormControl<bool>(validators: [Validators.required], value: false),
     PrivacyControl.hideUsernameInPrivateChallenges.name:
-    FormControl<bool>(validators: [Validators.required], value: false),
+        FormControl<bool>(validators: [Validators.required], value: false),
   });
   late PocketBase pb;
 
@@ -95,18 +99,21 @@ class _PrivacyControlsState extends State<PrivacyControls> {
               "Display your user ID instead of your username in the community",
               Symbols.disabled_visible_rounded,
               form.control(PrivacyControl.hideUsernameInCommunity.name).value,
-                  (value) =>
-                  _updatePrivacyControl(PrivacyControl.hideUsernameInCommunity, value),
+              (value) => _updatePrivacyControl(
+                  PrivacyControl.hideUsernameInCommunity, value),
               theme,
             ),
-          if (widget.showOnly.contains(PrivacyControl.hideUsernameInPrivateChallenges))
+          if (widget.showOnly
+              .contains(PrivacyControl.hideUsernameInPrivateChallenges))
             buildPrivacyControl(
               "Hide username in private challenges",
               "Display your user ID instead of your username in invite-only challenges",
               Symbols.shield_lock_rounded,
-              form.control(PrivacyControl.hideUsernameInPrivateChallenges.name).value,
-                  (value) =>
-                  _updatePrivacyControl(PrivacyControl.hideUsernameInPrivateChallenges, value),
+              form
+                  .control(PrivacyControl.hideUsernameInPrivateChallenges.name)
+                  .value,
+              (value) => _updatePrivacyControl(
+                  PrivacyControl.hideUsernameInPrivateChallenges, value),
               theme,
             ),
         ],
@@ -116,7 +123,8 @@ class _PrivacyControlsState extends State<PrivacyControls> {
 
   void _updatePrivacyControl(PrivacyControl control, bool value) async {
     try {
-      await pb.collection("users").update((pb.authStore.model as RecordModel).id,
+      await pb.collection("users").update(
+          (pb.authStore.model as RecordModel).id,
           body: {control.name: value});
       setState(() {
         form.control(control.name).value = value;
@@ -126,14 +134,15 @@ class _PrivacyControlsState extends State<PrivacyControls> {
       debugPrint("Error updating control: $error");
     }
   }
+
   Widget buildPrivacyControl(
-      String name,
-      String description,
-      IconData icon,
-      bool value,
-      void Function(bool) onChanged,
-      ThemeData theme,
-      ) {
+    String name,
+    String description,
+    IconData icon,
+    bool value,
+    void Function(bool) onChanged,
+    ThemeData theme,
+  ) {
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 5),
       decoration: BoxDecoration(
@@ -147,7 +156,8 @@ class _PrivacyControlsState extends State<PrivacyControls> {
         color: theme.colorScheme.surfaceContainer,
         borderRadius: BorderRadius.circular(15),
         child: SwitchListTile(
-          contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
           value: value,
           onChanged: onChanged,
           title: Row(
@@ -168,6 +178,4 @@ class _PrivacyControlsState extends State<PrivacyControls> {
       ),
     );
   }
-
-
 }

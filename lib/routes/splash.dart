@@ -4,7 +4,8 @@ import 'package:material_symbols_icons/material_symbols_icons.dart';
 class SplashScreen extends StatefulWidget {
   final Future<void> Function() asyncFunction; // Add this line
 
-  const SplashScreen({super.key, required this.asyncFunction}); // Modify constructor
+  const SplashScreen(
+      {super.key, required this.asyncFunction}); // Modify constructor
 
   @override
   _SplashScreenState createState() => _SplashScreenState();

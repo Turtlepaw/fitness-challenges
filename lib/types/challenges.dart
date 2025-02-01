@@ -12,9 +12,12 @@ class Challenge {
 }
 
 enum ChallengeType { bingo, steps }
+
 const List<Challenge> challenges = [
-  Challenge(Symbols.casino_rounded, "Bingo", "Classic bingo, but fitness style"),
-  Challenge(Symbols.steps_rounded, "Steps", "Get the most steps before the time ends"),
+  Challenge(
+      Symbols.casino_rounded, "Bingo", "Classic bingo, but fitness style"),
+  Challenge(Symbols.steps_rounded, "Steps",
+      "Get the most steps before the time ends"),
   //Challenge(Icons.bedtime_rounded, "Sleep", "Get the most hours of sleep before the time ends (coming soon!)"),
 ];
 
@@ -34,6 +37,7 @@ extension DifficultyExtension on Difficulty {
 }
 
 enum Types { bingo, steps, sleep }
+
 extension TypesExtension on Types {
   static Types of(int value) {
     switch (value) {

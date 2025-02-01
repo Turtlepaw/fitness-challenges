@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
 
-enum ErrorMessages {
-  noHealthConnected
-}
+enum ErrorMessages { noHealthConnected }
 
 final errorMessages = {
-  ErrorMessages.noHealthConnected: "You must connect a health platform before creating or joining a challenge"
+  ErrorMessages.noHealthConnected:
+      "You must connect a health platform before creating or joining a challenge"
 };
 
 class ErrorMessage extends StatelessWidget {
@@ -36,7 +35,7 @@ class ErrorMessage extends StatelessWidget {
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 10),
-            if(action != null) action!(theme),
+            if (action != null) action!(theme),
           ],
         ),
       ),
