@@ -2,9 +2,9 @@
 
 routerAdd("GET", "/api/hooks/join/type", (c) => {
   try {
-    let code = c.queryParam("code");
+    let code = c.request.url.query().get("code");
 
-    const records = $app.dao().findRecordsByFilter(
+    const records = $app.findRecordsByFilter(
       "challenges", // collection
       "code = {:code}", // filter
       undefined, // sort
@@ -31,11 +31,11 @@ routerAdd("GET", "/api/hooks/join/type", (c) => {
 
 routerAdd("POST", "/api/hooks/join", (c) => {
   try {
-    let code = c.queryParam("code");
+    let code = c.request.url.query().get("code");
     //let data = c.queryParam("data");
-    let id = c.queryParam("id");
+    let id = c.request.url.query().get("id");
 
-    const records = $app.dao().findRecordsByFilter(
+    const records = $app.findRecordsByFilter(
       "challenges", // collection
       "joinCode = {:code}", // filter
       undefined, // sort
@@ -55,7 +55,7 @@ routerAdd("POST", "/api/hooks/join", (c) => {
       record.set("users", users);
     }
 
-    $app.dao().saveRecord(record);
+    $app.save(record);
 
     return c.json(200, {
       success: true,
@@ -86,7 +86,7 @@ routerAdd("POST", "/api/hooks/regenerate_code", (c) => {
       uniqueCode = generateUniqueCode();
 
       // Search for existing records with the generated code
-      const records = $app.dao().findRecordsByFilter(
+      const records = $app.findRecordsByFilter(
         "challenges", // collection name
         "joinCode = {:joinCode}", // filter
         undefined, // sort
@@ -105,15 +105,15 @@ routerAdd("POST", "/api/hooks/regenerate_code", (c) => {
   }
 
   try {
-    let id = c.queryParam("id");
+    let id = c.request.url.query().get("id");
     const uniqueCode = getUniqueCode();
 
-    const record = $app.dao().findRecordById("challenges", id);
+    const record = $app.findRecordById("challenges", id)
 
     if (record == null) throw Error("Unknown challenge");
 
     record.set("joinCode", uniqueCode);
-    $app.dao().saveRecord(record);
+    $app.save(record);
 
     return c.json(200, {
       success: true,

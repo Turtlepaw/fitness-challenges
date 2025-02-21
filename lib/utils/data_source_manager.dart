@@ -56,7 +56,7 @@ class DataSourceManager {
   factory DataSourceManager.fromChallenge(RecordModel challenge) {
     try {
       var json =
-          challenge.getDataValue<Map<String, dynamic>>("dataSources", null);
+          challenge.get<Map<String, dynamic>>("dataSources", null);
       if (json == null) return DataSourceManager(List.empty(growable: true));
 
       return DataSourceManager(

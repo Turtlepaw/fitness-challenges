@@ -46,7 +46,7 @@ dependencies:
       url: https://github.com/turtlepaw/flutter_emoji_feedback.git
   bottom_sheet: ^4.0.4
   material_symbols_icons: ^4.2768.0
-  pocketbase: ^0.18.1
+  pocketbase: ^0.22.0
   google_sign_in: ^6.2.1
   shared_preferences: ^2.2.3
   provider: ^6.1.2
@@ -56,17 +56,17 @@ dependencies:
   intl: ^0.19.0
   reactive_forms: ^17.0.1
   shimmer: ^3.0.0
-  avatar_stack: ^1.2.0
+  avatar_stack: ^3.0.0
   flutter_advanced_avatar: ^1.5.0
   json_annotation: ^4.9.0
-  icons_launcher: ^2.1.7
+  icons_launcher: ^3.0.0
   another_flutter_splash_screen: ^1.2.1
   go_router: ^14.2.1
   animated_splash_screen: ^1.3.0
   page_transition: ^2.1.0
   collection: ^1.18.0
-  health: ^10.2.0
-  confetti: ^0.7.0
+  health: ^12.0.1
+  confetti: ^0.8.0
   overlap_stack: ^1.0.1
   relative_time: ^5.0.0
   flutter_localizations:
@@ -75,9 +75,9 @@ dependencies:
     git:
       url: https://github.com/WearOSCommunity/flutter_wear_os_connectivity.git
   # temporary fix
-  device_info_plus: ^10.1.2
+  device_info_plus: ^11.3.0
   share_plus: ^10.0.2
-  flutter_local_notifications: ^17.2.2
+  flutter_local_notifications: ^18.0.1
   flutter_background_service: ^5.0.10
   workmanager: ^0.5.2
   logger: ^2.4.0
@@ -105,7 +105,7 @@ dev_dependencies:
     sdk: flutter
   integration_test:
     sdk: flutter
-  flutter_lints: ^3.0.1
+  flutter_lints: ^5.0.0
   build_runner:
   flutter_gen_runner:
 

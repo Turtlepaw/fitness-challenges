@@ -363,6 +363,7 @@ class CreateWidgetState extends State<CreateWidget> {
   }
 
   Widget buildChallengeSelector(ThemeData theme) {
+    final pb = Provider.of<PocketBase>(context);
     return ReactiveFormConsumer(builder: (context, form, widget) {
       return Padding(
         padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
@@ -393,7 +394,7 @@ class CreateWidgetState extends State<CreateWidget> {
                   ...challenges.asMap().entries.map((entry) {
                     final c = entry.value;
                     final index = entry.key;
-                    if (index == 0) return const SizedBox();
+                    if (index == 0 && pb.authStore?.record?.getBoolValue("admin", false) != true) return const SizedBox();
                     return Card(
                       elevation: 0,
                       shape: RoundedRectangleBorder(
@@ -795,13 +796,22 @@ class CreateWidgetState extends State<CreateWidget> {
                   child: Wrap(
                     alignment: WrapAlignment.center,
                     spacing: 10, // Space between chips horizontally
-                    runSpacing: 10, //
+                    runSpacing: 0, //
                     children: [
                       ...Difficulty.values.map((l) {
                         return Card(
                           elevation: 0,
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(20),
+                            borderRadius: switch (l.index) {
+                              0 => const BorderRadius.vertical(
+                                  top: Radius.circular(15),
+                                  bottom: Radius.circular(8)),
+                              1 => BorderRadius.circular(8),
+                              2 => const BorderRadius.vertical(
+                                  top: Radius.circular(8),
+                                  bottom: Radius.circular(15)),
+                              _ => BorderRadius.circular(20),
+                            },
                             side: BorderSide(
                               width: 1.1,
                               color: theme.colorScheme.surfaceContainerHighest,
@@ -810,7 +820,7 @@ class CreateWidgetState extends State<CreateWidget> {
                           clipBehavior: Clip.antiAlias, // Clip the ripple
                           child: ListTile(
                             contentPadding: const EdgeInsets.symmetric(
-                                horizontal: 20, vertical: 5),
+                                horizontal: 20, vertical: 0),
                             //leading: Icon(c.icon),
                             selected: form.control(difficulty).value == l.index,
                             title: Text(_getDifficultyLabel(l.index)),
@@ -820,7 +830,9 @@ class CreateWidgetState extends State<CreateWidget> {
                             trailing: Radio(
                                 value: l.index,
                                 groupValue: form.control(difficulty).value,
-                                onChanged: (v) {}),
+                                onChanged: (v) {
+                                  form.control(difficulty).value = l.index;
+                                }),
                           ),
                         );
                         return FilterChip(
@@ -834,18 +846,21 @@ class CreateWidgetState extends State<CreateWidget> {
                         );
                       }),
                       ReactiveFormConsumer(builder: (context, form, widget) {
-                        return FilledButton.icon(
-                          label: const Text("Looks good"),
-                          onPressed: dateType != null && isDateValid(form)
-                              ? () {
-                                  nextPage();
-                                }
-                              : null,
-                          icon: Icon(
-                            Symbols.arrow_forward_rounded,
-                            color: dateType != null && isDateValid(form)
-                                ? theme.colorScheme.onPrimary
-                                : theme.colorScheme.onSurface.withOpacity(.38),
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 10),
+                          child: FilledButton.icon(
+                            label: const Text("Looks good"),
+                            onPressed: dateType != null && isDateValid(form)
+                                ? () {
+                              nextPage();
+                            }
+                                : null,
+                            icon: Icon(
+                              Symbols.arrow_forward_rounded,
+                              color: dateType != null && isDateValid(form)
+                                  ? theme.colorScheme.onPrimary
+                                  : theme.colorScheme.onSurface.withOpacity(.38),
+                            ),
                           ),
                         );
                       }),
@@ -1069,7 +1084,7 @@ class CreateWidgetState extends State<CreateWidget> {
   String _formatRange(FormGroup form) {
     var dateRange = form.control(date).value;
     if (dateRange == null) return "";
-    final format = DateFormat('MMM dd');
+    final format = DateFormat('EEE, MMM dd, y');
 
     return "Ends ${format.format(dateRange)}";
     // if (form.control(autoEnd).value) {

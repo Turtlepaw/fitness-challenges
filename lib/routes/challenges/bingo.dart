@@ -372,6 +372,7 @@ class _BingoCardWidgetState extends State<BingoCardWidget> {
             selectedUser.id == pb.authStore.model?.id) &&
         isPurchasable(Provider.of<HealthManager>(context), activity);
 
+    final onDisabled = theme.colorScheme.onSurface.withOpacity(0.38);
     return Stack(
       alignment: Alignment.center,
       children: [
@@ -395,7 +396,7 @@ class _BingoCardWidgetState extends State<BingoCardWidget> {
                     ? theme.colorScheme.primary
                     : (isAllowed
                         ? theme.colorScheme.primary
-                        : theme.colorScheme.primary.withOpacity(0.9)),
+                        : theme.colorScheme.surfaceContainerHighest),
                 borderRadius: BorderRadius.circular(10), // Increased
               ),
               child: InkWell(
@@ -412,9 +413,9 @@ class _BingoCardWidgetState extends State<BingoCardWidget> {
                               ? Symbols.star_rounded
                               : activity.type.asIcon(),
                           size: 28, // Increased
-                          color: isWinningTile
+                          color: isAllowed
                               ? theme.colorScheme.onPrimary
-                              : theme.colorScheme.onPrimary,
+                              : onDisabled,
                         ),
                         if (!isWinningTile)
                           const SizedBox(height: 6), // Increased
@@ -426,9 +427,9 @@ class _BingoCardWidgetState extends State<BingoCardWidget> {
                               textAlign: TextAlign.center,
                               style: theme.textTheme.labelMedium?.copyWith(
                                 // Changed to labelMedium
-                                color: isWinningTile
+                                color: isAllowed
                                     ? theme.colorScheme.onPrimary
-                                    : theme.colorScheme.onPrimary,
+                                    : onDisabled,
                                 fontWeight: isWinningTile
                                     ? FontWeight.bold
                                     : FontWeight.normal,

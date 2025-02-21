@@ -207,7 +207,7 @@ void callbackDispatcher() {
       final manager = ChallengeProvider(pb: pb);
       final healthManager = HealthManager(manager, pb, logger: logger);
       await manager.init();
-      await Health().configure(useHealthConnectIfAvailable: true);
+      await Health().configure();
       await healthManager.checkConnectionState();
       await healthManager.fetchHealthData();
       logger.debug("Sync complete, ${healthManager.steps}");
@@ -347,7 +347,7 @@ void main() async {
   Future.delayed(const Duration(seconds: 1), () {
     healthManager.fetchHealthData();
   });
-  Health().configure(useHealthConnectIfAvailable: true);
+  Health().configure();
   final wearManager = WearManager(pb).sendAuthentication(logger);
   checkLaunchIntent();
 

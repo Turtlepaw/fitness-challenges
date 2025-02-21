@@ -1,5 +1,5 @@
 routerAdd("GET", "/api/hooks/check_username", (c) => {
-  let username = c.queryParam("username");
+  let username = c.request.url.query().get("username");
 
   const records = $app.dao().findRecordsByFilter(
     "users", // collection
