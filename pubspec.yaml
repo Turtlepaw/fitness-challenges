@@ -79,7 +79,12 @@ dependencies:
   share_plus: ^10.0.2
   flutter_local_notifications: ^18.0.1
   flutter_background_service: ^5.1.0
-  workmanager: ^0.5.2
+  #workmanager: ^0.5.2
+  workmanager:
+    git:
+      url: https://github.com/fluttercommunity/flutter_workmanager.git
+      path: workmanager
+      ref: main
   logger: ^2.4.0
   path_provider: ^2.1.4
   permission_handler: ^11.3.1
