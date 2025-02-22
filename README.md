@@ -31,10 +31,10 @@ This app is built with [Flutter](https://flutter.dev/), if you don't have flutte
 
 The app includes a native Wear OS companion app for users to view challenges located in [`/wear-os`](./wear-os).
 
-> ![NOTE]
+> [!NOTE]
 > The Wear OS app is moving away from syncing health data and towards displaying challenges
 
-> ![WARNING]
+> [!WARNING]
 > The Wear OS app is currently on pause
 
 ### 💻 Creating a Pocketbase instance
