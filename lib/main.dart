@@ -69,7 +69,7 @@ Page<dynamic> Function(BuildContext, GoRouterState) defaultPageBuilder<T>(
     };
 
 final _router = GoRouter(
-    //debugLogDiagnostics: kDebugMode,
+    debugLogDiagnostics: true,
     initialLocation: '/',
     navigatorKey: _rootNavigatorKey,
     routes: [

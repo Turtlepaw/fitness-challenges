@@ -187,8 +187,13 @@ class _OnboardingState extends State<Onboarding> {
                   child: SizedBox(
                     //width: 125, // Desired width for the button
                     child: FilledButton(
-                      onPressed: () {
-                        context.push("/login");
+                      onPressed: () async {
+                        print("Get started (1)");
+                        WidgetsBinding.instance.addPostFrameCallback((_) {
+                          // Using context.go here, switch to push if you prefer.
+                          GoRouter.of(context).push("/login");
+                          print("Get started (2)");
+                        });
                       },
                       child: const Text('Get Started'),
                     ),
