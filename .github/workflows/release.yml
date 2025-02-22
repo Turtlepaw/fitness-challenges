@@ -10,7 +10,7 @@ on:
           - apk
           - aab
 
-name: Release
+name: Build release APK/AAB
 
 jobs:
   build:
