@@ -36,7 +36,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:workmanager/workmanager.dart';
 
-import 'login.dart';
+import 'routes/login.dart';
 
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
     FlutterLocalNotificationsPlugin();
@@ -72,6 +72,19 @@ final _router = GoRouter(
     debugLogDiagnostics: true,
     initialLocation: '/',
     navigatorKey: _rootNavigatorKey,
+    redirect: (context, state) {
+      final pb = Provider.of<PocketBase>(context, listen: false);
+      final isLoggedIn = pb.authStore.isValid;
+      // Prevent logged in users from accessing onboarding
+      if (isLoggedIn && state.fullPath == '/introduction') {
+        return '/home';
+      }
+      // Prevent non-authenticated users from accessing home
+      if (!isLoggedIn && state.fullPath == '/home') {
+        return '/introduction';
+      }
+      return null;
+    },
     routes: [
       GoRoute(
           path: '/',
@@ -88,30 +101,6 @@ final _router = GoRouter(
                   }
                 }
               })
-          /*FlutterSplashScreen.fadeIn(
-            backgroundColor: Theme.of(context).colorScheme.surface,
-            childWidget: SizedBox(
-              height: 250,
-              width: 250,
-              child: Icon(
-                Symbols.rocket_launch_rounded,
-                color: Theme.of(context).colorScheme.onSurface,
-                size: 1000,
-              ),
-            ),
-            asyncNavigationCallback: () async {
-              var pb = Provider.of<PocketBase>(context, listen: false);
-              await Future.delayed(const Duration(seconds: 100));
-              if (context.mounted) {
-                if (pb.authStore.isValid) {
-                  // User is logged in, navigate to home
-                  context.go('/home');
-                } else {
-                  // User is not logged in, navigate to login
-                  context.go('/login');
-                }
-              }
-            }),*/
           ),
       GoRoute(
         path: '/login',
@@ -171,7 +160,8 @@ final _router = GoRouter(
             pageBuilder: defaultPageBuilder(const CommunityPage()),
           ),
         ],
-      )
+      ),
+
     ]);
 
 @pragma('vm:entry-point')

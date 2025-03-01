@@ -6,14 +6,13 @@ import 'package:material_symbols_icons/material_symbols_icons.dart';
 import 'package:pair/pair.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-class Onboarding extends StatefulWidget {
+class Onboarding extends StatelessWidget {
   const Onboarding({super.key});
 
-  @override
-  _OnboardingState createState() => _OnboardingState();
-}
+  void onGetStarted(BuildContext context) {
+    context.push('/login');
+  }
 
-class _OnboardingState extends State<Onboarding> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -23,13 +22,15 @@ class _OnboardingState extends State<Onboarding> {
           LayoutBuilder(
             builder: (context, constraints) {
               return SingleChildScrollView(
-                padding: EdgeInsets.zero,
+                padding: EdgeInsets.only(
+                  top: MediaQuery.of(context).viewPadding.top,
+                  bottom: MediaQuery.of(context).viewPadding.bottom,
+                ),
                 child: ConstrainedBox(
                   constraints: BoxConstraints(minHeight: constraints.maxHeight),
                   child: IntrinsicHeight(
                     child: Column(
                       children: [
-                        const SizedBox(height: 70),
                         const Icon(
                           Symbols.rocket_launch_rounded,
                           size: 70,
@@ -148,8 +149,9 @@ class _OnboardingState extends State<Onboarding> {
                                         styleSheet: MarkdownStyleSheet(
                                             p: theme.textTheme.headlineSmall),
                                         onTapLink: (a, b, c) {
-                                          if (b != null)
+                                          if (b != null) {
                                             launchUrl(Uri.parse(b));
+                                          }
                                         },
                                       ),
                                     ],
@@ -187,12 +189,11 @@ class _OnboardingState extends State<Onboarding> {
                   child: SizedBox(
                     //width: 125, // Desired width for the button
                     child: FilledButton(
-                      onPressed: () async {
-                        print("Get started (1)");
-                        WidgetsBinding.instance.addPostFrameCallback((_) {
-                          // Using context.go here, switch to push if you prefer.
-                          GoRouter.of(context).push("/login");
-                          print("Get started (2)");
+                      onPressed: () {
+                        Future.delayed(Duration.zero, () {
+                          context.push('/login');
+                          // print current page
+                          print(GoRouterState.of(context).fullPath);
                         });
                       },
                       child: const Text('Get Started'),

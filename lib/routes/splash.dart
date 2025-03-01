@@ -29,22 +29,13 @@ class _SplashScreenState extends State<SplashScreen> {
     print("anim started");
 
     // Wait until the build is complete
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
       setState(() {
         _visible = true;
       });
+
+      await widget.asyncFunction();
     });
-
-    // Optional: Add delays for fade-in/fade-out if you uncomment them
-    // await Future.delayed(const Duration(seconds: 1)); // Duration for fade-in
-    // await Future.delayed(const Duration(seconds: 2));
-    // setState(() {
-    //   _visible = false;
-    // });
-    // await Future.delayed(const Duration(seconds: 1)); // Duration for fade-out
-
-    // Execute async function
-    await widget.asyncFunction();
   }
 
   @override

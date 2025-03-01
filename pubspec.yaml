@@ -61,7 +61,7 @@ dependencies:
   json_annotation: ^4.9.0
   icons_launcher: ^3.0.0
   another_flutter_splash_screen: ^1.2.1
-  go_router: ^14.8.0
+  go_router: ^14.8.1
   animated_splash_screen: ^1.3.0
   page_transition: ^2.2.1
   collection: ^1.19.0
@@ -89,7 +89,7 @@ dependencies:
   path_provider: ^2.1.5
   permission_handler: ^11.4.0
   media_store_plus: ^0.1.3
-  package_info_plus: ^8.2.1
+  package_info_plus: ^8.3.0
   open_file: ^3.5.10
   flutter_markdown: ^0.7.6+2
   pair: ^0.1.2
