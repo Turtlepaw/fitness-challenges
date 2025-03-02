@@ -406,6 +406,14 @@ class _LoginPageState extends State<LoginPage> {
                       width: width,
                       height: 50,
                       child: FilledButton(
+                        style: ButtonStyle(
+                          shape: WidgetStateProperty.all<
+                              RoundedRectangleBorder>(
+                            RoundedRectangleBorder(
+                              borderRadius: BorderRadius.vertical(top: Radius.circular(20), bottom: Radius.circular(8)),
+                            )
+                          )
+                        ),
                         onPressed: () => _signInWith("google"),
                         child: isLoading
                             ? SizedBox(
@@ -426,11 +434,19 @@ class _LoginPageState extends State<LoginPage> {
                               ),
                       ),
                     ),
-                    const SizedBox(height: 10),
+                    const SizedBox(height: 4),
                     AdaptiveBox(
                       width: width,
                       height: 50,
                       child: FilledButton(
+                        style: ButtonStyle(
+                            shape: WidgetStateProperty.all<
+                                RoundedRectangleBorder>(
+                                RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.vertical(top: Radius.circular(8), bottom: Radius.circular(20)),
+                                )
+                            )
+                        ),
                         onPressed: () => _signInWith("discord"),
                         child: isLoading
                             ? SizedBox(
