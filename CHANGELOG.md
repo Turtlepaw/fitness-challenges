@@ -1,6 +1,6 @@
-# December Changelog
+# March Changelog
 
-###### Yes, we've been developing this update for 2 months.
+###### Yes, we've been developing this update for many months.
 
 ## Highlights
 
