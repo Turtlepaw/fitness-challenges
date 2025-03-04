@@ -47,7 +47,7 @@ class _ProfileDialogState extends State<ProfileDialog> {
   @override
   void didChangeDependencies() {
     final pb = Provider.of<PocketBase>(context, listen: false);
-    if(pb.authStore.model?.getStringValue("email")?.isNotEmpty == true){
+    if (pb.authStore.model?.getStringValue("email")?.isNotEmpty == true) {
       form.control(email).value = pb.authStore.model?.getStringValue("email");
     }
 
@@ -103,14 +103,12 @@ class _ProfileDialogState extends State<ProfileDialog> {
       final user = widget.pb.authStore.model;
 
       var body = {"username": usernameValue};
-      if(form.control(email).value?.isNotEmpty == true){
+      if (form.control(email).value?.isNotEmpty == true) {
         print("Updating email to ${form.control(email).value}");
         body["email"] = form.control(email).value.toString().trim();
       }
 
-      await widget.pb
-          .collection("users")
-          .update(user.id, body: body);
+      await widget.pb.collection("users").update(user.id, body: body);
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -180,18 +178,21 @@ class ProfileWidget extends StatelessWidget {
                     pb.authStore.model?.getStringValue("username"),
                     style: theme.textTheme.displaySmall,
                   ),
-                  if(pb.authStore.model?.getStringValue("email")?.isNotEmpty == true) Row(
-                    children: [
-                      Text(
-                        pb.authStore.model?.getStringValue("email"),
-                        style: theme.textTheme.bodyLarge,
-                      ),
-                      const SizedBox(
-                        width: 5,
-                      ),
-                      Icon(Symbols.lock_rounded, size: 15, color: theme.colorScheme.onSurfaceVariant)
-                    ],
-                  )
+                  if (pb.authStore.model?.getStringValue("email")?.isNotEmpty ==
+                      true)
+                    Row(
+                      children: [
+                        Text(
+                          pb.authStore.model?.getStringValue("email"),
+                          style: theme.textTheme.bodyLarge,
+                        ),
+                        const SizedBox(
+                          width: 5,
+                        ),
+                        Icon(Symbols.lock_rounded,
+                            size: 15, color: theme.colorScheme.onSurfaceVariant)
+                      ],
+                    )
                 ],
               )
             ],
@@ -203,10 +204,19 @@ class ProfileWidget extends StatelessWidget {
           runSpacing: 5, // Set this to 0 to minimize space between rows
           alignment: WrapAlignment.start, // Align items at the start
           children: [
-            FilledButton(onPressed: () => onRequestChangePassword(context), child: const Text("Change Password")),
-            FilledButton(onPressed: () => onRequestDeleteAccount(context), style: ButtonStyle(
-                backgroundColor: WidgetStateProperty.all(theme.colorScheme.error)
-            ), child: Text("Delete my account", style: theme.textTheme.labelLarge?.copyWith(color: theme.colorScheme.onError),),
+            FilledButton(
+                onPressed: () => onRequestChangePassword(context),
+                child: const Text("Change Password")),
+            FilledButton(
+              onPressed: () => onRequestDeleteAccount(context),
+              style: ButtonStyle(
+                  backgroundColor:
+                      WidgetStateProperty.all(theme.colorScheme.error)),
+              child: Text(
+                "Delete my account",
+                style: theme.textTheme.labelLarge
+                    ?.copyWith(color: theme.colorScheme.onError),
+              ),
             ),
           ],
         ),
@@ -255,39 +265,39 @@ class ProfileWidget extends StatelessWidget {
     );
   }
 
-  void onRequestDeleteAccount(BuildContext context){
+  void onRequestDeleteAccount(BuildContext context) {
     final pb = Provider.of<PocketBase>(context, listen: false);
     showDialog(
         context: context,
         builder: (context) => ConfirmDialog(
-          isDestructive: true,
-          icon: Icons.delete_forever_rounded,
-          title: "Delete account",
-          description: "Are you sure you want to delete your account?",
-          onConfirm: () async {
-            pb.collection("users").delete(
-              pb.authStore.model.id
-            );
-            pb.authStore.clear();
-            context.go("/introduction");
-          },
-        ),
+              isDestructive: true,
+              icon: Icons.delete_forever_rounded,
+              title: "Delete account",
+              description: "Are you sure you want to delete your account?",
+              onConfirm: () async {
+                pb.collection("users").delete(pb.authStore.model.id);
+                pb.authStore.clear();
+                context.go("/introduction");
+              },
+            ),
         useSafeArea: false);
   }
 
   void onRequestChangePassword(BuildContext context) async {
     final pb = Provider.of<PocketBase>(context, listen: false);
     try {
-      await pb.collection("users").requestPasswordReset((pb.authStore.model as RecordModel).getStringValue("email"));
+      await pb.collection("users").requestPasswordReset(
+          (pb.authStore.model as RecordModel).getStringValue("email"));
       showDialog(
           context: context,
           builder: (context) => const ChangePasswordDialog(),
           useSafeArea: false);
     } catch (e) {
-      Provider.of<SharedLogger>(context, listen: false).error(e.toString())
-      .debug("Email is \"${pb.authStore.model?.getStringValue("email")}\"");
+      Provider.of<SharedLogger>(context, listen: false)
+          .error(e.toString())
+          .debug("Email is \"${pb.authStore.model?.getStringValue("email")}\"");
       var text = "Failed to send email";
-      if(pb.authStore.model?.getStringValue("email")?.isEmpty){
+      if (pb.authStore.model?.getStringValue("email")?.isEmpty) {
         text = "No email associated with account";
       }
       ScaffoldMessenger.of(context).showSnackBar(
@@ -302,14 +312,14 @@ class ProfileWidget extends StatelessWidget {
     return LayoutBuilder(
         builder: (BuildContext context, BoxConstraints constraints) {
       return ConstraintsTransformBox(
+          alignment: Alignment.centerLeft,
           constraintsTransform: (constraints) => BoxConstraints(
                 maxWidth:
                     constraints.maxWidth > 450 ? 400 : constraints.maxWidth,
               ),
           child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 10).add(
-              const EdgeInsets.only(right: 20)
-            ),
+            padding: const EdgeInsets.symmetric(vertical: 10)
+                .add(const EdgeInsets.only(right: 20)),
             child: Column(
               children: [
                 ReactiveTextField(

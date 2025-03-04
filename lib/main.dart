@@ -1,3 +1,4 @@
+import 'package:app_links/app_links.dart';
 import 'package:bottom_sheet/bottom_sheet.dart';
 import 'package:dynamic_color/dynamic_color.dart';
 import 'package:fitness_challenges/components/bottomSheet.dart';
@@ -23,6 +24,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:health/health.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
 import 'package:material_symbols_icons/symbols.dart';
@@ -34,7 +36,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:workmanager/workmanager.dart';
 
-import 'login.dart';
+import 'routes/login.dart';
 
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
     FlutterLocalNotificationsPlugin();
@@ -66,87 +68,101 @@ Page<dynamic> Function(BuildContext, GoRouterState) defaultPageBuilder<T>(
       );
     };
 
-final _router =
-    GoRouter(initialLocation: '/', navigatorKey: _rootNavigatorKey, routes: [
-  GoRoute(
-      path: '/',
-      builder: (context, state) => SplashScreen(asyncFunction: () async {
-            if (context.mounted) {
-              var pb = Provider.of<PocketBase>(context, listen: false);
-
-              if (pb.authStore.isValid) {
-                // User is logged in, navigate to home
-                context.go('/home');
-              } else {
-                // User is not logged in, navigate to login
-                context.go('/introduction');
-              }
-            }
-          })
-      /*FlutterSplashScreen.fadeIn(
-            backgroundColor: Theme.of(context).colorScheme.surface,
-            childWidget: SizedBox(
-              height: 250,
-              width: 250,
-              child: Icon(
-                Symbols.rocket_launch_rounded,
-                color: Theme.of(context).colorScheme.onSurface,
-                size: 1000,
-              ),
-            ),
-            asyncNavigationCallback: () async {
-              var pb = Provider.of<PocketBase>(context, listen: false);
-              await Future.delayed(const Duration(seconds: 100));
-              if (context.mounted) {
-                if (pb.authStore.isValid) {
-                  // User is logged in, navigate to home
-                  context.go('/home');
-                } else {
-                  // User is not logged in, navigate to login
-                  context.go('/login');
-                }
-              }
-            }),*/
-      ),
-  GoRoute(
-    path: '/login',
-    pageBuilder: defaultPageBuilder(const LoginPage()),
-  ),
-  GoRoute(
-    path: '/introduction',
-    pageBuilder: defaultPageBuilder(const Onboarding()),
-  ),
-  GoRoute(
-      path: '/challenge/:id',
-      pageBuilder: (context, state) {
-        return defaultPageBuilder(
-                ChallengeDialog(challenge: state.pathParameters['id']!))(
-            context, state);
-      }),
-  ShellRoute(
-    navigatorKey: _shellNavigatorKey,
-    pageBuilder: (context, state, child) {
-      return NoTransitionPage(
-          child: Scaffold(
-        bottomNavigationBar: CustomNavigationBar(state: state),
-        body: child,
-      ));
+final _router = GoRouter(
+    debugLogDiagnostics: true,
+    initialLocation: '/',
+    navigatorKey: _rootNavigatorKey,
+    redirect: (context, state) {
+      final pb = Provider.of<PocketBase>(context, listen: false);
+      final isLoggedIn = pb.authStore.isValid;
+      // Prevent logged in users from accessing onboarding
+      if (isLoggedIn && state.fullPath == '/introduction') {
+        return '/home';
+      }
+      // Prevent non-authenticated users from accessing home
+      if (!isLoggedIn && state.fullPath == '/home') {
+        return '/introduction';
+      }
+      return null;
     },
     routes: [
       GoRoute(
-          pageBuilder: defaultPageBuilder(const HomePage(title: "Home")),
-          path: '/home'),
+          path: '/',
+          builder: (context, state) => SplashScreen(asyncFunction: () async {
+                if (context.mounted) {
+                  var pb = Provider.of<PocketBase>(context, listen: false);
+
+                  if (pb.authStore.isValid) {
+                    // User is logged in, navigate to home
+                    context.go('/home');
+                  } else {
+                    // User is not logged in, navigate to login
+                    context.go('/introduction');
+                  }
+                }
+              })
+          ),
       GoRoute(
-        path: '/settings',
-        pageBuilder: defaultPageBuilder(const SettingsPage()),
+        path: '/login',
+        pageBuilder: defaultPageBuilder(const LoginPage()),
       ),
       GoRoute(
-        path: '/community',
-        pageBuilder: defaultPageBuilder(const CommunityPage()),
+        path: '/introduction',
+        pageBuilder: defaultPageBuilder(const Onboarding()),
       ),
-    ],
-  )
-]);
+      GoRoute(
+          path: '/challenge/:id',
+          pageBuilder: (context, state) {
+            return defaultPageBuilder(
+                    ChallengeDialog(challenge: state.pathParameters['id']!))(
+                context, state);
+          }),
+      GoRoute(
+        path: '/invite',
+        pageBuilder: (context, state) {
+          return defaultPageBuilder(JoinDialog(
+                  pb: Provider.of<PocketBase>(context, listen: false)))(
+              context, state);
+        },
+      ),
+      GoRoute(
+        path: '/invite/:id',
+        onExit: (context, state) {
+          context.go('/home');
+          return true;
+        },
+        pageBuilder: (context, state) {
+          return defaultPageBuilder(JoinDialog(
+            pb: Provider.of<PocketBase>(context, listen: false),
+            inviteCode: state.pathParameters['id'],
+          ))(context, state);
+        },
+      ),
+      ShellRoute(
+        navigatorKey: _shellNavigatorKey,
+        pageBuilder: (context, state, child) {
+          return NoTransitionPage(
+              child: Scaffold(
+            bottomNavigationBar: CustomNavigationBar(state: state),
+            body: child,
+          ));
+        },
+        routes: [
+          GoRoute(
+              pageBuilder: defaultPageBuilder(const HomePage(title: "Home")),
+              path: '/home'),
+          GoRoute(
+            path: '/settings',
+            pageBuilder: defaultPageBuilder(const SettingsPage()),
+          ),
+          GoRoute(
+            path: '/community',
+            pageBuilder: defaultPageBuilder(const CommunityPage()),
+          ),
+        ],
+      ),
+
+    ]);
 
 @pragma('vm:entry-point')
 void notificationTapBackground(NotificationResponse notificationResponse) {
@@ -181,7 +197,7 @@ void callbackDispatcher() {
       final manager = ChallengeProvider(pb: pb);
       final healthManager = HealthManager(manager, pb, logger: logger);
       await manager.init();
-      await Health().configure(useHealthConnectIfAvailable: true);
+      await Health().configure();
       await healthManager.checkConnectionState();
       await healthManager.fetchHealthData();
       logger.debug("Sync complete, ${healthManager.steps}");
@@ -311,6 +327,7 @@ void checkLaunchIntent() async {
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  //GoogleFonts.config.allowRuntimeFetching = false;
   final logger = SharedLogger();
   final pb = await initializePocketbase();
   final manager = ChallengeProvider(pb: pb);
@@ -320,7 +337,7 @@ void main() async {
   Future.delayed(const Duration(seconds: 1), () {
     healthManager.fetchHealthData();
   });
-  Health().configure(useHealthConnectIfAvailable: true);
+  Health().configure();
   final wearManager = WearManager(pb).sendAuthentication(logger);
   checkLaunchIntent();
 
@@ -345,11 +362,15 @@ void main() async {
         "background-sync-one-time", "BackgroundSyncOneTime");
   }
 
-  if (kReleaseMode) {
-    debugPrint = (String? message, {int? wrapWidth}) {
-      print(message); // Redirect to print in release mode
-    };
-  }
+  debugPrint = (String? message, {int? wrapWidth}) {
+    logger.debug(message ?? "#debugPrint called with no message");
+    print(message); // Redirect to print in release mode
+  };
+
+  LicenseRegistry.addLicense(() async* {
+    final license = await rootBundle.loadString('google_fonts/OFL.txt');
+    yield LicenseEntryWithLineBreaks(['google_fonts'], license);
+  });
 
   runApp(
     MultiProvider(
@@ -408,6 +429,22 @@ class _AppState extends State<App> {
     super.initState();
     pb = Provider.of<PocketBase>(context, listen: false);
     isLoggedIn = pb.authStore.isValid; // Initialize with current status
+
+    final appLinks = AppLinks(); // AppLinks is singleton
+
+    final sub = appLinks.uriLinkStream.listen((uri) {
+      if (uri != null && uri.path == '/dialog') {
+        if (uri != null && uri.pathSegments.isNotEmpty) {
+          if (uri.pathSegments[0] == 'invite' && uri.pathSegments.length > 1) {
+            showDialog(
+              context: context,
+              builder: (context) =>
+                  JoinDialog(pb: pb, inviteCode: uri.pathSegments[1]),
+            );
+          }
+        }
+      }
+    });
 
     if (isLoggedIn) {
       subscribeUserData();
@@ -472,12 +509,26 @@ class _AppState extends State<App> {
           useMaterial3: true,
           iconTheme: const IconThemeData(
               color: Colors.black, fill: 1, weight: 400, opticalSize: 24),
+          textTheme: GoogleFonts.interTextTheme(
+            Theme.of(context).textTheme,
+          ),
         ),
         darkTheme: ThemeData(
           colorScheme: darkColorScheme ?? _defaultDarkColorScheme,
           useMaterial3: true,
           iconTheme: const IconThemeData(
-              color: Colors.white, fill: 1, weight: 400, opticalSize: 24),
+            color: Colors.white,
+            fill: 1,
+            weight: 400,
+            opticalSize: 24,
+          ),
+          textTheme: GoogleFonts.interTextTheme(
+            Theme.of(context).textTheme,
+          ).apply(
+            bodyColor: (darkColorScheme ?? _defaultDarkColorScheme).onSurface,
+            displayColor:
+                (darkColorScheme ?? _defaultDarkColorScheme).onSurface,
+          ),
         ),
         themeMode: ThemeMode.system,
       );
@@ -513,24 +564,6 @@ class _HomePageState extends State<HomePage> {
     pb = Provider.of<PocketBase>(context, listen: false);
   }
 
-  void _showBottomSheet(BuildContext context) {
-    final theme = Theme.of(context);
-    showFlexibleBottomSheet(
-        minHeight: 0,
-        initHeight: 0.23,
-        maxHeight: 0.4,
-        useRootScaffold: true,
-        useRootNavigator: true,
-        context: context,
-        builder: _buildBottomSheet,
-        anchors: [0, 0.2],
-        isSafeArea: false,
-        bottomSheetColor: theme.colorScheme.surfaceContainer,
-        bottomSheetBorderRadius: const BorderRadius.vertical(
-          top: Radius.circular(20),
-        ));
-  }
-
   void _showCreateModal(BuildContext context) {
     var nav = Navigator.of(context);
     nav.pop();
@@ -543,10 +576,11 @@ class _HomePageState extends State<HomePage> {
   void _showJoinModal(BuildContext context) {
     var nav = Navigator.of(context);
     nav.pop();
-    showDialog(
-      context: context,
-      builder: (context) => JoinDialog(pb: pb),
-    );
+    context.push('/invite');
+    // showDialog(
+    //   context: context,
+    //   builder: (context) => JoinDialog(pb: pb),
+    // );
   }
 
   int currentPageIndex = 0;
@@ -557,25 +591,11 @@ class _HomePageState extends State<HomePage> {
         Provider.of<ChallengeProvider>(context, listen: true);
     final mediaQuery = MediaQuery.of(context);
     final theme = Theme.of(context);
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
     return Scaffold(
       appBar: AppBar(
-        // TRY THIS: Try changing the color here to a specific color (to
-        // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
-        // change color while the other colors stay the same.
-        //backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
         title: Text(widget.title),
       ),
       body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
         child: ListView(
           children: <Widget>[
             if (challengeProvider.isLoading)
@@ -647,6 +667,34 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  void _showBottomSheet(BuildContext context) {
+    final theme = Theme.of(context);
+    final screenHeight = MediaQuery.of(context).size.height;
+
+    // Increase the base content height estimation
+    final contentHeight =
+        230.0; // Increased from 180 to account for all content + safe margins
+
+    // Calculate the initial height ratio based on content, with a higher minimum
+    final initHeight = (contentHeight / screenHeight).clamp(0.25, 0.4);
+
+    showFlexibleBottomSheet(
+      minHeight: 0,
+      initHeight: initHeight,
+      maxHeight: 0.5,
+      useRootScaffold: true,
+      useRootNavigator: true,
+      context: context,
+      builder: _buildBottomSheet,
+      anchors: [0, initHeight],
+      isSafeArea: false,
+      bottomSheetColor: theme.colorScheme.surfaceContainer,
+      bottomSheetBorderRadius: const BorderRadius.vertical(
+        top: Radius.circular(20),
+      ),
+    );
+  }
+
   Widget _buildBottomSheet(
     BuildContext context,
     ScrollController scrollController,
@@ -655,44 +703,60 @@ class _HomePageState extends State<HomePage> {
     final challengeProvider =
         Provider.of<ChallengeProvider>(context, listen: true);
     var theme = Theme.of(context);
-    return BottomSheetBuilder(scrollController: scrollController, children: [
-      Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 10),
-          child: Column(
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return BottomSheetBuilder(
+            scrollController: scrollController,
             children: [
-              buildSheetAction(Symbols.draw_rounded, "Create a challenge", theme, (){
-                _showCreateModal(context);
-              }),
-              buildSheetAction(Symbols.group_add_rounded, "Join a challenge", theme, (){
-                _showJoinModal(context);
-              }),
-              const SizedBox(height: 10),
-              TextButton(
-                onPressed: () async {
-                  await challengeProvider.reloadChallenges(context);
-                },
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
+              Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 16),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min, // Add this
                   children: [
-                    const Icon(
-                      Symbols.refresh_rounded,
-                      size: 25,
-                    ),
-                    const SizedBox(width: 10),
-                    Text(
-                      "Force refresh challenges",
-                      style: theme.textTheme.bodyLarge
-                          ?.copyWith(color: theme.colorScheme.primary),
+                    buildSheetAction(
+                        Symbols.draw_rounded, "Create a challenge", theme, () {
+                      _showCreateModal(context);
+                    }),
+                    const SizedBox(height: 8), // Add consistent spacing
+                    buildSheetAction(
+                        Symbols.group_add_rounded, "Join a challenge", theme,
+                        () {
+                      _showJoinModal(context);
+                    }),
+                    const SizedBox(
+                        height: 16), // Slightly larger spacing before button
+                    TextButton(
+                      onPressed: () async {
+                        await challengeProvider.reloadChallenges(context);
+                      },
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(
+                            Symbols.refresh_rounded,
+                            size: 25,
+                          ),
+                          const SizedBox(width: 10),
+                          Text(
+                            "Force refresh challenges",
+                            style: theme.textTheme.bodyLarge
+                                ?.copyWith(color: theme.colorScheme.primary),
+                          )
+                        ],
+                      ),
                     )
                   ],
                 ),
               )
-            ],
-          ))
-    ]);
+            ]);
+      },
+    );
   }
 
-  Widget buildSheetAction(IconData icon, String title, ThemeData theme, void Function() onPressed) {
+  Widget buildSheetAction(
+      IconData icon, String title, ThemeData theme, void Function() onPressed) {
     final mediaQuery = MediaQuery.of(context);
 
     return Container(

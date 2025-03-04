@@ -1,6 +1,12 @@
+<div align="center">
+
+<img src="./images/icon_rounded.png" width="100"/>
+
 # Fitness Challenges
 
 #### Compete in challenges with friends and family.
+
+</div>
 
 ### 📸 Preview Images
 
@@ -14,15 +20,22 @@
 This app is built with [Flutter](https://flutter.dev/), if you don't have flutter setup, flutter has a guide on [how to install and setup flutter on your desktop](https://docs.flutter.dev/get-started/install).
 
 #### 🔍 Tools for developing
+
 - [ ] JDK 21
 - [ ] Android Studio
 - [ ] Flutter SDK
 
-#### ⌚ Wear OS
+## ⌚ Wear OS
 
 <img src="./images/Wear_Screenshot (with shell).png" width="200" alt="Wear OS Preview"/>
 
 The app includes a native Wear OS companion app for users to view challenges located in [`/wear-os`](./wear-os).
+
+> [!NOTE]
+> The Wear OS app is moving away from syncing health data and towards displaying challenges
+
+> [!WARNING]
+> The Wear OS app is currently on pause
 
 ### 💻 Creating a Pocketbase instance
 

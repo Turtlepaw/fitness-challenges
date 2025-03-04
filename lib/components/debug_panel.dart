@@ -22,28 +22,31 @@ class DebugPanel extends StatelessWidget {
               Symbols.bug_report_rounded,
               color: theme.colorScheme.onSurfaceVariant,
             ),
-            child: Text(
-                "Export Logs",
-                style: theme.textTheme.bodyLarge
-              //?.copyWith(color: theme.colorScheme.onPrimary),
-            ),
+            child: Text("Export Logs", style: theme.textTheme.bodyLarge
+                //?.copyWith(color: theme.colorScheme.onPrimary),
+                ),
             onPressed: () async {
               showDialog(
                   context: context,
                   builder: (context) => const LoadingDialog(
-                    isDestructive: false,
-                    icon: Icons.check_rounded,
-                    title: "Saving Logs",
-                    description: "This will take a few moments.",
-                  ),
+                        isDestructive: false,
+                        icon: Icons.check_rounded,
+                        title: "Saving Logs",
+                        description: "This will take a few moments.",
+                      ),
                   useSafeArea: false);
 
               final logger = Provider.of<SharedLogger>(context, listen: false);
               final file = await logger.exportLogsToFile("debug_logs");
-              Future.delayed(Duration.zero, () {
-                Navigator.of(context).pop();
+              await Future.delayed(Duration.zero, () {
+                // close dialog
+                if (context.mounted) {
+                  print("Closing dialog");
+                  //return Navigator.of(context).pop();
+                }
               });
-              if(file == null) {
+              print("Dialog closed");
+              if (file == null) {
                 ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
                   content: Text("Failed to export logs"),
                 ));
@@ -51,14 +54,18 @@ class DebugPanel extends StatelessWidget {
               } else {
                 print(file.absolute);
                 showDialog(
-                    context: context,
-                    builder: (context) => const ConfirmDialog(
-                      isDestructive: false,
-                      icon: Icons.check_rounded,
-                      title: "Logs Saved",
-                      description: "File saved in **Downloads** folder",
-                    ),
-                    useSafeArea: false);
+                        context: context,
+                        builder: (context) => const ConfirmDialog(
+                              isDestructive: false,
+                              icon: Icons.check_rounded,
+                              title: "Logs Saved",
+                              description: "File saved in **Downloads** folder",
+                            ),
+                        useSafeArea: false)
+                    .then((_) {
+                  if (context.mounted && Navigator.canPop(context))
+                    Navigator.of(context).pop();
+                });
                 ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
                   content: Text("Logs saved in Downloads"),
                 ));
@@ -71,11 +78,9 @@ class DebugPanel extends StatelessWidget {
               Icons.discord_rounded,
               color: theme.colorScheme.onSurfaceVariant,
             ),
-            child: Text(
-                "Get help",
-                style: theme.textTheme.bodyLarge
-              //?.copyWith(color: theme.colorScheme.onPrimary),
-            ),
+            child: Text("Get help", style: theme.textTheme.bodyLarge
+                //?.copyWith(color: theme.colorScheme.onPrimary),
+                ),
             onPressed: () async {
               launchUrl(Uri.parse("https://discord.gg/3u2bWnzg3x"));
             },
@@ -91,18 +96,17 @@ class DebugPanel extends StatelessWidget {
               Icons.code_rounded,
               color: theme.colorScheme.onSurfaceVariant,
             ),
-            child: Text(
-                "Github",
-                style: theme.textTheme.bodyLarge
-              //?.copyWith(color: theme.colorScheme.onPrimary),
-            ),
+            child: Text("Github", style: theme.textTheme.bodyLarge
+                //?.copyWith(color: theme.colorScheme.onPrimary),
+                ),
             onPressed: () async {
-              launchUrl(Uri.parse("https://github.com/Turtlepaw/fitness-challenges"));
+              launchUrl(
+                  Uri.parse("https://github.com/Turtlepaw/fitness-challenges"));
             },
           )
         ],
-        builder: (BuildContext context, MenuController controller,
-            Widget? child) {
+        builder:
+            (BuildContext context, MenuController controller, Widget? child) {
           return Tooltip(
             message: "App Options",
             child: IconButton(
@@ -120,5 +124,4 @@ class DebugPanel extends StatelessWidget {
       ),
     );
   }
-
 }

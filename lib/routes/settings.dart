@@ -1,3 +1,4 @@
+import 'package:fitness_challenges/components/common.dart';
 import 'package:fitness_challenges/components/loader.dart';
 import 'package:fitness_challenges/components/privacy.dart';
 import 'package:fitness_challenges/constants.dart';
@@ -151,6 +152,7 @@ class _SettingsPageState extends State<SettingsPage> {
         actions: const [DebugPanel()],
       ),
       body: CustomScrollView(
+        key: GlobalKey(debugLabel: "Settings Page"),
         slivers: [
           SliverToBoxAdapter(
             child: Padding(
@@ -268,7 +270,7 @@ class _SettingsPageState extends State<SettingsPage> {
                       })
                     : buildCard([
                         SizedBox(
-                          width: MediaQuery.of(context).size.width - 75,
+                          width: MediaQuery.of(context).size.width - 45,
                           child: Column(children: [
                             Padding(
                               padding:
@@ -414,14 +416,15 @@ class _SettingsPageState extends State<SettingsPage> {
                     color: theme.colorScheme.onSurface,
                   ),
                   const SizedBox(width: 10),
-                  Text("Privacy", style: theme.textTheme.titleLarge)
+                  Text("Privacy", style: theme.textTheme.titleLarge),
+                  const NewTag()
                 ],
               ),
             ),
           ),
           SliverToBoxAdapter(
               child: Padding(
-            padding: const EdgeInsets.only(left: 15),
+            padding: const EdgeInsets.only(left: 15, right: 10),
             child: SizedBox(
               width: MediaQuery.of(context).size.width,
               child: const PrivacyControls(),

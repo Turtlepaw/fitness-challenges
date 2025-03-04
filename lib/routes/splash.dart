@@ -4,7 +4,8 @@ import 'package:material_symbols_icons/material_symbols_icons.dart';
 class SplashScreen extends StatefulWidget {
   final Future<void> Function() asyncFunction; // Add this line
 
-  const SplashScreen({super.key, required this.asyncFunction}); // Modify constructor
+  const SplashScreen(
+      {super.key, required this.asyncFunction}); // Modify constructor
 
   @override
   _SplashScreenState createState() => _SplashScreenState();
@@ -16,29 +17,25 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
+  }
+
+  @override
+  void didChangeDependencies() {
     _startAnimation();
+    super.didChangeDependencies();
   }
 
   Future<void> _startAnimation() async {
     print("anim started");
 
     // Wait until the build is complete
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
       setState(() {
         _visible = true;
       });
+
+      await widget.asyncFunction();
     });
-
-    // Optional: Add delays for fade-in/fade-out if you uncomment them
-    // await Future.delayed(const Duration(seconds: 1)); // Duration for fade-in
-    // await Future.delayed(const Duration(seconds: 2));
-    // setState(() {
-    //   _visible = false;
-    // });
-    // await Future.delayed(const Duration(seconds: 1)); // Duration for fade-out
-
-    // Execute async function
-    await widget.asyncFunction();
   }
 
   @override

@@ -1,15 +1,17 @@
-import 'dart:math';
-
 import 'package:confetti/confetti.dart'; // Import the confetti package
 import 'package:dynamic_color/dynamic_color.dart';
-import 'package:fitness_challenges/utils/bingo/manager.dart';
+import 'package:fitness_challenges/components/userPreview.dart';
+import 'package:fitness_challenges/constants.dart';
 import 'package:fitness_challenges/utils/health.dart';
+import 'package:fitness_challenges/utils/sharedLogger.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_advanced_avatar/flutter_advanced_avatar.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:pocketbase/pocketbase.dart';
 import 'package:provider/provider.dart';
 
+import '../../components/dialog/userDialog.dart';
+import '../../types/collections.dart';
 import '../../utils/bingo/data.dart';
 import '../../utils/common.dart';
 
@@ -32,11 +34,12 @@ class _BingoCardWidgetState extends State<BingoCardWidget> {
   late ConfettiController _confettiController;
   List<bool> _completedCards = [];
   List<bool> _isAnimating = [];
-  late dynamic selectedUser; // Declare selectedUser here
   UserBingoData? _selectedBingoData;
+  dynamic selectedUser;
   late PocketBase pb;
   late BingoDataManager manager;
   late RecordModel _challenge;
+  late SharedLogger logger;
 
   @override
   void initState() {
@@ -44,76 +47,60 @@ class _BingoCardWidgetState extends State<BingoCardWidget> {
     _confettiController =
         ConfettiController(duration: const Duration(seconds: 1));
     pb = Provider.of<PocketBase>(context, listen: false);
-
-    // Initialize the challenge, selected user, and animation states
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      setState(() {
-        _initializeState();
-      });
-    });
-  }
-
-  @override
-  void didUpdateWidget(covariant BingoCardWidget oldWidget) {
-    super.didUpdateWidget(oldWidget);
-
-    // Check if widget.challenge has changed
-    if (widget.challenge != oldWidget.challenge) {
-      // Reinitialize state if the challenge has changed
-      setState(() {
-        _initializeState(); // Reinitialize with the new challenge
-      });
-    }
-  }
-
-  void _initializeState() {
-    _challenge = widget.challenge!;
-    _selectedBingoData = _getSelectedBingoData();
-    selectedUser = _getSelectedUser();
-    Map<String, dynamic> jsonMap = _challenge.getDataValue("data");
-    manager = BingoDataManager.fromJson(jsonMap);
-
-    // Initialize _completedCards based on existing data
-    _completedCards =
-        List<bool>.generate(_selectedBingoData!.activities.length, (index) {
-      return _selectedBingoData!.activities[index].type == BingoDataType.filled;
-    });
-
-    _isAnimating =
-        List<bool>.filled(_selectedBingoData!.activities.length, false);
+    logger = Provider.of<SharedLogger>(context, listen: false);
   }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+    _initializeState();
+  }
 
-    // Update manager when dependencies change
-    Map<String, dynamic> jsonMap = widget.challenge!.getDataValue("data");
+  @override
+  void didUpdateWidget(covariant BingoCardWidget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.challenge != oldWidget.challenge) {
+      _initializeState();
+    }
+  }
+
+  void _initializeState() {
+    if (widget.challenge == null) return;
+
+    _challenge = widget.challenge!;
+    Map<String, dynamic> jsonMap = _challenge.getDataValue("data");
     manager = BingoDataManager.fromJson(jsonMap);
 
-    // Update state with the new challenge and completed cards
-    setState(() {
-      _initializeState(); // Reinitialize state whenever dependencies change
-    });
+    _selectedBingoData = manager.data.firstWhere(
+      (value) => value.userId == pb.authStore.model?.id,
+      orElse: () => UserBingoData(userId: "", activities: []),
+    );
+
+    selectedUser = _getSelectedUser();
+
+    // Preserve state if possible, or initialize
+    if (_completedCards.isEmpty ||
+        _completedCards.length != _selectedBingoData!.activities.length) {
+      _completedCards = List<bool>.generate(
+        _selectedBingoData!.activities.length,
+        (index) =>
+            _selectedBingoData!.activities[index].type == BingoDataType.filled,
+      );
+    }
+
+    if (_isAnimating.isEmpty ||
+        _isAnimating.length != _selectedBingoData!.activities.length) {
+      _isAnimating =
+          List<bool>.filled(_selectedBingoData!.activities.length, false);
+    }
   }
 
   dynamic _getSelectedUser() {
-    // Retrieve the selected user based on _selectedBingoData or fallback to the current user
-    return _challenge?.expand["users"]?.firstWhere(
+    return _challenge.expand["users"]?.firstWhere(
           (u) => u.id == _selectedBingoData?.userId,
           orElse: () => pb.authStore.model!,
         ) ??
         pb.authStore.model;
-  }
-
-  dynamic _getSelectedBingoData() {
-    // Get the bingo data for the selected user, or default to the current user's data
-    return BingoDataManager.fromJson(_challenge!.getDataValue("data"))
-        .data
-        .firstWhere(
-          (value) => value.userId == pb.authStore.model?.id,
-          orElse: () => UserBingoData(userId: "", activities: []),
-        );
   }
 
   @override
@@ -124,203 +111,60 @@ class _BingoCardWidgetState extends State<BingoCardWidget> {
 
   @override
   Widget build(BuildContext context) {
-    var theme = Theme.of(context);
-    final health = Provider.of<HealthManager>(context);
+    final theme = Theme.of(context);
 
     return LayoutBuilder(
       builder: (context, constraints) {
         final crossAxisCount = (constraints.maxWidth / 100).floor();
 
-        return Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10.0),
-          child: ListView(
-            shrinkWrap: true,
-            physics: const ClampingScrollPhysics(),
-            children: [
-              widget.buildTopDetails(context),
-
-              // Display who owns the current bingo card
-              Padding(
-                padding: const EdgeInsets.only(left: 8),
-                child: Row(
-                  children: [
-                    const Icon(Symbols.playing_cards_rounded),
-                    const SizedBox(width: 10),
-                    Text(
-                      "${selectedUser.id == pb.authStore.model?.id ? "Your" : "${selectedUser.getStringValue("username")}'s"} bingo card",
-                      style: theme.textTheme.headlineSmall,
-                    )
-                  ],
-                ),
-              ),
-              const SizedBox(height: 15),
-
-              // Main bingo card display based on the selected user's data
-              Container(
-                padding: const EdgeInsets.all(10.0),
-                decoration: BoxDecoration(
-                    color: theme.colorScheme.surfaceContainer,
-                    borderRadius: BorderRadius.circular(15),
-                    border: Border.all(
-                      color: theme.colorScheme.surfaceContainerHighest,
-                      width: 1.1,
-                      style: BorderStyle.solid,
-                      strokeAlign: BorderSide.strokeAlignCenter,
-                    )),
-                child: GridView.builder(
-                  physics: const NeverScrollableScrollPhysics(),
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 5,
-                    crossAxisSpacing: 5.0,
-                    mainAxisSpacing: 5.0,
-                    childAspectRatio: 0.73,
-                  ),
-                  itemCount: _selectedBingoData!.activities.length,
-                  shrinkWrap: true,
-                  itemBuilder: (context, index) {
-                    final activity = _selectedBingoData!.activities[index];
-                    final isCompleted = _completedCards[index];
-                    final isAllowed = activity.type != BingoDataType.filled &&
-                        selectedUser.id == pb.authStore.model?.id;
-
-                    return Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        // This AnimatedContainer only handles scale and rotation
-                        AnimatedScale(
-                          scale: _isAnimating[index] ? 1.3 : 1.0,
-                          duration: const Duration(milliseconds: 300),
-                          filterQuality: FilterQuality.high,
-                          curve: Curves.easeInOut,
-                          child: AnimatedRotation(
-                            turns: _isAnimating[index] ? 0.02 : 0,
-                            duration: const Duration(milliseconds: 350),
-                            filterQuality: FilterQuality.high,
-                            child: Card(
-                              shadowColor:
-                                  theme.colorScheme.shadow.withAlpha(100),
-                              elevation: 5,
-                              // Add card elevation for a raised effect
-                              color: !isAllowed
-                                  ? theme.colorScheme.primary.withAlpha(210)
-                                  : theme.colorScheme.primary,
-                              // Card handles color
-                              clipBehavior: Clip.hardEdge,
-                              child: InkWell(
-                                onTap: isAllowed
-                                    ? () async {
-                                        setState(() {
-                                          _isAnimating[index] = true;
-                                        });
-
-                                        // Simulate a delay to show the animation
-                                        await Future.delayed(
-                                            const Duration(milliseconds: 200));
-
-                                        final data =
-                                            manager.updateUserBingoActivity(
-                                          pb.authStore.model?.id,
-                                          index,
-                                          BingoDataType.filled,
-                                        );
-
-                                        if (data != null) {
-                                          final updatedChallenge = await pb
-                                              .collection("challenges")
-                                              .update(
-                                                _challenge!.id,
-                                                body: {"data": data.toJson()},
-                                                expand: "users",
-                                              );
-                                          setState(() {
-                                            _challenge =
-                                                updatedChallenge; // Update challenge state
-                                            _completedCards[index] = true;
-                                            _isAnimating[index] = false;
-                                            //_confettiController.play(); // Start confetti animation
-                                            selectedUser =
-                                                _getSelectedUser(); // Update selected user
-                                          });
-                                        } else {
-                                          debugPrint(
-                                              "Manager#updateUserBingoActivity returned null");
-                                        }
-                                      }
-                                    : null,
-                                child: Center(
-                                  child: Column(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Icon(
-                                        activity.type.asIcon(),
-                                        size: 40,
-                                        color: theme.colorScheme.onPrimary,
-                                      ),
-                                      const SizedBox(height: 10),
-                                      Text(
-                                        formatNumber(activity.amount),
-                                        textAlign: TextAlign.center,
-                                        style: theme.textTheme.labelLarge
-                                            ?.copyWith(
-                                          color: theme.colorScheme.onPrimary,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-
-                        // Confetti effect for completed activity
-                        if (isCompleted)
-                          Positioned.fill(
-                            child: ConfettiWidget(
-                              confettiController: _confettiController,
-                              blastDirectionality:
-                                  BlastDirectionality.explosive,
-                              numberOfParticles: 5,
-                              gravity: 0.7,
-                              shouldLoop: false,
-                              colors: [
-                                theme.colorScheme.primary,
-                                theme.colorScheme.secondary,
-                                theme.colorScheme.tertiary,
-                              ],
-                              // Confetti colors
-                              createParticlePath: (size) => drawStar(size),
-                            ),
-                          ),
-                      ],
-                    );
-                  },
-                ),
-              ),
-
-              Padding(
-                padding: const EdgeInsets.only(top: 10),
-                child: Wrap(
-                  spacing: 1, // Space between items horizontally
-                  runSpacing: 5, // Set this to 0 to minimize space between rows
-                  alignment: WrapAlignment.start, // Align items at the start
-                  children: [
-                    _buildDataBlock(BingoDataType.steps, health.steps),
-                    _buildDataBlock(BingoDataType.calories, health.calories),
-                    _buildDataBlock(BingoDataType.distance, health.distance),
-                    _buildDataBlock(BingoDataType.water, health.water),
-                  ],
-                ),
-              ),
-
-              // Horizontal scroll of other users' bingo cards
-              _buildOtherUsersCards(manager),
-
-              widget.buildBottomDetails(context),
-            ],
-          ),
+        return ListView(
+          padding: const EdgeInsets.symmetric(horizontal: 10),
+          shrinkWrap: true,
+          physics: const ClampingScrollPhysics(),
+          children: [
+            widget.buildTopDetails(context),
+            _buildSelectedUserCard(theme),
+            _buildBingoGrid(theme),
+            _buildHealthBlocks(theme),
+            _buildOtherUsersCards(manager),
+            widget.buildBottomDetails(context),
+          ],
         );
       },
+    );
+  }
+
+  Widget _buildHealthBlocks(ThemeData theme) {
+    final health = Provider.of<HealthManager>(context);
+    return Padding(
+      padding: const EdgeInsets.only(top: 10),
+      child: Wrap(
+        spacing: 1, // Space between items horizontally
+        runSpacing: 5, // Set this to 0 to minimize space between rows
+        alignment: WrapAlignment.start, // Align items at the start
+        children: [
+          _buildDataBlock(BingoDataType.steps, health.steps),
+          _buildDataBlock(BingoDataType.calories, health.calories),
+          _buildDataBlock(BingoDataType.distance, health.distance),
+          _buildDataBlock(BingoDataType.water, health.water),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSelectedUserCard(ThemeData theme) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 8, bottom: 15),
+      child: Row(
+        children: [
+          const Icon(Symbols.playing_cards_rounded),
+          const SizedBox(width: 10),
+          Text(
+            "${selectedUser.id == pb.authStore.model?.id ? "Your" : "${getUsernameFromUser(selectedUser)}'s"} bingo card",
+            style: theme.textTheme.headlineSmall,
+          )
+        ],
+      ),
     );
   }
 
@@ -356,6 +200,51 @@ class _BingoCardWidgetState extends State<BingoCardWidget> {
             textAlign: TextAlign.center, // Center the text
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildBingoGrid(ThemeData theme) {
+    return Container(
+      padding: const EdgeInsets.all(10.0),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainer,
+        borderRadius: BorderRadius.circular(15),
+        border: Border.all(
+          color: theme.colorScheme.surfaceContainerHighest,
+          width: 1.1,
+        ),
+      ),
+      // First get the screen width to calculate tile sizes
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final availableWidth =
+              constraints.maxWidth - 20.0; // Account for padding
+          final tileWidth = (availableWidth - (4 * 5.0)) / 5;
+          final tileHeight = tileWidth / 0.73;
+
+          // Then use SingleChildScrollView for vertical scrolling
+          return SingleChildScrollView(
+            child: GridView.builder(
+              physics: const NeverScrollableScrollPhysics(),
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 5,
+                crossAxisSpacing: 5.0,
+                mainAxisSpacing: 5.0,
+                childAspectRatio: tileWidth / tileHeight,
+              ),
+              itemCount: _selectedBingoData!.activities.length,
+              shrinkWrap: true,
+              itemBuilder: (context, index) {
+                final isWinningTile =
+                    (_selectedBingoData?.winningTiles ?? []).contains(index);
+
+                return _buildBingoTile(index, theme,
+                    isWinningTile: isWinningTile);
+              },
+            ),
+          );
+        },
       ),
     );
   }
@@ -411,6 +300,10 @@ class _BingoCardWidgetState extends State<BingoCardWidget> {
                 clipBehavior: Clip.hardEdge,
                 child: InkWell(
                   splashColor: theme.colorScheme.primary.withAlpha(30),
+                  onLongPress: () => _openDialog(UserDialog(
+                    pb: pb,
+                    user: user,
+                  )),
                   onTap: () {
                     setState(() {
                       _selectedBingoData = userBingoData;
@@ -425,7 +318,7 @@ class _BingoCardWidgetState extends State<BingoCardWidget> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         AdvancedAvatar(
-                          name: user.getStringValue("username"),
+                          name: getUsernameFromUser(user),
                           style: theme.textTheme.titleMedium?.copyWith(
                             color: theme.colorScheme.onPrimary,
                           ),
@@ -442,7 +335,7 @@ class _BingoCardWidgetState extends State<BingoCardWidget> {
                         ),
                         const SizedBox(height: 10.0),
                         Text(
-                          user.getStringValue("username"),
+                          trimString(getUsernameFromUser(user), 11),
                           style: theme.textTheme.bodyLarge?.copyWith(
                             color: isSelected
                                 ? theme.colorScheme.onSurfaceVariant
@@ -471,28 +364,197 @@ class _BingoCardWidgetState extends State<BingoCardWidget> {
     );
   }
 
-  // Optional: Custom particle shape for the confetti (stars)
-  Path drawStar(Size size) {
-    // Code for star-shape particle, using a custom Path
-    final path = Path();
-    final numberOfPoints = 5;
-    final step = pi / numberOfPoints;
-    final halfWidth = size.width / 2;
-    final halfHeight = size.height / 2;
-    final radius = min(halfWidth, halfHeight);
-    for (int i = 0; i < numberOfPoints * 2; i++) {
-      final isEven = i % 2 == 0;
-      final r = isEven ? radius : radius / 2;
-      final angle = i * step;
-      final x = halfWidth + r * cos(angle);
-      final y = halfHeight + r * sin(angle);
-      if (i == 0) {
-        path.moveTo(x, y);
-      } else {
-        path.lineTo(x, y);
+  Widget _buildBingoTile(int index, ThemeData theme,
+      {bool isWinningTile = false}) {
+    final activity = _selectedBingoData!.activities[index];
+    final isCompleted = _completedCards[index];
+    final isAllowed = (activity.type != BingoDataType.filled &&
+            selectedUser.id == pb.authStore.model?.id) &&
+        isPurchasable(Provider.of<HealthManager>(context), activity);
+
+    final onDisabled = theme.colorScheme.onSurface.withOpacity(0.38);
+    return Stack(
+      alignment: Alignment.center,
+      children: [
+        AnimatedScale(
+          scale: _isAnimating[index] ? 1.3 : (isWinningTile ? 1.05 : 1.0),
+          duration: const Duration(milliseconds: 300),
+          child: AnimatedRotation(
+            turns: _isAnimating[index] ? 0.02 : 0,
+            duration: const Duration(milliseconds: 350),
+            child: Container(
+              margin: const EdgeInsets.all(3), // Slightly increased
+              decoration: BoxDecoration(
+                border: isWinningTile
+                    ? Border.all(
+                        color: theme.colorScheme.primaryContainer,
+                        style: BorderStyle.solid,
+                        width: 3.5, // Slightly increased
+                      )
+                    : null,
+                color: isWinningTile
+                    ? theme.colorScheme.primary
+                    : (isAllowed
+                        ? theme.colorScheme.primary
+                        : theme.colorScheme.surfaceContainerHighest),
+                borderRadius: BorderRadius.circular(10), // Increased
+              ),
+              child: InkWell(
+                onTap: isAllowed ? () => _handleTileTap(index) : null,
+                child: Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(6.0), // Increased
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          isWinningTile
+                              ? Symbols.star_rounded
+                              : activity.type.asIcon(),
+                          size: 28, // Increased
+                          color: isAllowed
+                              ? theme.colorScheme.onPrimary
+                              : onDisabled,
+                        ),
+                        if (!isWinningTile)
+                          const SizedBox(height: 6), // Increased
+                        if (!isWinningTile)
+                          FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Text(
+                              formatNumber(activity.amount),
+                              textAlign: TextAlign.center,
+                              style: theme.textTheme.labelMedium?.copyWith(
+                                // Changed to labelMedium
+                                color: isAllowed
+                                    ? theme.colorScheme.onPrimary
+                                    : onDisabled,
+                                fontWeight: isWinningTile
+                                    ? FontWeight.bold
+                                    : FontWeight.normal,
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+        if (isWinningTile)
+          Positioned.fill(
+            child: AnimatedOpacity(
+              opacity: 0.3,
+              duration: const Duration(milliseconds: 700),
+              curve: Curves.easeInOut,
+              child: Container(
+                decoration: BoxDecoration(
+                  shape: BoxShape.rectangle,
+                  borderRadius: BorderRadius.circular(10), // Increased to match
+                  gradient: RadialGradient(
+                    colors: [
+                      theme.colorScheme.secondary.withOpacity(0.3),
+                      Colors.transparent,
+                    ],
+                    center: Alignment.center,
+                    radius: 1.0,
+                  ),
+                ),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  void _openDialog(Widget dialog) {
+    showDialog(
+      context: context,
+      builder: (context) => dialog,
+    ).then((_) async {
+      if (widget.challenge == null) return;
+      //TODO: move to a provider based update system
+      final data = await pb
+          .collection(Collection.challenges)
+          .getOne(widget.challenge!.id, expand: "users");
+      setState(() {
+        _challenge = data;
+      });
+    });
+  }
+
+  bool isPurchasable(HealthManager health, BingoDataActivity activity) {
+    return switch (activity.type) {
+      BingoDataType.steps => (health.steps ?? 0) >= activity.amount,
+      BingoDataType.calories => (health.calories ?? 0) >= activity.amount,
+      BingoDataType.distance => (health.distance ?? 0) >= activity.amount,
+      BingoDataType.water => (health.water ?? 0) >= activity.amount,
+      BingoDataType.filled => false,
+      BingoDataType.azm => false //throw UnimplementedError(),
+    };
+  }
+
+  Future<void> _handleTileTap(int index) async {
+    setState(() {
+      _isAnimating[index] = true;
+    });
+
+    try {
+      await Future.delayed(const Duration(milliseconds: 200));
+
+      var data = await manager.updateUserBingoActivity(
+        pb.authStore.model?.id,
+        index,
+        BingoDataType.filled,
+      );
+
+      // Debugging the updated user data
+      print(
+          "Updated Activities: ${data?.getUser(pb.authStore.model?.id).activities}");
+
+      if (data != null) {
+        Map<String, dynamic> body = {};
+        // Check if user won
+        final winningTiles = data.checkIfUserHasWon(5, pb.authStore.model?.id);
+        final oldWinner = _challenge.getStringValue("winner", null) as String?;
+        if (winningTiles.isNotEmpty) {
+          data = data.setWinningTilesOf(pb.authStore.model.id, winningTiles);
+          if (oldWinner == null || oldWinner.isEmpty)
+            body['winner'] = pb.authStore.model.id;
+          if (_challenge.getBoolValue("autoEnd") == true) {
+            body['ended'] = true;
+            final date = DateTime.now()
+                .copyWith(hour: 0, minute: 0, second: 0, millisecond: 0)
+                .add(const Duration(days: 14));
+            body['deleteDate'] = pbDateFormat.format(date);
+          }
+          ;
+          logger.debug("User ${pb.authStore.model.id} won!");
+        }
+
+        body['data'] = data.toJson();
+
+        final updatedChallenge = await pb.collection("challenges").update(
+              _challenge.id,
+              body: body,
+              expand: "users",
+            );
+
+        setState(() {
+          _challenge = updatedChallenge;
+          _completedCards[index] = true;
+          _isAnimating[index] = false;
+          selectedUser = _getSelectedUser(); // Update selected user
+        });
       }
+    } catch (e) {
+      logger.error("Error: $e");
+      setState(() {
+        _isAnimating[index] = false;
+      });
     }
-    path.close();
-    return path;
   }
 }

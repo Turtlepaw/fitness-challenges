@@ -1,5 +1,5 @@
 import 'package:pocketbase/pocketbase.dart';
-import'package:shared_preferences/shared_preferences.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'constants.dart' as Constants;
 
 Future<PocketBase> initializePocketbase() async {

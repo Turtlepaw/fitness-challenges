@@ -2,24 +2,25 @@ import 'dart:math';
 
 import 'package:collection/collection.dart';
 import 'package:confetti/confetti.dart';
-import 'package:dynamic_color/dynamic_color.dart';
+import 'package:fitness_challenges/components/dialog/userDialog.dart';
 import 'package:fitness_challenges/components/loader.dart';
+import 'package:fitness_challenges/components/userPreview.dart';
 import 'package:fitness_challenges/constants.dart';
+import 'package:fitness_challenges/gen/assets.gen.dart';
 import 'package:fitness_challenges/routes/challenges/bingo.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_advanced_avatar/flutter_advanced_avatar.dart';
 import 'package:flutter_emoji_feedback/flutter_emoji_feedback.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:intl/intl.dart';
-import 'package:material_symbols_icons/symbols.dart';
 import 'package:pocketbase/pocketbase.dart';
 import 'package:provider/provider.dart';
 import 'package:relative_time/relative_time.dart';
 
 import '../components/dialog/codeDialog.dart';
 import '../components/dialog/confirmDialog.dart';
-import '../components/dialog/userDialog.dart';
+import '../components/dialog/userListDialog.dart';
 import '../types/collections.dart';
-import '../utils/bingo/data.dart';
 import '../utils/challengeManager.dart';
 import '../utils/common.dart';
 import '../utils/manager.dart';
@@ -153,180 +154,199 @@ class _ChallengeDialogState extends State<ChallengeDialog> {
           actions: [
             Padding(
               padding: EdgeInsets.only(right: challenge == null ? 15 : 5),
-              child: challenge == null ? const LoadingBox(width: 80, height: 30) : MenuAnchor(
-                menuChildren: <Widget>[
-                  if (challenge.getDataValue("host") == pb.authStore.model?.id)
-                    MenuItemButton(
-                      leadingIcon: const Icon(Icons.person_add),
-                      child: Text("Invite Users",
-                          style: theme.textTheme.bodyLarge),
-                      onPressed: () => _openDialog(CodeDialog(
-                        pb: pb,
-                        challenge: challenge,
-                      )),
-                    ),
-                  if (challenge.getDataValue("host") == pb.authStore.model?.id)
-                    MenuItemButton(
-                      leadingIcon: const Icon(Icons.group),
-                      child: Text("Manage Users",
-                          style: theme.textTheme.bodyLarge),
-                      onPressed: () => _openDialog(UserDialog(
-                        pb: pb,
-                        challenge: challenge,
-                      )),
-                    ),
-                  if (challenge.getDataValue("host") == pb.authStore.model?.id)
-                    MenuItemButton(
-                      leadingIcon: const Icon(
-                        Icons.access_time_filled_rounded,
-                      ),
-                      child: Text(
-                        "End Challenge",
-                        style: theme.textTheme.bodyLarge,
-                      ),
-                      onPressed: () => _openDialog(ConfirmDialog(
-                        icon: Icons.access_time_filled_rounded,
-                        title: "End Challenge",
-                        description:
-                        "But, everyone's been having so much fun! This wil permanently end the challenge.",
-                        onConfirm: () async {
-                          DateTime currentUtcTime = DateTime.now().toUtc(); // Get current UTC time
-                          DateTime futureTime = currentUtcTime.add(const Duration(days: 7)); // Add 7 days
+              child: challenge == null
+                  ? const LoadingBox(width: 80, height: 30)
+                  : MenuAnchor(
+                      menuChildren: <Widget>[
+                        if (challenge.getDataValue("host") ==
+                            pb.authStore.model?.id)
+                          MenuItemButton(
+                            leadingIcon: const Icon(Icons.person_add),
+                            child: Text("Invite Users",
+                                style: theme.textTheme.bodyLarge),
+                            onPressed: () => _openDialog(CodeDialog(
+                              pb: pb,
+                              challenge: challenge,
+                            )),
+                          ),
+                        if (challenge.getDataValue("host") ==
+                            pb.authStore.model?.id)
+                          MenuItemButton(
+                            leadingIcon: const Icon(Icons.group),
+                            child: Text("Manage Users",
+                                style: theme.textTheme.bodyLarge),
+                            onPressed: () => _openDialog(UserListDialog(
+                              pb: pb,
+                              challenge: challenge,
+                            )),
+                          ),
+                        if (challenge.getDataValue("host") ==
+                            pb.authStore.model?.id)
+                          MenuItemButton(
+                            leadingIcon: const Icon(
+                              Icons.access_time_filled_rounded,
+                            ),
+                            child: Text(
+                              "End Challenge",
+                              style: theme.textTheme.bodyLarge,
+                            ),
+                            onPressed: () => _openDialog(ConfirmDialog(
+                              icon: Icons.access_time_filled_rounded,
+                              title: "End Challenge",
+                              description:
+                                  "But, everyone's been having so much fun! This wil permanently end the challenge.",
+                              onConfirm: () async {
+                                DateTime currentUtcTime = DateTime.now()
+                                    .toUtc(); // Get current UTC time
+                                DateTime futureTime = currentUtcTime
+                                    .add(const Duration(days: 7)); // Add 7 days
 
-                          await pb
-                              .collection(Collection.challenges)
-                              .update(challenge.id, body: {
-                                'ended': true,
-                            'deleteDate': futureTime.toIso8601String(),
-                          });
-                          if (context.mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Challenge ended'),
-                              ),
-                            );
-                            final nav = Navigator.of(context);
-                            nav.pop();
-                          }
-                        },
-                      )),
-                    ),
-                  if (challenge.getDataValue("host") == pb.authStore.model?.id)
-                    MenuItemButton(
-                      leadingIcon: Icon(
-                        Icons.delete,
-                        color: theme.colorScheme.error,
-                      ),
-                      child: Text(
-                        "Delete",
-                        style: theme.textTheme.bodyLarge
-                            ?.copyWith(color: theme.colorScheme.error),
-                      ),
-                      onPressed: () => _openDialog(ConfirmDialog(
-                        isDestructive: true,
-                        icon: Icons.delete,
-                        title: "Delete Challenge",
-                        description:
-                        "The challenge will be irreversibly deleted.",
-                        onConfirm: () async {
-                          await pb
-                              .collection(Collection.challenges)
-                              .delete(challenge.id);
-                          if (context.mounted) {
-                            Provider.of<ChallengeProvider>(context,
-                                listen: false)
-                                .reloadChallenges(context);
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Challenge deleted'),
-                              ),
-                            );
-                            final nav = Navigator.of(context);
-                            nav.pop();
-                            nav.pop();
-                          }
-                        },
-                      )),
-                    )
-                  else
-                    MenuItemButton(
-                      leadingIcon: Icon(
-                        Icons.logout,
-                        color: theme.colorScheme.error,
-                      ),
-                      child: Text(
-                        "Leave",
-                        style: theme.textTheme.bodyLarge
-                            ?.copyWith(color: theme.colorScheme.error),
-                      ),
-                      onPressed: () => _openDialog(ConfirmDialog(
-                        isDestructive: true,
-                        icon: Icons.logout,
-                        title: "Leave Challenge",
-                        description:
-                        "You won't be able to rejoin without an invite code.",
-                        onConfirm: () async {
-                          final id = pb.authStore.model?.id;
-                          final data = Manager.fromChallenge(challenge)
-                              .removeUser(id)
-                              .toJson();
-                          await pb.collection(Collection.challenges).update(
-                              challenge.id,
-                              body: {"users-": id, "data": data});
+                                await pb
+                                    .collection(Collection.challenges)
+                                    .update(challenge.id, body: {
+                                  'ended': true,
+                                  'deleteDate': futureTime.toIso8601String(),
+                                });
+                                if (context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text('Challenge ended'),
+                                    ),
+                                  );
+                                  final nav = Navigator.of(context);
+                                  nav.pop();
+                                }
+                              },
+                            )),
+                          ),
+                        if (challenge.getDataValue("host") ==
+                            pb.authStore.model?.id)
+                          MenuItemButton(
+                            leadingIcon: Icon(
+                              Icons.delete,
+                              color: theme.colorScheme.error,
+                            ),
+                            child: Text(
+                              "Delete",
+                              style: theme.textTheme.bodyLarge
+                                  ?.copyWith(color: theme.colorScheme.error),
+                            ),
+                            onPressed: () => _openDialog(ConfirmDialog(
+                              isDestructive: true,
+                              icon: Icons.delete,
+                              title: "Delete Challenge",
+                              description:
+                                  "The challenge will be irreversibly deleted.",
+                              onConfirm: () async {
+                                await pb
+                                    .collection(Collection.challenges)
+                                    .delete(challenge.id);
+                                if (context.mounted) {
+                                  Provider.of<ChallengeProvider>(context,
+                                          listen: false)
+                                      .reloadChallenges(context);
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text('Challenge deleted'),
+                                    ),
+                                  );
+                                  final nav = Navigator.of(context);
+                                  nav.pop();
+                                  nav.pop();
+                                }
+                              },
+                            )),
+                          )
+                        else
+                          MenuItemButton(
+                            leadingIcon: Icon(
+                              Icons.logout,
+                              color: theme.colorScheme.error,
+                            ),
+                            child: Text(
+                              "Leave",
+                              style: theme.textTheme.bodyLarge
+                                  ?.copyWith(color: theme.colorScheme.error),
+                            ),
+                            onPressed: () => _openDialog(ConfirmDialog(
+                              isDestructive: true,
+                              icon: Icons.logout,
+                              title: "Leave Challenge",
+                              description:
+                                  "You won't be able to rejoin without an invite code.",
+                              onConfirm: () async {
+                                final id = pb.authStore.model?.id;
+                                final data = Manager.fromChallenge(challenge)
+                                    .removeUser(id)
+                                    .toJson();
+                                await pb
+                                    .collection(Collection.challenges)
+                                    .update(challenge.id,
+                                        body: {"users-": id, "data": data});
 
-                          if (context.mounted) {
-                            Provider.of<ChallengeProvider>(context,
-                                listen: false)
-                                .reloadChallenges(context);
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Left challenge'),
-                              ),
-                            );
-                            final nav = Navigator.of(context);
-                            nav.pop();
-                            nav.pop();
-                          }
-                        },
-                      )),
-                    )
-                ],
-                builder: (BuildContext context, MenuController controller,
-                    Widget? child) {
-                  return Tooltip(
-                    message: "Options",
-                    child: IconButton(
-                      onPressed: () {
-                        if (controller.isOpen) {
-                          controller.close();
-                        } else {
-                          controller.open();
-                        }
+                                if (context.mounted) {
+                                  Provider.of<ChallengeProvider>(context,
+                                          listen: false)
+                                      .reloadChallenges(context);
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text('Left challenge'),
+                                    ),
+                                  );
+                                  final nav = Navigator.of(context);
+                                  nav.pop();
+                                  nav.pop();
+                                }
+                              },
+                            )),
+                          )
+                      ],
+                      builder: (BuildContext context, MenuController controller,
+                          Widget? child) {
+                        return Tooltip(
+                          message: "Options",
+                          child: IconButton(
+                            onPressed: () {
+                              if (controller.isOpen) {
+                                controller.close();
+                              } else {
+                                controller.open();
+                              }
+                            },
+                            icon: const Icon(Icons.more_vert),
+                          ),
+                        );
                       },
-                      icon: const Icon(Icons.more_vert),
                     ),
-                  );
-                },
-              ),
             )
           ],
-          title: Text(challenge == null ? "Loading..." : challenge.getStringValue("name")),
+          title: Text(challenge == null
+              ? "Loading..."
+              : challenge.getStringValue("name")),
         ),
-        body: AnimatedSwitcher(duration: const Duration(milliseconds: 200), child: challenge == null ? Padding(
-          padding: const EdgeInsets.only(top: 15),
-          child: Center(
-            heightFactor: 1,
-            child: LoadingBox(width: MediaQuery.of(context).size.width - 30, height: 200),
-          ),
-        ) : switch (challenge.getIntValue("type")) {
-          0 => BingoCardWidget(
-            buildTopDetails: (context) => _buildTopDetails(context, challenge.getStringValue("winner")),
-            buildBottomDetails: _buildBottomDetails,
-            challenge: challenge,
-          ),
-          1 => _buildStepsCards(context),
-          _ => const Text("unknown challenge type")
-        },),
+        body: AnimatedSwitcher(
+          duration: const Duration(milliseconds: 200),
+          child: challenge == null
+              ? Padding(
+                  padding: const EdgeInsets.only(top: 15),
+                  child: Center(
+                    heightFactor: 1,
+                    child: LoadingBox(
+                        width: MediaQuery.of(context).size.width - 30,
+                        height: 200),
+                  ),
+                )
+              : switch (challenge.getIntValue("type")) {
+                  0 => BingoCardWidget(
+                      buildTopDetails: (context) => _buildTopDetails(
+                          context, challenge.getStringValue("winner")),
+                      buildBottomDetails: _buildBottomDetails,
+                      challenge: challenge,
+                    ),
+                  1 => _buildStepsCards(context),
+                  _ => const Text("unknown challenge type")
+                },
+        ),
       ),
     );
   }
@@ -371,7 +391,8 @@ class _ChallengeDialogState extends State<ChallengeDialog> {
             alignment: Alignment.center,
             child: Stack(
               children: [
-                Row(
+                Flexible(
+                    child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
@@ -382,26 +403,38 @@ class _ChallengeDialogState extends State<ChallengeDialog> {
                       size: 26,
                     ),
                     const SizedBox(width: 15),
-                    Container(
-                      decoration: BoxDecoration(
+                    InkWell(
+                      onTap: () => _openDialog(UserDialog(
+                        pb: pb,
+                        user: user,
+                      )),
+                      borderRadius: BorderRadius.circular(
+                          6), // Ensures the ripple respects the borderRadius
+                      splashColor: theme.colorScheme.primary
+                          .withOpacity(0.1), // Optional: Customize splash color
+                      child: Ink(
+                        decoration: BoxDecoration(
                           color: theme.colorScheme.surfaceContainerHigh,
-                          borderRadius: BorderRadius.circular(6)),
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 1),
-                      child: Text(
-                          trimString(user.getStringValue("username", "Unknown"),
-                              MAX_USERNAME_LENGTH),
-                        // Substitute for user.getStringValue("username")
-                        style: theme.textTheme.headlineSmall,
+                          borderRadius: BorderRadius.circular(
+                              6), // Applies the border radius
+                        ),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 1),
+                        child: Text(
+                          trimString(getUsernameFromUser(user),
+                              maxUsernameLengthShort),
+                          style: theme.textTheme.titleMedium,
+                        ),
                       ),
                     ),
                     const SizedBox(width: 8),
-                    Text(
+                    Flexible(
+                        child: Text(
                       "is the winner",
-                      style: Theme.of(context).textTheme.headlineSmall,
-                    )
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ))
                   ],
-                ),
+                )),
                 Positioned.fill(
                   child: Align(
                     alignment: Alignment.center,
@@ -477,7 +510,7 @@ class _ChallengeDialogState extends State<ChallengeDialog> {
                             horizontal: 25, vertical: 15),
                         child: Column(children: [
                           AnimatedSwitcher(
-                              duration: const Duration(milliseconds: 500),
+                              duration: const Duration(milliseconds: 400),
                               switchInCurve: Curves.easeOut,
                               child: _hasSubmittedFeedback
                                   ? Padding(
@@ -485,6 +518,11 @@ class _ChallengeDialogState extends State<ChallengeDialog> {
                                           vertical: 15),
                                       child: Column(
                                         children: [
+                                          SvgPicture.asset(
+                                            Assets.images.notoAwesome,
+                                            width: 50,
+                                          ),
+                                          const SizedBox(height: 15),
                                           Text(
                                             "Thanks for submitting feedback!",
                                             style: theme.textTheme.titleLarge,
@@ -508,50 +546,60 @@ class _ChallengeDialogState extends State<ChallengeDialog> {
                                         Padding(
                                           padding: const EdgeInsets.symmetric(
                                               horizontal: 15, vertical: 10),
-                                          child: EmojiFeedback(
-                                            enableFeedback: true,
-                                            animDuration: const Duration(
-                                                milliseconds: 300),
-                                            //initialRating: 0,
-                                            customLabels: const [
-                                              "Terrible",
-                                              "Bad",
-                                              "Okay",
-                                              "Good",
-                                              "Great"
-                                            ],
-                                            curve: Curves.easeOutBack,
-                                            inactiveElementScale: .7,
-                                            onChanged: (value) async {
-                                              await pb
-                                                  .collection("feedback")
-                                                  .create(body: {
-                                                "rating": switch (value) {
-                                                  1 => "Terrible",
-                                                  2 => "Bad",
-                                                  3 => "Okay",
-                                                  4 => "Good",
-                                                  5 => "Great",
-                                                  _ => "Unknown"
-                                                },
-                                                "user": pb.authStore.model.id,
-                                                "challenge": _challenge!.id,
-                                                "ratingId": value
-                                              });
+                                          child: SizedBox(
+                                            //height: 100,
+                                            child: EmojiFeedback(
+                                              enableFeedback: true,
+                                              animDuration: const Duration(
+                                                  milliseconds: 300),
+                                              onChangeWaitForAnimation: true,
+                                              //initialRating: 0,
+                                              customLabels: const [
+                                                "Terrible",
+                                                "Bad",
+                                                "Okay",
+                                                "Good",
+                                                "Great"
+                                              ],
+                                              curve: Curves.easeOutBack,
+                                              emojiPreset: notoAnimatedEmojis,
+                                              inactiveElementScale: .9,
+                                              tapScale: .8,
+                                              onChanged: (value) async {
+                                                if (value == null) return;
+                                                await pb
+                                                    .collection("feedback")
+                                                    .create(body: {
+                                                  "rating": switch (value) {
+                                                    1 => "Terrible",
+                                                    2 => "Bad",
+                                                    3 => "Okay",
+                                                    4 => "Good",
+                                                    5 => "Great",
+                                                    _ => "Unknown"
+                                                  },
+                                                  "user": pb.authStore.model.id,
+                                                  "challenge": _challenge!.id,
+                                                  "ratingId": value
+                                                });
 
-                                              await Future.delayed(
-                                                  const Duration(
-                                                      milliseconds: 300));
-                                              setState(() {
-                                                _hasSubmittedFeedback = true;
-                                              });
-                                            },
+                                                await Future.delayed(
+                                                    const Duration(
+                                                        milliseconds: 300));
+                                                setState(() {
+                                                  _hasSubmittedFeedback = true;
+                                                });
+                                              },
+                                            ),
                                           ),
                                         ),
                                       ],
                                     )),
                         ])),
-                  ))
+                  )),
+            const SizedBox(
+              height: 20,
+            )
           ],
         )
       ],
@@ -578,13 +626,16 @@ class _ChallengeDialogState extends State<ChallengeDialog> {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final maxUsernameLength = (constraints.maxWidth / MAX_USERNAME_LENGTH).floor();
+        final maxUsernameLength =
+            (constraints.maxWidth / MAX_USERNAME_LENGTH).floor();
 
         return Container(
           padding: const EdgeInsets.all(10.0),
           child: ListView(
-            shrinkWrap: true, // This will make the ListView take the height of its content
-            physics: ClampingScrollPhysics(), // You can adjust the scroll behavior if needed
+            shrinkWrap:
+                true, // This will make the ListView take the height of its content
+            physics:
+                const ClampingScrollPhysics(), // You can adjust the scroll behavior if needed
             children: [
               _buildTopDetails(context, userTotals.first['userId'] as String),
               ...userTotals.mapIndexed((index, data) {
@@ -592,67 +643,75 @@ class _ChallengeDialogState extends State<ChallengeDialog> {
                     .firstWhere((u) => u.id == data['userId']);
 
                 return Card(
+                  clipBehavior: Clip.hardEdge,
                   elevation: 4.0, // Add elevation for better visual depth
                   color: theme.colorScheme.primary,
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                        vertical: 15, horizontal: 15),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        if (_challenge!.getBoolValue("ended") && index == 0)
-                          Row(
-                            children: [
-                              const SizedBox(width: 5),
-                              Icon(
-                                Symbols.trophy_rounded,
+                  child: InkWell(
+                    highlightColor: theme.colorScheme.primary,
+                    onTap: () => _openDialog(UserDialog(
+                      pb: pb,
+                      user: user,
+                    )),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                          vertical: 15, horizontal: 15),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          // if (_challenge!.getBoolValue("ended") && index == 0)
+                          //   Row(
+                          //     children: [
+                          //       const SizedBox(width: 5),
+                          //       Icon(
+                          //         Symbols.trophy_rounded,
+                          //         color: theme.colorScheme.onPrimary,
+                          //         size: 26,
+                          //       ),
+                          //       const SizedBox(width: 10),
+                          //     ],
+                          //   ),
+                          // Position Indicator
+                          Text(
+                            "${index + 1}.",
+                            style: theme.textTheme.titleMedium?.copyWith(
                                 color: theme.colorScheme.onPrimary,
-                                size: 26,
-                              ),
-                              const SizedBox(width: 10),
-                            ],
+                                fontWeight: FontWeight.bold),
                           ),
-                        // Position Indicator
-                        Text(
-                          "${index + 1}.",
-                          style: theme.textTheme.titleLarge?.copyWith(
+                          const SizedBox(width: 20),
+                          AdvancedAvatar(
+                            name: getUsernameFromUser(user),
+                            style: theme.textTheme.titleMedium
+                                ?.copyWith(color: theme.colorScheme.primary),
+                            decoration: BoxDecoration(
                               color: theme.colorScheme.onPrimary,
-                              fontWeight: FontWeight.bold),
-                        ),
-                        const SizedBox(width: 20),
-                        AdvancedAvatar(
-                          name: user.getStringValue("username"),
-                          style: theme.textTheme.titleMedium
-                              ?.copyWith(color: theme.colorScheme.primary),
-                          decoration: BoxDecoration(
-                            color: theme.colorScheme.onPrimary,
-                            borderRadius: BorderRadius.circular(50),
+                              borderRadius: BorderRadius.circular(50),
+                            ),
+                            size: 35,
                           ),
-                          size: 35,
-                        ),
-                        const SizedBox(width: 15),
-                        Text(
-                          trimString(user.getStringValue("username"),
-                              maxUsernameLength),
-                          style: theme.textTheme.titleLarge
-                              ?.copyWith(color: theme.colorScheme.onPrimary),
-                        ),
-                        // Center
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.end,
-                            children: [
-                              Text(
-                                "${formatInt(data['totalValue'] as int)} steps",
-                                style: theme.textTheme.titleLarge?.copyWith(
-                                    color: theme.colorScheme.onPrimary),
-                              ),
-                            ],
+                          const SizedBox(width: 15),
+                          Text(
+                            trimString(
+                                getUsernameFromUser(user), maxUsernameLength),
+                            style: theme.textTheme.titleMedium
+                                ?.copyWith(color: theme.colorScheme.onPrimary),
                           ),
-                        ),
-                        // User Avatar
-                        const SizedBox(width: 10),
-                      ],
+                          // Center
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                Text(
+                                  "${formatInt(data['totalValue'] as int)}",
+                                  style: theme.textTheme.titleMedium?.copyWith(
+                                      color: theme.colorScheme.onPrimary),
+                                ),
+                              ],
+                            ),
+                          ),
+                          // User Avatar
+                          const SizedBox(width: 10),
+                        ],
+                      ),
                     ),
                   ),
                 );
@@ -664,211 +723,4 @@ class _ChallengeDialogState extends State<ChallengeDialog> {
       },
     );
   }
-
-  UserBingoData? _selectedBingoData;
-
-  Widget _buildBingoCard(BuildContext context) {
-    var theme = Theme.of(context);
-    final challenge = _challenge;
-    Map<String, dynamic> jsonMap = challenge!.getDataValue("data");
-    final manager = BingoDataManager.fromJson(jsonMap);
-
-    // If no card is selected, default to the current user's bingo data
-    _selectedBingoData ??= manager.data.firstWhere(
-          (value) => value.userId == pb.authStore.model?.id,
-      orElse: () => UserBingoData(userId: "", activities: []),
-    );
-
-    final selectedUser = _challenge?.expand["users"]?.firstWhere(
-          (u) => u.id == _selectedBingoData?.userId,
-      orElse: () => pb.authStore.model!,
-    ) ??
-        pb.authStore.model;
-
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final crossAxisCount = (constraints.maxWidth / 100).floor();
-
-        return Container(
-          padding: const EdgeInsets.all(10.0),
-          child: ListView(
-            shrinkWrap: true,
-            physics: const ClampingScrollPhysics(),
-            children: [
-              _buildTopDetails(context, null),
-
-              // Display who owns the current bingo card
-              Padding(
-                padding: const EdgeInsets.only(left: 8),
-                child: Text(
-                  "${selectedUser.id == pb.authStore.model?.id ? "Your" : "${selectedUser.getStringValue("username")}'s"} bingo card",
-                  style: theme.textTheme.titleLarge,
-                ),
-              ),
-              const SizedBox(height: 10),
-
-              // Main bingo card display based on the selected user's data
-              GridView.builder(
-                physics: const NeverScrollableScrollPhysics(),
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 5,
-                  crossAxisSpacing: 5.0,
-                  mainAxisSpacing: 5.0,
-                  childAspectRatio: 0.68,
-                ),
-                itemCount: _selectedBingoData!.activities.length,
-                shrinkWrap: true,
-                itemBuilder: (context, index) {
-                  final activity = _selectedBingoData!.activities[index];
-
-                  return Card(
-                    clipBehavior: Clip.hardEdge,
-                    color: theme.colorScheme.primary,
-                    child: InkWell(
-                      splashColor: theme.colorScheme.onPrimary.withAlpha(30),
-                      onTap: (activity.type != BingoDataType.filled && pb.authStore.model?.id == selectedUser.id)
-                          ? () async {
-                        final data = manager.updateUserBingoActivity(
-                          pb.authStore.model?.id,
-                          index,
-                          BingoDataType.filled,
-                        );
-                        if (data != null) {
-                          final updatedChallenge = await pb.collection("challenges").update(
-                            _challenge!.id,
-                            body: {"data": data.toJson()},
-                            expand: "users",
-                          );
-                          setState(() {
-                            _challenge = updatedChallenge;
-                            _selectedBingoData = data.data.firstWhere((value) => value.userId == pb.authStore.model?.id);
-                          });
-                        } else {
-                          debugPrint("Manager#updateUserBingoActivity returned null");
-                        }
-                      }
-                          : null,
-                      child: Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              activity.type.asIcon(),
-                              size: 40,
-                              color: theme.colorScheme.onPrimary,
-                            ),
-                            const SizedBox(height: 10),
-                            Text(
-                              activity.amount.toString(),
-                              textAlign: TextAlign.center,
-                              style: theme.textTheme.labelLarge?.copyWith(
-                                color: theme.colorScheme.onPrimary,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  );
-                },
-              ),
-
-              // Horizontal scroll of other users' bingo cards
-              _buildOtherUsersCards(manager),
-
-              _buildBottomDetails(context),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildOtherUsersCards(BingoDataManager manager) {
-    var theme = Theme.of(context);
-
-    // Get the currently selected user's data (if any)
-    final selectedUser = _challenge?.expand["users"]?.
-        firstWhere((u) => u.id == _selectedBingoData?.userId) ?? pb.authStore.model;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Text indicating that this is the section for other users
-        Padding(
-          padding: const EdgeInsets.only(left: 5, top: 15, bottom: 5),
-          child: Text(
-            "Other users",
-            style: theme.textTheme.titleLarge,
-          ),
-        ),
-
-        // Horizontal list of other users' bingo cards
-        Container(
-          margin: const EdgeInsets.only(top: 5.0),
-          height: 120.0, // Height for the horizontal card list
-          child: ListView.builder(
-            scrollDirection: Axis.horizontal,
-            itemCount: manager.data.length,
-            itemBuilder: (context, index) {
-              final userBingoData = manager.data[index];
-              final isSelected = userBingoData.userId == _selectedBingoData?.userId;
-              final user = _challenge!.expand["users"]!
-                  .firstWhere((u) => u.id == userBingoData.userId);
-
-              return Card.outlined(
-                clipBehavior: Clip.hardEdge,
-                child: InkWell(
-                  splashColor: theme.colorScheme.primary.withAlpha(30),
-                  onTap: () {
-                    setState(() {
-                      _selectedBingoData = userBingoData;
-                    });
-                  },
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 15),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        AdvancedAvatar(
-                          name: user.getStringValue("username"),
-                          style: theme.textTheme.titleMedium?.copyWith(
-                            color: theme.colorScheme.onPrimary,
-                          ),
-                          decoration: BoxDecoration(
-                            color: theme.colorScheme.primary,
-                            borderRadius: BorderRadius.circular(50),
-                          ),
-                          child: selectedUser.id == user.id ? Icon(Symbols.check_rounded, color: theme.colorScheme.onPrimary,) : null,
-                        ),
-                        const SizedBox(height: 10.0),
-                        Text(
-                          user.getStringValue("username"),
-                          style: theme.textTheme.bodyLarge?.copyWith(
-                            color: isSelected
-                                ? theme.colorScheme.onSurfaceVariant.harmonizeWith(theme.colorScheme.primary)
-                                : theme.colorScheme.onSurface,
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        if(user.id == pb.authStore.model?.id) Text(
-                          "You",
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: theme.colorScheme.onSurfaceVariant
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              );
-            },
-          ),
-        ),
-      ],
-    );
-  }
-
-
 }

@@ -36,11 +36,12 @@ class _FadingColorAnimationState extends State<LoadingBox>
     super.didChangeDependencies();
     // Ensuring Theme.of(context) is accessed after initState
     var theme = Theme.of(context);
-    print(theme.colorScheme.surfaceContainerHighest == theme.colorScheme.surface);
+    print(
+        theme.colorScheme.surfaceContainerHighest == theme.colorScheme.surface);
     _colorAnimation = ColorTween(
-      begin: theme.colorScheme.surfaceContainerHighest,
-      end: theme.colorScheme.surfaceContainerHigh
-    ).animate(_animationController);
+            begin: theme.colorScheme.surfaceContainerHighest,
+            end: theme.colorScheme.surfaceContainerHigh)
+        .animate(_animationController);
   }
 
   @override

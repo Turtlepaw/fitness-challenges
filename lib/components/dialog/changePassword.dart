@@ -17,8 +17,7 @@ class _ChangePasswordState extends State<ChangePasswordDialog> {
     var theme = Theme.of(context);
     final color = theme.colorScheme.onSurface;
     final destructiveButtonStyle = ButtonStyle(
-        backgroundColor: WidgetStateProperty.all(theme.colorScheme.error  )
-    );
+        backgroundColor: WidgetStateProperty.all(theme.colorScheme.error));
 
     return Dialog(
         child: Padding(
@@ -33,24 +32,33 @@ class _ChangePasswordState extends State<ChangePasswordDialog> {
                 children: [
                   Column(
                     children: [
-                      Icon(Symbols.mark_email_read_rounded, size: 40, color: color,),
-                      const SizedBox(height: 10,),
+                      Icon(
+                        Symbols.mark_email_read_rounded,
+                        size: 40,
+                        color: color,
+                      ),
+                      const SizedBox(
+                        height: 10,
+                      ),
                       Text(
                         "We've sent an email",
                         style: theme.textTheme.headlineSmall,
                       ),
                     ],
                   ),
-                    const SizedBox(height: 3,),
-                    MarkdownBody(
-                      data: "We've sent an email to change your password, don't forget to check your spam folder.",
-                      styleSheet: MarkdownStyleSheet(
-                        p: theme.textTheme.bodyLarge,
-                        textAlign: WrapAlignment.center,
-                      ),
-                      // style: theme.textTheme.bodyLarge,
-                      // textAlign: TextAlign.center,
+                  const SizedBox(
+                    height: 3,
+                  ),
+                  MarkdownBody(
+                    data:
+                        "We've sent an email to change your password, don't forget to check your spam folder.",
+                    styleSheet: MarkdownStyleSheet(
+                      p: theme.textTheme.bodyLarge,
+                      textAlign: WrapAlignment.center,
                     ),
+                    // style: theme.textTheme.bodyLarge,
+                    // textAlign: TextAlign.center,
+                  ),
                 ],
               )),
           const SizedBox(height: 5),
@@ -58,9 +66,10 @@ class _ChangePasswordState extends State<ChangePasswordDialog> {
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
               FilledButton(
-                  onPressed: (){
+                  onPressed: () {
                     Navigator.of(context).pop();
-                  }, child: const Text("Got it"))
+                  },
+                  child: const Text("Got it"))
             ],
           )
         ],

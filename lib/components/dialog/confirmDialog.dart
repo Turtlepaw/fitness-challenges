@@ -9,7 +9,12 @@ class ConfirmDialog extends StatefulWidget {
   final bool isDestructive;
 
   const ConfirmDialog(
-      {super.key, required this.icon, required this.title, this.onConfirm, this.description, this.isDestructive = false});
+      {super.key,
+      required this.icon,
+      required this.title,
+      this.onConfirm,
+      this.description,
+      this.isDestructive = false});
 
   @override
   _ConfirmDialogState createState() => _ConfirmDialogState();
@@ -21,13 +26,12 @@ class _ConfirmDialogState extends State<ConfirmDialog> {
   @override
   Widget build(BuildContext context) {
     var theme = Theme.of(context);
-    final color = switch(widget.isDestructive){
+    final color = switch (widget.isDestructive) {
       false => theme.colorScheme.onSurface,
       true => theme.colorScheme.error,
     };
     final destructiveButtonStyle = ButtonStyle(
-        backgroundColor: WidgetStateProperty.all(theme.colorScheme.error)
-    );
+        backgroundColor: WidgetStateProperty.all(theme.colorScheme.error));
 
     return Dialog(
         child: Padding(
@@ -42,16 +46,25 @@ class _ConfirmDialogState extends State<ConfirmDialog> {
                 children: [
                   Column(
                     children: [
-                      Icon(widget.icon, size: 40, color: color,),
-                      const SizedBox(height: 10,),
+                      Icon(
+                        widget.icon,
+                        size: 40,
+                        color: color,
+                      ),
+                      const SizedBox(
+                        height: 10,
+                      ),
                       Text(
                         widget.title,
                         style: theme.textTheme.headlineSmall,
+                        textAlign: TextAlign.center,
                       ),
                     ],
                   ),
                   if (widget.description != null)
-                    const SizedBox(height: 3,),
+                    const SizedBox(
+                      height: 3,
+                    ),
                   if (widget.description != null)
                     MarkdownBody(
                       data: widget.description!,
@@ -70,24 +83,44 @@ class _ConfirmDialogState extends State<ConfirmDialog> {
             children: [
               FilledButton.tonal(
                   style: widget.isDestructive ? destructiveButtonStyle : null,
-                  onPressed: _handleClose, child: Text("Close", style: theme.textTheme.labelLarge?.copyWith(color: widget.isDestructive ? theme.colorScheme.onError : theme.colorScheme.onSecondaryContainer),)),
-              if(widget.onConfirm != null)
-                const SizedBox(width: 12),
-              if(widget.onConfirm != null) FilledButton(
-                style: widget.isDestructive ? destructiveButtonStyle : null,
-                  onPressed: (){
-                    if(!_isLoading){
-                      setState(() {
-                        _isLoading = true;
-                      });
+                  onPressed: _handleClose,
+                  child: Text(
+                    "Close",
+                    style: theme.textTheme.labelLarge?.copyWith(
+                        color: widget.isDestructive
+                            ? theme.colorScheme.onError
+                            : theme.colorScheme.onSecondaryContainer),
+                  )),
+              if (widget.onConfirm != null) const SizedBox(width: 12),
+              if (widget.onConfirm != null)
+                FilledButton(
+                    style: widget.isDestructive ? destructiveButtonStyle : null,
+                    onPressed: () {
+                      if (!_isLoading) {
+                        setState(() {
+                          _isLoading = true;
+                        });
 
-                      if(widget.onConfirm != null) widget.onConfirm!();
-                    }
-                  }, child: _isLoading ? SizedBox(
-                width: 15,
-                height: 15,
-                child: CircularProgressIndicator(strokeCap: StrokeCap.round, strokeWidth: 3, color: theme.colorScheme.onPrimary,),
-              ) : Text("Confirm", style: theme.textTheme.labelLarge?.copyWith(color: widget.isDestructive ? theme.colorScheme.onError : theme.colorScheme.onPrimary),))
+                        if (widget.onConfirm != null) widget.onConfirm!();
+                      }
+                    },
+                    child: _isLoading
+                        ? SizedBox(
+                            width: 15,
+                            height: 15,
+                            child: CircularProgressIndicator(
+                              strokeCap: StrokeCap.round,
+                              strokeWidth: 3,
+                              color: theme.colorScheme.onPrimary,
+                            ),
+                          )
+                        : Text(
+                            "Confirm",
+                            style: theme.textTheme.labelLarge?.copyWith(
+                                color: widget.isDestructive
+                                    ? theme.colorScheme.onError
+                                    : theme.colorScheme.onPrimary),
+                          ))
             ],
           )
         ],

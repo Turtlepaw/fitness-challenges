@@ -9,7 +9,12 @@ class LoadingDialog extends StatefulWidget {
   final bool isDestructive;
 
   const LoadingDialog(
-      {super.key, required this.icon, required this.title, this.onConfirm, this.description, this.isDestructive = false});
+      {super.key,
+      required this.icon,
+      required this.title,
+      this.onConfirm,
+      this.description,
+      this.isDestructive = false});
 
   @override
   _LoadingDialogState createState() => _LoadingDialogState();
@@ -29,17 +34,19 @@ class _LoadingDialogState extends State<LoadingDialog> {
         mainAxisSize: MainAxisSize.min,
         children: [
           Padding(
-              padding: const EdgeInsets.only(top: 5, left: 10, bottom: 10).add(
-                EdgeInsets.all(15)
-              ),
+              padding: const EdgeInsets.only(top: 5, left: 10, bottom: 10)
+                  .add(EdgeInsets.all(15)),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Column(
                     children: [
                       //Icon(widget.icon, size: 40,),
-                      const CircularProgressIndicator(strokeCap: StrokeCap.round),
-                      const SizedBox(height: 15,),
+                      const CircularProgressIndicator(
+                          strokeCap: StrokeCap.round),
+                      const SizedBox(
+                        height: 15,
+                      ),
                       Text(
                         widget.title,
                         style: theme.textTheme.headlineSmall,
@@ -47,7 +54,9 @@ class _LoadingDialogState extends State<LoadingDialog> {
                     ],
                   ),
                   if (widget.description != null)
-                    const SizedBox(height: 3,),
+                    const SizedBox(
+                      height: 3,
+                    ),
                   if (widget.description != null)
                     MarkdownBody(
                       data: widget.description!,

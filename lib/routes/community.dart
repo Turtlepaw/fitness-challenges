@@ -101,19 +101,26 @@ class _CommunityPageState extends State<CommunityPage> {
                 ),
                 Column(
                   children: [
-                    PrivacyControls(
-                      alignment: CrossAxisAlignment.center,
-                      showOnly: const [PrivacyControl.hideUsernameInCommunity],
-                      onChanged: (control, value){
-                        if(control == PrivacyControl.hideUsernameInCommunity){
-                          print("Hide username in community changed to $value");
-                          WidgetsBinding.instance.addPostFrameCallback((_) {
-                            setState(() {
-                              hideUsername = value;
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 10),
+                      child: PrivacyControls(
+                        alignment: CrossAxisAlignment.center,
+                        showOnly: const [
+                          PrivacyControl.hideUsernameInCommunity
+                        ],
+                        onChanged: (control, value) {
+                          if (control ==
+                              PrivacyControl.hideUsernameInCommunity) {
+                            print(
+                                "Hide username in community changed to $value");
+                            WidgetsBinding.instance.addPostFrameCallback((_) {
+                              setState(() {
+                                hideUsername = value;
+                              });
                             });
-                          });
-                        }
-                      },
+                          }
+                        },
+                      ),
                     ),
                     const SizedBox(
                       height: 15,

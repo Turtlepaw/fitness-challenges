@@ -17,10 +17,7 @@ class StepsEntry {
 
   // Convert a DateTimeIntPair to a JSON map
   Map<String, dynamic> toJson() {
-    return {
-      'dateTime': dateTime.toIso8601String(),
-      'value': value
-    };
+    return {'dateTime': dateTime.toIso8601String(), 'value': value};
   }
 }
 
@@ -73,7 +70,8 @@ class StepsDataManager extends Manager<UserStepsData> {
   }
 
   @override
-  StepsDataManager addUser(String userId, { Difficulty difficulty = Difficulty.easy }) {
+  StepsDataManager addUser(String userId,
+      {Difficulty difficulty = Difficulty.easy}) {
     data.add(UserStepsData(userId: userId, entries: []));
     return this;
   }

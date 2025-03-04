@@ -45,7 +45,7 @@ class CustomNavigationBar extends StatelessWidget {
           context.go('/home');
         } else if (index == 1) {
           context.go('/community');
-        } else if(index == 2){
+        } else if (index == 2) {
           context.go('/settings');
         }
       },
