@@ -1,4 +1,5 @@
 import 'package:fitness_challenges/components/debug_panel.dart';
+import 'package:fitness_challenges/components/dialog/getHelp.dart';
 import 'package:fitness_challenges/components/loader.dart';
 import 'package:fitness_challenges/utils/challengeManager.dart';
 import 'package:fitness_challenges/utils/sharedLogger.dart';
@@ -313,8 +314,10 @@ class _LoginPageState extends State<LoginPage> {
       key: const ValueKey<bool>(false),
       child: Column(
         children: [
+          Icon(Symbols.login_rounded, size: 70, color: theme.colorScheme.primary),
+          const SizedBox(height: 20),
           Text(
-            "Sign in with username",
+            "Let's sign you in",
             style: theme.textTheme.headlineMedium,
             textAlign: TextAlign.center,
           ),
@@ -322,7 +325,7 @@ class _LoginPageState extends State<LoginPage> {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 15),
             child: Text(
-              "If you already have an account, enter your username and we'll try to find it.",
+              "You can sign in with a connection or with your username and password.",
               style: theme.textTheme.bodyLarge,
               textAlign: TextAlign.center,
             ),
@@ -470,10 +473,22 @@ class _LoginPageState extends State<LoginPage> {
                   ],
           ),
           const SizedBox(height: 15),
-          Text(
-            "Google sign in may not work, if it doesn't, try using username and password.",
-            textAlign: TextAlign.center,
-            style: theme.textTheme.bodyLarge,
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 15),
+            child: Text(
+              "Google sign in may not work. If you need help, please contact us.",
+              textAlign: TextAlign.center,
+              style: theme.textTheme.bodyLarge,
+            ),
+          ),
+          const SizedBox(height: 15),
+          FilledButton.tonal(
+            onPressed: () {
+              showDialog(
+                  context: context,
+                  builder: (context) => GetHelpDialog());
+            },
+            child: Text("Get Help")
           )
         ],
       ),

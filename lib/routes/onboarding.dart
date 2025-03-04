@@ -31,6 +31,7 @@ class Onboarding extends StatelessWidget {
                   child: IntrinsicHeight(
                     child: Column(
                       children: [
+                        const SizedBox(height: 50),
                         const Icon(
                           Symbols.rocket_launch_rounded,
                           size: 70,
@@ -192,11 +193,16 @@ class Onboarding extends StatelessWidget {
                       onPressed: () {
                         Future.delayed(Duration.zero, () {
                           context.push('/login');
-                          // print current page
-                          print(GoRouterState.of(context).fullPath);
                         });
                       },
-                      child: const Text('Get Started'),
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text('Get Started'),
+                          SizedBox(width: 10),
+                          Icon(Symbols.arrow_forward_rounded),
+                        ],
+                      ),
                     ),
                   ),
                 ),

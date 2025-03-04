@@ -4,6 +4,8 @@ import 'package:intl/intl.dart';
 const String apiUrl = "https://fitnesschallenges.webredirect.org";
 const String websiteUri = "https://fitnesschallenges.vercel.app";
 const String inviteUri = "$websiteUri/invite";
+const String discordInviteUrl = "https://discord.gg/3u2bWnzg3x";
+const String githubUrl = "https://github.com/Turtlepaw/fitness-challenges";
 const types = [
   HealthDataType.STEPS,
   HealthDataType.HEART_RATE,
