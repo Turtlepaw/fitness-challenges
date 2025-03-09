@@ -40,7 +40,7 @@ class Onboarding extends StatelessWidget {
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 15),
                           child: Text(
-                            "Your fitness journey starts here.",
+                            "Fitness made social.",
                             style: theme.textTheme.headlineLarge?.copyWith(
                               fontWeight: FontWeight.w600,
                             ),
@@ -109,13 +109,13 @@ class Onboarding extends StatelessWidget {
                           ),
                           items: [
                             const Pair(Symbols.steps_rounded,
-                                "Play step challenges. Together."),
+                                "Challenge friends and move together."),
                             const Pair(Symbols.playing_cards_rounded,
-                                "Play bingo with a fitness twist."),
+                                "Turn everyday movement into games."),
                             const Pair(Symbols.deployed_code_history_rounded,
-                                "Support a developing [open-source](https://github.com/Turtlepaw/fitness-challenges) app."),
+                                "Join an [open-source](https://github.com/Turtlepaw/fitness-challenges) community project."),
                             const Pair(Symbols.lock_rounded,
-                                "Private, secure, and transparent."),
+                                "Your data stays private and secure."),
                           ].map((i) {
                             return Builder(
                               builder: (BuildContext context) {

@@ -356,6 +356,14 @@ class _LoginPageState extends State<LoginPage> {
               width: width,
               height: 50,
               child: FilledButton(
+                style: ButtonStyle(
+                    shape: WidgetStateProperty.all<
+                        RoundedRectangleBorder>(
+                        RoundedRectangleBorder(
+                          borderRadius: BorderRadius.vertical(top: Radius.circular(20), bottom: Radius.circular(20)),
+                        )
+                    )
+                ),
                 onPressed: form.control(username).valid
                     ? () {
                         setState(() {
@@ -379,7 +387,7 @@ class _LoginPageState extends State<LoginPage> {
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              SizedBox(width: screenWidth / 2.5, child: const Divider()),
+              SizedBox(width: screenWidth / 3, child: const Divider()),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
                 child: Text(
@@ -388,7 +396,7 @@ class _LoginPageState extends State<LoginPage> {
                       ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
                 ),
               ),
-              SizedBox(width: screenWidth / 2.5, child: const Divider()),
+              SizedBox(width: screenWidth / 3, child: const Divider()),
             ],
           ),
           const SizedBox(height: 15),
@@ -488,7 +496,7 @@ class _LoginPageState extends State<LoginPage> {
                   context: context,
                   builder: (context) => GetHelpDialog());
             },
-            child: Text("Get Help")
+            child: Text("Need help signing in?")
           )
         ],
       ),
