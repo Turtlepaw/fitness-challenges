@@ -104,13 +104,18 @@ class _LoginPageState extends State<LoginPage> {
       await pb.collection('users').authWithPassword(username, password);
 
       if (mounted) {
+        // Show success snack bar
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Logged in!'),
           ),
         );
 
-        Provider.of<ChallengeProvider>(context).reloadChallenges(context);
+        // Reload challenges inside mounted check
+        if (mounted) {
+          Provider.of<ChallengeProvider>(context, listen: false)
+              .reloadChallenges(context);
+        }
 
         logger.debug("Successfully logged in");
         context.go("/home");

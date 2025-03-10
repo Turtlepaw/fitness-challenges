@@ -93,92 +93,107 @@ class _CommunityChallengeState extends State<CommunityChallenge> {
           width = 300; // Limit to ~300 on larger devices
         }
 
-        return Card.outlined(
-          clipBehavior: Clip.hardEdge,
-          margin: const EdgeInsets.symmetric(horizontal: 15),
-          child: InkWell(
-            splashColor: theme.colorScheme.primary.withAlpha(30),
-            onTap: () {
-              openDialog(context);
-            },
-            child: SizedBox(
-              width: width,
-              child: Padding(
-                padding:
-                    const EdgeInsets.symmetric(vertical: 15, horizontal: 25),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: [
-                    if (_challenge.getBoolValue("ended"))
-                      Row(
-                        children: [
-                          Text("Challenge has ended",
-                              style: theme.textTheme.labelLarge)
-                        ],
-                      ),
-                    if (_challenge.getBoolValue("ended"))
-                      const SizedBox(height: 8),
-                    Row(
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 15),
+          child: Container(
+            // Border container
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(15),
+              border: Border.all(
+                color: theme.colorScheme.surfaceContainerHigh,
+                width: 1.1,
+                style: BorderStyle.solid,
+              ),
+            ),
+            child: Material(
+              color: theme.colorScheme.surfaceContainerLow, // Background color
+              borderRadius: BorderRadius.circular(15),
+              clipBehavior: Clip.antiAlias, // Ensures clipping for ripple
+              child: InkWell(
+                splashColor: theme.colorScheme.primary.withAlpha(30),
+                onTap: () {
+                  openDialog(context);
+                },
+                child: SizedBox(
+                  width: width,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                        vertical: 15, horizontal: 25),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.start,
                       children: [
-                        Icon(challenges
-                            .elementAt(_challenge.getIntValue("type"))
-                            .icon),
-                        const SizedBox(width: 10),
-                        Text(
-                          _challenge.getStringValue("name"),
-                          style: theme.textTheme.titleLarge,
-                        ),
-                      ],
-                    ),
-                    const SizedBox(
-                      height: 15,
-                    ),
-                    Row(
-                      mainAxisSize: MainAxisSize.max,
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Expanded(
-                          child: OverlapStack(
-                            align: OverlapStackAlign.start,
-                            minSpacing: 1,
-                            maxSpacing: 2.3,
-                            itemSize: const Size(20, 40),
-                            itemLimit: 5,
-                            children:
-                                userListFromChallenge(_challenge).map((user) {
-                              return Padding(
-                                padding:
-                                    const EdgeInsets.symmetric(horizontal: 3),
-                                child: AdvancedAvatar(
-                                  name: user,
-                                  style: theme.textTheme.titleMedium?.copyWith(
-                                      color: theme.colorScheme.onPrimary),
-                                  decoration: BoxDecoration(
-                                    color: theme.colorScheme.primary,
-                                    borderRadius: BorderRadius.circular(50),
-                                  ),
-                                ),
-                              );
-                            }).toList(),
+                        if (_challenge.getBoolValue("ended"))
+                          Row(
+                            children: [
+                              Text("Challenge has ended",
+                                  style: theme.textTheme.labelLarge)
+                            ],
                           ),
+                        if (_challenge.getBoolValue("ended"))
+                          const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            Icon(challenges
+                                .elementAt(_challenge.getIntValue("type"))
+                                .icon),
+                            const SizedBox(width: 10),
+                            Text(
+                              _challenge.getStringValue("name"),
+                              style: theme.textTheme.titleLarge,
+                            ),
+                          ],
                         ),
-                        FilledButton(
-                            onPressed: () {
-                              openDialog(context);
-                            },
-                            child: hasJoined
-                                ? const Row(
-                                    children: [
-                                      Icon(Symbols.check_rounded),
-                                      SizedBox(width: 5),
-                                      Text("Joined")
-                                    ],
-                                  )
-                                : const Text("Join"))
+                        const SizedBox(
+                          height: 15,
+                        ),
+                        Row(
+                          mainAxisSize: MainAxisSize.max,
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Expanded(
+                              child: OverlapStack(
+                                align: OverlapStackAlign.start,
+                                minSpacing: 1,
+                                maxSpacing: 2.3,
+                                itemSize: const Size(20, 40),
+                                itemLimit: 5,
+                                children:
+                                userListFromChallenge(_challenge).map((user) {
+                                  return Padding(
+                                    padding:
+                                    const EdgeInsets.symmetric(horizontal: 3),
+                                    child: AdvancedAvatar(
+                                      name: user,
+                                      style: theme.textTheme.titleMedium?.copyWith(
+                                          color: theme.colorScheme.onPrimary),
+                                      decoration: BoxDecoration(
+                                        color: theme.colorScheme.primary,
+                                        borderRadius: BorderRadius.circular(50),
+                                      ),
+                                    ),
+                                  );
+                                }).toList(),
+                              ),
+                            ),
+                            FilledButton(
+                                onPressed: () {
+                                  openDialog(context);
+                                },
+                                child: hasJoined
+                                    ? const Row(
+                                  children: [
+                                    Icon(Symbols.check_rounded),
+                                    SizedBox(width: 5),
+                                    Text("Joined")
+                                  ],
+                                )
+                                    : const Text("Join"))
+                          ],
+                        )
                       ],
-                    )
-                  ],
+                    ),
+                  ),
                 ),
               ),
             ),
