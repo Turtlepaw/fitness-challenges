@@ -1,0 +1,2 @@
+D:/fitness-challenges/android/app/.cxx/Debug/s1c575e1/x86/CMakeFiles/edit_cache.dir
+D:/fitness-challenges/android/app/.cxx/Debug/s1c575e1/x86/CMakeFiles/rebuild_cache.dir

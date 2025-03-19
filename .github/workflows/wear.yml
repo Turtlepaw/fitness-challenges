@@ -1,0 +1,76 @@
+on:
+  workflow_dispatch:
+    inputs:
+      buildType:
+        description: 'Build Type'
+        required: true
+        default: 'apk'
+        type: choice
+        options:
+          - apk
+          - aab
+
+name: Release Wear OS
+
+jobs:
+  build:
+    name: Build APK/AAB
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21.x'
+          distribution: 'temurin'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Set executable permissions for gradlew
+        working-directory: wear-os
+        run: chmod +x ./gradlew
+
+      - name: Decode keystore
+        run: echo "$KEYSTORE" | base64 --decode > wear-os/wear/keystore.jks
+        env:
+          KEYSTORE: ${{ secrets.KEYSTORE }}
+
+      - name: Build APK
+        if: ${{ github.event.inputs.buildType == 'apk' }}
+        run: ./gradlew assembleCiRelease
+        working-directory: wear-os
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+          CI: true
+
+      - name: Build AAB
+        if: ${{ github.event.inputs.buildType == 'aab' }}
+        run: ./gradlew bundleCiRelease
+        working-directory: wear-os
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+          CI: true
+
+      - name: Upload APK
+        if: ${{ github.event.inputs.buildType == 'apk' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: APK
+          path: wear-os/wear/build/outputs/apk/ciRelease/wear-ciRelease.apk #wear-os/wear/ciRelease/*.apk
+          compression-level: 0
+
+      - name: Upload AAB
+        if: ${{ github.event.inputs.buildType == 'aab' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: AAB
+          path: wear-os/wear/build/outputs/bundle/ciRelease/wear-ciRelease.aab
+          compression-level: 0
