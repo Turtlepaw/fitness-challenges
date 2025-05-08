@@ -32,12 +32,18 @@ class Bingo {
               .toActivity(distance); // Convert to int for compatibility
 
         case 2:
-          final activeMinutes = (random.nextInt(
-                      activeMinutesRange[1] - activeMinutesRange[0] + 1) +
-                  activeMinutesRange[0])
-              .roundToNearest(5)
-              .clamp(activeMinutesRange[0], activeMinutesRange[1]);
-          return BingoDataType.azm.toActivity(activeMinutes);
+          // Temporarily skip over it
+          // final activeMinutes = (random.nextInt(
+          //             activeMinutesRange[1] - activeMinutesRange[0] + 1) +
+          //         activeMinutesRange[0])
+          //     .roundToNearest(5)
+          //     .clamp(activeMinutesRange[0], activeMinutesRange[1]);
+          // return BingoDataType.azm.toActivity(activeMinutes);
+          final steps = (random.nextInt(stepsRange[1] - stepsRange[0] + 1) +
+              stepsRange[0])
+              .roundToNearest(50)
+              .clamp(stepsRange[0], stepsRange[1]);
+          return BingoDataType.steps.toActivity(steps);
 
         case 3:
           final calories =

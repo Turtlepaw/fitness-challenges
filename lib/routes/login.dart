@@ -170,6 +170,28 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
+  Future<void> _handlePasswordReset(String email) async {
+    try {
+      await pb.collection('users').requestPasswordReset(email);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Password reset email sent. Please check your inbox.'),
+          ),
+        );
+      }
+    } catch (e) {
+      logger.error('Error requesting password reset: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Error sending password reset email. Please try again.'),
+          ),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -216,102 +238,6 @@ class _LoginPageState extends State<LoginPage> {
       ),
     );
   }
-
-  // Widget _buildUsernameForm(double width, ThemeData theme) {
-  //   return Column(
-  //     children: [
-  //       SizedBox(
-  //         width: width,
-  //         child: Column(
-  //           children: [
-  //             // ReactiveTextField(
-  //             //   formControlName: username,
-  //             //   onSubmitted: (v) => form.focus(password),
-  //             //   decoration: const InputDecoration(
-  //             //     border: OutlineInputBorder(),
-  //             //     labelText: 'Username',
-  //             //     icon: Icon(Symbols.person_rounded),
-  //             //   ),
-  //             //   validationMessages: {
-  //             //     ValidationMessage.required: (error) =>
-  //             //         "Username must not be empty",
-  //             //     "unique": (error) => "Username taken"
-  //             //   },
-  //             // ),
-  //             // const SizedBox(height: 10),
-  //             ReactiveTextField(
-  //               formControlName: password,
-  //               obscureText: true,
-  //               decoration: const InputDecoration(
-  //                 border: OutlineInputBorder(),
-  //                 labelText: 'Password',
-  //                 icon: Icon(Symbols.password_rounded),
-  //                 hintText: 'Choose a strong password',
-  //               ),
-  //               validationMessages: {
-  //                 ValidationMessage.required: (error) =>
-  //                     "Password must not be empty",
-  //               },
-  //             ),
-  //             const SizedBox(height: 8),
-  //             Text(
-  //               "Enter your details to sign in or create a new account.",
-  //               style: theme.typography.englishLike.bodyMedium,
-  //               textAlign: TextAlign.center,
-  //             ),
-  //             const SizedBox(height: 15),
-  //             ReactiveFormConsumer(builder: (context, form, child) {
-  //               return SizedBox(
-  //                 width: width,
-  //                 height: 50,
-  //                 child: FilledButton(
-  //                   style: FilledButton.styleFrom(),
-  //                   onPressed: form.valid
-  //                       ? () {
-  //                           _signInWithUsername(
-  //                             form.control("username").value,
-  //                             form.control("password").value,
-  //                           );
-  //                         }
-  //                       : null,
-  //                   child: isLoading
-  //                       ? SizedBox(
-  //                           width: 20,
-  //                           height: 20,
-  //                           child: CircularProgressIndicator(
-  //                             color: Theme.of(context).colorScheme.onPrimary,
-  //                             strokeCap: StrokeCap.round,
-  //                           ),
-  //                         )
-  //                       : Text(
-  //                           'Continue',
-  //                           style: theme.typography.englishLike.titleMedium
-  //                               ?.copyWith(
-  //                             color: form.valid
-  //                                 ? theme.colorScheme.onPrimary
-  //                                 : theme.colorScheme.onSurface
-  //                                     .withOpacity(0.38),
-  //                             fontWeight: FontWeight.w500,
-  //                           ),
-  //                         ),
-  //                 ),
-  //               );
-  //             })
-  //           ],
-  //         ),
-  //       ),
-  //       const SizedBox(height: 15),
-  //       TextButton(
-  //         onPressed: () {
-  //           setState(() {
-  //             showUsernameForm = false;
-  //           });
-  //         },
-  //         child: const Text('Back to Sign In Options'),
-  //       ),
-  //     ],
-  //   );
-  // }
 
   Widget _buildSignInButtons(double? width, ThemeData theme) {
     final screenWidth = MediaQuery.of(context).size.width;
@@ -502,6 +428,18 @@ class _LoginPageState extends State<LoginPage> {
                   builder: (context) => GetHelpDialog());
             },
             child: Text("Need help signing in?")
+          ),
+          const SizedBox(height: 15),
+          TextButton(
+            onPressed: () {
+              showDialog(
+                context: context,
+                builder: (context) => _ResetPasswordDialog(
+                  onReset: _handlePasswordReset,
+                ),
+              );
+            },
+            child: Text('Forgot Password?'),
           )
         ],
       ),
@@ -774,6 +712,57 @@ class _UsernameFormState extends State<_UsernameForm> {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _ResetPasswordDialog extends StatefulWidget {
+  final Function(String) onReset;
+
+  const _ResetPasswordDialog({required this.onReset});
+
+  @override
+  State<_ResetPasswordDialog> createState() => _ResetPasswordDialogState();
+}
+
+class _ResetPasswordDialogState extends State<_ResetPasswordDialog> {
+  final _emailController = TextEditingController();
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: Text('Reset Password'),
+      content: TextField(
+        controller: _emailController,
+        decoration: InputDecoration(
+          labelText: 'Email',
+          hintText: 'Enter your email address',
+        ),
+        keyboardType: TextInputType.emailAddress,
+        onSubmitted: (value) {
+          widget.onReset(value);
+          Navigator.pop(context);
+        },
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: Text('Cancel'),
+        ),
+        FilledButton(
+          onPressed: () {
+            widget.onReset(_emailController.text);
+            Navigator.pop(context);
+          },
+          child: Text('Reset Password'),
+        ),
+      ],
     );
   }
 }

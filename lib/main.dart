@@ -1,4 +1,4 @@
-  import 'package:app_links/app_links.dart';
+   import 'package:app_links/app_links.dart';
 import 'package:bottom_sheet/bottom_sheet.dart';
 import 'package:dynamic_color/dynamic_color.dart';
 import 'package:fitness_challenges/components/bottomSheet.dart';
