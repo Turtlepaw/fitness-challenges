@@ -4,7 +4,7 @@
 
 # Fitness Challenges
 
-#### Compete in challenges with friends and family.
+#### Compete in challenges with friends and family
 
 </div>
 
@@ -12,8 +12,8 @@
 
 |                                                                  |                                                                  |                                                                  |                                                                  |
 | ---------------------------------------------------------------- | ---------------------------------------------------------------- | ---------------------------------------------------------------- | ---------------------------------------------------------------- |
-| <img src="./images/Screenshot_20240902_003413.png" width="200"/> | <img src="./images/Screenshot_20240902_003428.png" width="200"/> | <img src="./images/Screenshot_20240902_003443.png" width="200"/> | <img src="./images/Screenshot_20240902_003507.png" width="200"/> |
 | Home                                                             | Step Challenge                                                   | Invite Users                                                     | Health connections and profile                                   |
+| <img src="./images/Screenshot_20240902_003413.png" width="200"/> | <img src="./images/Screenshot_20240902_003428.png" width="200"/> | <img src="./images/Screenshot_20240902_003443.png" width="200"/> | <img src="./images/Screenshot_20240902_003507.png" width="200"/> |
 
 ## 🛠️ Developing
 

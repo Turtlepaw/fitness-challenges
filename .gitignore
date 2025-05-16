@@ -51,3 +51,6 @@ app.*.map.json
 /wear-os/.kotlin
 
 /android/local.properties
+
+# For fastlane
+play-store-credentials.json
