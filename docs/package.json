@@ -1,0 +1,29 @@
+{
+  "dependencies": {
+    "clsx": "^2.1.1",
+    "material-symbols": "^0.28.2",
+    "next": "^15.2.0",
+    "nextra": "^4.2.13",
+    "nextra-theme-docs": "^4.2.13",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "sharp": "^0.33.5"
+  },
+  "name": "docs",
+  "module": "index.ts",
+  "type": "module",
+  "private": true,
+  "devDependencies": {
+    "@types/bun": "latest",
+    "@types/react": "^19.0.10",
+    "wrangler": "^3.111.0"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "scripts": {
+    "dev": "next",
+    "build": "next build",
+    "start": "next start"
+  }
+}
