@@ -394,7 +394,7 @@ class CreateWidgetState extends State<CreateWidget> {
                   ...challenges.asMap().entries.map((entry) {
                     final c = entry.value;
                     final index = entry.key;
-                    if (index == 0 && pb.authStore?.record?.getBoolValue("admin", false) != true) return const SizedBox();
+                    //if (index == 0 && pb.authStore?.record?.getBoolValue("admin", false) != true) return const SizedBox();
                     return Card(
                       elevation: 0,
                       shape: RoundedRectangleBorder(
